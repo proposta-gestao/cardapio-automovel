@@ -115,7 +115,7 @@ async function carregarProdutos() {
         nome: p.name,
         desc: p.description || '',
         preco: parseFloat(p.price),
-        img: p.image_url || 'Logo.png',
+        img: p.image_url || 'logo_automovel.png',
         stock: p.stock,
         cat: p.categories?.name || '',
         catSlug: p.categories?.slug || ''
@@ -412,7 +412,7 @@ document.getElementById("mais").onclick = () => {
         dom.qntText.innerText = state.quantidadeAtual;
         atualizarSubtotalModal();
     } else {
-        alert("Quantidade máxima em estoque atingida!");
+        mostrarToast("Quantidade máxima em estoque atingida!", "error");
     }
 };
 
@@ -501,19 +501,19 @@ if (telInput) {
 // Enviar Pedido via WhatsApp
 document.getElementById("btnEnviar").onclick = async () => {
     const btn = document.getElementById("btnEnviar");
-    if (state.carrinho.length === 0) return alert("Seu carrinho está vazio!");
+    if (state.carrinho.length === 0) return mostrarToast("Seu carrinho está vazio!", "error");
 
     const nomeCliente = document.getElementById("clienteNome")?.value.trim() || '';
     const telefoneCliente = document.getElementById("clienteTelefone")?.value.trim() || '';
 
-    if (!nomeCliente) return alert("Por favor, informe seu nome completo.");
-    if (!telefoneCliente) return alert("Por favor, informe seu telefone/WhatsApp.");
+    if (!nomeCliente) return mostrarToast("Por favor, informe seu nome completo.", "error");
+    if (!telefoneCliente) return mostrarToast("Por favor, informe seu telefone/WhatsApp.", "error");
 
     const mesa = document.getElementById("clienteMesa")?.value.trim() || '';
     const posicao = document.getElementById("clientePosicao")?.value.trim() || '';
 
-    if (!mesa) return alert("Por favor, informe o número da MESA.");
-    if (!posicao) return alert("Por favor, informe a POSIÇÃO.");
+    if (!mesa) return mostrarToast("Por favor, informe o número da MESA.", "error");
+    if (!posicao) return mostrarToast("Por favor, informe a POSIÇÃO.", "error");
 
     const camposEndereco = { mesa, posicao };
     const freteValor = 0;
@@ -543,7 +543,7 @@ document.getElementById("btnEnviar").onclick = async () => {
         if (outOfStockItem) {
             btn.disabled = false;
             btn.innerHTML = `<span>Enviar pedido para o atendente</span><span class="atendente-icon">🛎️</span>`;
-            alert(`O produto ${outOfStockItem} é tão delicioso que esgotou (ou não tem a quantidade solicitada) =) \nVeja as outras opções que são tão gostosas quanto ele!`);
+            mostrarToast(`Produto esgotado ou quantidade indisponível!`, 'error');
             toggleCart(false);
             carregarProdutos(); // Recarrega vitrine para atualizar estoque/esgotados
             return;

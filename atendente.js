@@ -368,7 +368,7 @@ function createOrderCard(order) {
             actionButton = `
                 <div class="card-actions">
                     <button class="btn-action btn-assume" onclick="assumirPedido('${order.id}')">ASSUMIR 🤝</button>
-                    <button class="btn-action btn-cancel" onclick="updateOrderStatus('${order.id}', 'cancelado')">Limpar</button>
+                    <button class="btn-action btn-cancel" onclick="updateOrderStatus('${order.id}', 'cancelado')">CANCELAR</button>
                 </div>
             `;
         } else {
