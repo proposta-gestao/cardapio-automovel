@@ -115,7 +115,6 @@ function switchTab(tabName) {
     });
 
     if (tabName === 'pendente') document.getElementById('colPendente').classList.add('active');
-    if (tabName === 'pago') document.getElementById('colPago').classList.add('active');
     if (tabName === 'cozinha') document.getElementById('colCozinha').classList.add('active');
 }
 
@@ -205,9 +204,6 @@ function handleUpdatedOrder(payload) {
 }
 
 async function updateOrderStatus(orderId, newStatus) {
-    const btn = document.querySelector(`[data-order-id="${orderId}"] .btn-action`);
-    if (btn) btn.disabled = true;
-
     const { error } = await sb
         .from('orders')
         .update({ status: newStatus })
@@ -215,17 +211,29 @@ async function updateOrderStatus(orderId, newStatus) {
 
     if (error) {
         alert("Erro ao atualizar status: " + error.message);
-        if (btn) btn.disabled = false;
-    } else {
-        // Se marcou como pago, abre o modal de confirmação para enviar p/ cozinha
-        if (newStatus === 'pago') {
-            abrirModalConfirmacao(orderId);
-        }
     }
 }
 
-// --- Funções do Modal de Confirmação ---
-function abrirModalConfirmacao(orderId) {
+async function assumirPedido(orderId) {
+    if (!waiter) return;
+
+    const { error } = await sb
+        .from('orders')
+        .update({ 
+            atendente_id: waiter.id,
+            atendente_nome: waiter.nome
+        })
+        .eq('id', orderId);
+
+    if (error) {
+        alert("Erro ao assumir pedido: " + error.message);
+    } else {
+        abrirModalDetalhes(orderId);
+    }
+}
+
+// --- Funções do Modal de Detalhes ---
+function abrirModalDetalhes(orderId) {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
 
@@ -234,13 +242,14 @@ function abrirModalConfirmacao(orderId) {
     const itemsList = document.getElementById('modalOrderItems');
     const btnCozinha = document.getElementById('btnModalEnviarCozinha');
 
-    info.innerText = `Pedido de ${order.customer_name} | Mesa ${order.customer_address.mesa || '??'}`;
+    info.innerText = `Pedido #${order.id.slice(0, 8)} | ${order.customer_name}`;
 
     let itemsHtml = (order.order_items || []).map(item => `
         <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.95rem;">
             <span>${item.quantity}x ${item.product_name}</span>
             <span style="color:var(--accent-waiter); font-weight:700;">${formatCurrency(item.unit_price * item.quantity)}</span>
         </div>
+        ${item.observations ? `<div style="font-size:0.8rem; color:#FF7F50; margin-top:-5px; margin-bottom:10px;">Obs: ${item.observations}</div>` : ''}
     `).join('');
 
     itemsList.innerHTML = `
@@ -254,18 +263,20 @@ function abrirModalConfirmacao(orderId) {
     `;
 
     btnCozinha.onclick = async () => {
-        // Desabilita o botão para evitar cliques duplos
-        btnCozinha.disabled = true;
-        btnCozinha.innerText = "ENVIANDO...";
-        
-        await updateOrderStatus(orderId, 'cozinha');
-        fecharModalConfirmacao();
-        
-        // Pequeno delay para resetar o botão caso o modal seja reaberto depois
-        setTimeout(() => {
-            btnCozinha.disabled = false;
-            btnCozinha.innerText = "ENVIAR PARA COZINHA 🍳";
-        }, 500);
+        if (confirm("Deseja confirmar o pagamento e enviar para a cozinha?")) {
+            btnCozinha.disabled = true;
+            btnCozinha.innerText = "ENVIANDO...";
+            
+            // Fluxo: Marca como pago internamente e envia pra cozinha
+            // Na nossa lógica simplificada, vamos direto para 'cozinha'
+            await updateOrderStatus(orderId, 'cozinha');
+            fecharModalConfirmacao();
+            
+            setTimeout(() => {
+                btnCozinha.disabled = false;
+                btnCozinha.innerText = "CONFIRMAR PAGAMENTO E ENVIAR 🍳";
+            }, 500);
+        }
     };
 
     modal.style.display = 'flex';
@@ -278,23 +289,18 @@ function fecharModalConfirmacao() {
 // --- Renderização ---
 function renderBoard() {
     const listPendente = document.getElementById('listPendente');
-    const listPago = document.getElementById('listPago');
     const listCozinha = document.getElementById('listCozinha');
 
     listPendente.innerHTML = '';
-    listPago.innerHTML = '';
     listCozinha.innerHTML = '';
 
-    let cPendente = 0, cPago = 0, cCozinha = 0;
+    let cPendente = 0, cCozinha = 0;
 
     orders.forEach(order => {
         const card = createOrderCard(order);
         if (order.status === 'pendente') {
             listPendente.appendChild(card);
             cPendente++;
-        } else if (order.status === 'pago') {
-            listPago.appendChild(card);
-            cPago++;
         } else if (order.status === 'cozinha') {
             listCozinha.appendChild(card);
             cCozinha++;
@@ -302,12 +308,10 @@ function renderBoard() {
     });
 
     document.getElementById('countPendente').innerText = cPendente;
-    document.getElementById('countPago').innerText = cPago;
     document.getElementById('countCozinha').innerText = cCozinha;
 
     // Atualiza badges das abas mobile
     document.getElementById('badgeTabPendente').innerText = cPendente;
-    document.getElementById('badgeTabPago').innerText = cPago;
     document.getElementById('badgeTabCozinha').innerText = cCozinha;
 }
 
@@ -317,30 +321,27 @@ function createOrderCard(order) {
     div.dataset.orderId = order.id;
 
     const timeStr = new Date(order.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    const localizacao = order.customer_address; // { mesa, posicao }
-
-    let itemsHtml = (order.order_items || []).map(item => `
-        <li>
-            <span>${item.quantity}x ${item.product_name}</span>
-            <span>${formatCurrency(item.unit_price * item.quantity)}</span>
-        </li>
-        ${item.observations ? `<span class="item-obs">Obs: ${item.observations}</span>` : ''}
-    `).join('');
+    const localizacao = order.customer_address;
 
     let actionButton = '';
+    let waiterInfoView = '';
+
     if (order.status === 'pendente') {
-        actionButton = `
-            <div class="card-actions">
-                <button class="btn-action btn-pay" onclick="updateOrderStatus('${order.id}', 'pago')">Marcar como Pago 💰</button>
-                <button class="btn-action btn-cancel" onclick="updateOrderStatus('${order.id}', 'cancelado')">Cancelar</button>
-            </div>
-        `;
-    } else if (order.status === 'pago') {
-        actionButton = `
-            <div class="card-actions">
-                <button class="btn-action btn-kitchen" onclick="updateOrderStatus('${order.id}', 'cozinha')">Enviar p/ Cozinha 🍳</button>
-            </div>
-        `;
+        if (!order.atendente_id) {
+            actionButton = `
+                <div class="card-actions">
+                    <button class="btn-action btn-assume" onclick="assumirPedido('${order.id}')">ASSUMIR 🤝</button>
+                    <button class="btn-action btn-cancel" onclick="updateOrderStatus('${order.id}', 'cancelado')">Limpar</button>
+                </div>
+            `;
+        } else {
+            waiterInfoView = `<div class="order-waiter">👤 Atendendo: ${order.atendente_nome}</div>`;
+            actionButton = `
+                <div class="card-actions">
+                    <button class="btn-action btn-view" onclick="abrirModalDetalhes('${order.id}')">VER DETALHES 📋</button>
+                </div>
+            `;
+        }
     } else if (order.status === 'cozinha') {
         actionButton = `
             <div class="card-actions">
@@ -350,18 +351,18 @@ function createOrderCard(order) {
     }
 
     div.innerHTML = `
-        <div class="card-header">
+        <div class="card-header" onclick="abrirModalDetalhes('${order.id}')" style="cursor:pointer">
             <span class="order-id">#${order.id.slice(0, 8)}</span>
             <span class="order-time">${timeStr}</span>
         </div>
-        <div class="order-location">MESA ${localizacao.mesa || '??'} | POSIÇÃO ${localizacao.posicao || '??'}</div>
-        <p class="customer-name">${order.customer_name}</p>
-        <ul class="order-items">
-            ${itemsHtml}
-        </ul>
-        <div class="card-footer">
-            <span style="color:#888; font-size: 0.8rem">Total</span>
-            <span class="order-total">${formatCurrency(order.total)}</span>
+        <div style="cursor:pointer" onclick="abrirModalDetalhes('${order.id}')">
+            <p class="customer-name">${order.customer_name}</p>
+            <div class="order-location" style="margin-top:5px; margin-bottom:5px;">MESA ${localizacao.mesa || '??'} | POS ${localizacao.posicao || '??'}</div>
+            ${waiterInfoView}
+            <div class="card-footer" style="margin-top:10px;">
+                <span style="color:#888; font-size: 0.8rem">Total</span>
+                <span class="order-total" style="font-size:1rem;">${formatCurrency(order.total)}</span>
+            </div>
         </div>
         ${actionButton}
     `;

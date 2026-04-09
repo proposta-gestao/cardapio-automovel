@@ -144,7 +144,7 @@
 
         .board-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 20px;
             align-items: start;
         }
@@ -232,9 +232,17 @@
         }
 
         .customer-name {
-            font-weight: 600;
+            font-weight: 700;
             margin: 0;
-            font-size: 1.1rem;
+            font-size: 1.15rem;
+            color: #fff;
+        }
+
+        .order-waiter {
+            font-size: 0.8rem;
+            color: var(--status-pago);
+            margin-top: 5px;
+            font-weight: 600;
         }
 
         .order-items {
@@ -293,8 +301,8 @@
             transition: all 0.2s;
         }
 
-        .btn-pay { background: var(--status-pago); color: #000; }
-        .btn-kitchen { background: var(--status-cozinha); color: #fff; }
+        .btn-assume { background: var(--accent-waiter); color: #000; }
+        .btn-view { background: #333; color: #fff; }
         .btn-done { background: var(--status-concluido); color: #fff; }
         .btn-cancel { background: transparent; color: #ff4757; border: 1px solid #ff4757; }
 
@@ -353,7 +361,6 @@
         }
 
         .tab-item.active[data-tab="pendente"] { border-color: var(--status-pendente); color: var(--status-pendente); }
-        .tab-item.active[data-tab="pago"] { border-color: var(--status-pago); color: var(--status-pago); }
         .tab-item.active[data-tab="cozinha"] { border-color: var(--status-cozinha); color: var(--status-cozinha); }
 
         /* Mobile specific adjustments */
@@ -558,10 +565,6 @@
                 <span>Novos</span>
                 <span class="tab-badge" id="badgeTabPendente">0</span>
             </div>
-            <div class="tab-item" data-tab="pago" onclick="switchTab('pago')">
-                <span>Pagos</span>
-                <span class="tab-badge" id="badgeTabPago">0</span>
-            </div>
             <div class="tab-item" data-tab="cozinha" onclick="switchTab('cozinha')">
                 <span>Cozinha</span>
                 <span class="tab-badge" id="badgeTabCozinha">0</span>
@@ -578,15 +581,6 @@
                 <div id="listPendente"></div>
             </div>
 
-            <!-- Pagos -->
-            <div class="board-column" id="colPago">
-                <div class="column-header">
-                    <span class="column-title" style="color: var(--status-pago)">💰 Pagos / Confirmados</span>
-                    <span class="badge-count" id="countPago">0</span>
-                </div>
-                <div id="listPago"></div>
-            </div>
-
             <!-- Na Cozinha -->
             <div class="board-column" id="colCozinha">
                 <div class="column-header">
@@ -598,12 +592,12 @@
         </main>
     </section>
 
-    <!-- Modal de Confirmação de Pagamento -->
+    <!-- Modal de Detalhes do Pedido -->
     <div id="modalConfirmacao" class="modal-backdrop">
         <div class="modal-card">
             <div class="modal-header" style="position: relative;">
                 <button onclick="fecharModalConfirmacao()" style="position: absolute; right: 15px; top: 15px; background: transparent; border: none; color: #555; font-size: 1.5rem; cursor: pointer;">&times;</button>
-                <h2>💰 Pagamento Confirmado!</h2>
+                <h2>📝 Detalhes do Pedido</h2>
                 <p id="modalOrderInfo" style="margin: 5px 0 0; font-size: 0.85rem; color: #888;"></p>
             </div>
             <div class="modal-body" id="modalOrderItems">
@@ -611,7 +605,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn-modal-kitchen" id="btnModalEnviarCozinha">
-                    ENVIAR PARA COZINHA 🍳
+                    CONFIRMAR PAGAMENTO E ENVIAR 🍳
                 </button>
             </div>
         </div>
