@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Atendente — ♠️♦️ACP♥️♣️</title>
+    <link rel="stylesheet" href="index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-waiter: #0d0d0d;
+            --card-waiter: #1a1a1a;
+            --accent-waiter: #E5B25D;
+            --status-pendente: #FF4757;
+            --status-pago: #2ED573;
+            --status-cozinha: #1E90FF;
+            --status-concluido: #747D8C;
+        }
+
+        body {
+            background-color: var(--bg-waiter);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Login Screen */
+        #loginScreen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+        }
+
+        .login-card {
+            background: var(--card-waiter);
+            padding: 2.5rem;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+            text-align: center;
+        }
+
+        .login-logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 1.5rem;
+            background: url('Logo.png') center/cover no-repeat;
+            border-radius: 50%;
+            border: 2px solid var(--accent-waiter);
+        }
+
+        .login-card h2 {
+            margin-bottom: 2rem;
+            color: var(--accent-waiter);
+            font-weight: 700;
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .form-group input {
+            width: 100%;
+            background: #252525;
+            border: 1px solid #333;
+            padding: 12px;
+            border-radius: 10px;
+            color: #fff;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        .btn-login {
+            width: 100%;
+            background: var(--accent-waiter);
+            color: #000;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(229, 178, 93, 0.4);
+        }
+
+        /* Dashboard */
+        #dashboardScreen {
+            display: none;
+            padding: 20px;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .dash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #333;
+        }
+
+        .dash-info h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--accent-waiter);
+        }
+
+        .dash-info p {
+            margin: 5px 0 0;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .btn-logout {
+            background: transparent;
+            color: #ff4757;
+            border: 1px solid #ff4757;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .board-column {
+            background: #111;
+            border-radius: 15px;
+            padding: 15px;
+            min-height: 80vh;
+            border: 1px solid #222;
+        }
+
+        .column-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 0 5px;
+        }
+
+        .column-title {
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge-count {
+            background: #333;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+
+        .order-card {
+            background: var(--card-waiter);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #333;
+            animation: slideIn 0.3s ease-out;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-pendente { border-left-color: var(--status-pendente); }
+        .card-pago { border-left-color: var(--status-pago); }
+        .card-cozinha { border-left-color: var(--status-cozinha); }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .order-id {
+            color: #555;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .order-time {
+            color: var(--accent-waiter);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .order-location {
+            background: rgba(229, 178, 93, 0.1);
+            color: var(--accent-waiter);
+            padding: 5px 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: inline-block;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .customer-name {
+            font-weight: 600;
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .order-items {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+            padding: 10px 0;
+        }
+
+        .order-items li {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            color: #ccc;
+        }
+
+        .item-obs {
+            font-size: 0.8rem;
+            color: #FF7F50;
+            font-style: italic;
+            margin-top: -3px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .order-total {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .btn-pay { background: var(--status-pago); color: #000; }
+        .btn-kitchen { background: var(--status-cozinha); color: #fff; }
+        .btn-done { background: var(--status-concluido); color: #fff; }
+        .btn-cancel { background: transparent; color: #ff4757; border: 1px solid #ff4757; }
+
+        .btn-action:hover:not(:disabled) {
+            filter: brightness(1.2);
+            transform: scale(1.02);
+        }
+
+        .btn-action:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Mobile specific adjustments */
+        @media (max-width: 900px) {
+            .board-grid {
+                grid-template-columns: 1fr;
+            }
+            .board-column {
+                min-height: auto;
+                margin-bottom: 30px;
+            }
+        }
+
+        /* Audio message */
+        .audio-permission-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Overlay de Permissão de Áudio -->
+    <div id="audioOverlay" class="audio-permission-overlay">
+        <div class="login-card">
+            <h2>Bem-vindo de volta!</h2>
+            <p style="color: #888; margin-bottom: 2rem;">Para ouvirmos a campainha dos novos pedidos, precisamos da sua permissão.</p>
+            <button class="btn-login" id="btnAudioEnable">Ativar Sons e Iniciar Painel</button>
+        </div>
+    </div>
+
+    <!-- Tela de Login -->
+    <section id="loginScreen">
+        <div class="login-card">
+            <div class="login-logo"></div>
+            <h2>Painel do Atendente</h2>
+            <div class="form-group">
+                <label>CPF</label>
+                <input type="text" id="loginCpf" placeholder="000.000.000-00" maxlength="14">
+            </div>
+            <div class="form-group">
+                <label>SENHA</label>
+                <input type="password" id="loginSenha" placeholder="••••••">
+            </div>
+            <p id="errorMsg" style="color: #ff4757; font-size: 0.85rem; display: none; margin-bottom: 1rem;"></p>
+            <button class="btn-login" id="btnLogin">Entrar</button>
+        </div>
+    </section>
+
+    <!-- Dashboard -->
+    <section id="dashboardScreen">
+        <header class="dash-header">
+            <div class="dash-info">
+                <h1>♠️♦️ACP Pedidos — Realtime</h1>
+                <p>Logado como: <strong id="waiterName">...</strong></p>
+            </div>
+            <button class="btn-logout" id="btnLogout">Sair do Painel</button>
+        </header>
+
+        <main class="board-grid">
+            <!-- Novos Pedidos -->
+            <div class="board-column">
+                <div class="column-header">
+                    <span class="column-title" style="color: var(--status-pendente)">🔔 Novos Pedidos</span>
+                    <span class="badge-count" id="countPendente">0</span>
+                </div>
+                <div id="listPendente"></div>
+            </div>
+
+            <!-- Pagos -->
+            <div class="board-column">
+                <div class="column-header">
+                    <span class="column-title" style="color: var(--status-pago)">💰 Pagos / Confirmados</span>
+                    <span class="badge-count" id="countPago">0</span>
+                </div>
+                <div id="listPago"></div>
+            </div>
+
+            <!-- Na Cozinha -->
+            <div class="board-column">
+                <div class="column-header">
+                    <span class="column-title" style="color: var(--status-cozinha)">🍳 Na Cozinha / Preparo</span>
+                    <span class="badge-count" id="countCozinha">0</span>
+                </div>
+                <div id="listCozinha"></div>
+            </div>
+        </main>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="atendente.js"></script>
+</body>
+</html>
