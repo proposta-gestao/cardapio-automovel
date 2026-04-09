@@ -11,48 +11,50 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-        <link rel="stylesheet" href="index.css">
-  
-  
-  <meta name="description" content="Seu jogo em outro nível">
-  
-  
-  <meta property="og:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a7a63065-8cdf-4076-a471-587cd9645c59/id-preview-07d9cd74--6599f10e-6caf-4058-b3b8-91e40902b01d.lovable.app-1775566307476.png">
-  <meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a7a63065-8cdf-4076-a471-587cd9645c59/id-preview-07d9cd74--6599f10e-6caf-4058-b3b8-91e40902b01d.lovable.app-1775566307476.png">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta property="og:type" content="website">
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  <meta property="og:title" content="♠️♦️ACP♥️♣️ | Cardápio Digital">
-  <meta name="twitter:title" content="♠️♦️ACP♥️♣️ | Cardápio Digital">
-  <meta property="og:description" content="Seu jogo em outro nível">
-  <meta name="twitter:description" content="Seu jogo em outro nível">
+    <link rel="stylesheet" href="index.css">
+
+
+    <meta name="description" content="Seu jogo em outro nível">
+
+
+    <meta property="og:image"
+        content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a7a63065-8cdf-4076-a471-587cd9645c59/id-preview-07d9cd74--6599f10e-6caf-4058-b3b8-91e40902b01d.lovable.app-1775566307476.png">
+    <meta name="twitter:image"
+        content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a7a63065-8cdf-4076-a471-587cd9645c59/id-preview-07d9cd74--6599f10e-6caf-4058-b3b8-91e40902b01d.lovable.app-1775566307476.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta property="og:type" content="website">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <meta property="og:title" content="♠️♦️ACP♥️♣️ | Cardápio Digital">
+    <meta name="twitter:title" content="♠️♦️ACP♥️♣️ | Cardápio Digital">
+    <meta property="og:description" content="Seu jogo em outro nível">
+    <meta name="twitter:description" content="Seu jogo em outro nível">
 </head>
 
 <body>
@@ -65,26 +67,27 @@
         <header class="header">
             <div class="top-nav">
                 <div class="brand-container">
-                <div class="logo-main" role="img" aria-label="♠️♦️ACP♥️♣️ Logo"></div>
+                    <div class="logo-main" role="img" aria-label="♠️♦️ACP♥️♣️ Logo"></div>
 
-                <div class="brand-text">
-                    <h1 class="brand-name">♠️♦️ACP♥️♣️</h1>
-                    <h3 class="brand-subtitle">Seu jogo em outro nível</h3>
+                    <div class="brand-text">
+                        <h1 class="brand-name">♠️♦️ACP♥️♣️</h1>
+                        <h3 class="brand-subtitle">Seu jogo em outro nível</h3>
+                    </div>
+                </div>
+                <div class="nav-actions">
+                    <button class="cart-toggle" id="btnCart" aria-label="Ver carrinho">
+                        <span class="cart-icon">🛒</span>
+                        <span class="cart-label">Carrinho</span>
+                        <span class="cart-count" id="contador">0</span>
+                    </button>
                 </div>
             </div>
-            <div class="nav-actions">
-                <button class="cart-toggle" id="btnCart" aria-label="Ver carrinho">
-                    <span class="cart-icon">🛒</span>
-                    <span class="cart-label">Carrinho</span>
-                    <span class="cart-count" id="contador">0</span>
-                </button>
-            </div>
-        </div>
-        <div class="search-bar-container">
-            <div class="search-wrapper">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="busca" placeholder="O que você deseja comer hoje?" aria-label="Buscar pratos">
-            </div>
+            <div class="search-bar-container">
+                <div class="search-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="busca" placeholder="O que você deseja comer hoje?"
+                        aria-label="Buscar pratos">
+                </div>
         </header>
 
         <!-- Categories Navigation -->
@@ -168,7 +171,21 @@
             <div class="step-body" id="step2Body">
                 <button class="btn-back-step" id="btnVoltarEtapa">← Voltar</button>
 
-                <!-- Dados Pessoais -->
+                <!-- Dados do Pedido -->
+                <div class="form-section">
+                    <p class="form-section-title">Onde você está?</p>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="clienteMesa">MESA *</label>
+                            <input type="text" id="clienteMesa" placeholder="Ex: 05">
+                        </div>
+                        <div class="form-group">
+                            <label for="clientePosicao">POSIÇÃO *</label>
+                            <input type="text" id="clientePosicao" placeholder="Ex: 02">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-section">
                     <p class="form-section-title">Seus Dados</p>
                     <div class="form-group">
@@ -178,82 +195,6 @@
                     <div class="form-group">
                         <label for="clienteTelefone">Telefone / WhatsApp *</label>
                         <input type="tel" id="clienteTelefone" placeholder="(31) 99999-9999" maxlength="15">
-                    </div>
-                </div>
-
-                <!-- Tipo de Recebimento -->
-                <div class="form-section">
-                    <p class="form-section-title">Como prefere receber?</p>
-                    <div class="delivery-type-grid">
-                        <label class="delivery-radio-card" id="cardRetirada" for="radioRetirada">
-                            <input type="radio" name="tipoEntrega" value="retirada" id="radioRetirada">
-                            <span class="delivery-radio-icon">🏠</span>
-                            <span class="delivery-radio-label">Retirada</span>
-                            <span class="delivery-radio-sub">Retire na loja</span>
-                        </label>
-                        <label class="delivery-radio-card selected" id="cardEntrega" for="radioEntrega">
-                            <input type="radio" name="tipoEntrega" value="entrega" id="radioEntrega" checked>
-                            <span class="delivery-radio-icon">🚗</span>
-                            <span class="delivery-radio-label">Entrega</span>
-                            <span class="delivery-radio-sub">Receba em casa</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Bloco Retirada -->
-                <div id="blocoRetirada" style="display:none;">
-                    <div class="store-address-card">
-                        <div class="store-address-icon">📍</div>
-                        <div id="enderecoLojaDisplay" class="store-address-text">
-                            Carregando endereço...
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bloco Entrega -->
-                <div id="blocoEntrega">
-                    <div class="form-section">
-                        <div class="form-group">
-                            <label for="cep">CEP</label>
-                            <div class="cep-wrapper">
-                                <input type="text" id="cep" placeholder="00000-000" maxlength="9" autocomplete="postal-code" aria-label="CEP">
-                                <span class="cep-status" id="cepStatus"></span>
-                            </div>
-                            <span id="cepError" class="error-message"></span>
-                        </div>
-                        <div id="enderecoFields" style="display:none;">
-                            <div class="form-group">
-                                <label for="endereco">Logradouro</label>
-                                <input type="text" id="endereco" placeholder="Rua, Avenida..." readonly>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="numero">Número *</label>
-                                    <input type="text" id="numero" placeholder="123">
-                                </div>
-                                <div class="form-group">
-                                    <label for="complemento">Complemento</label>
-                                    <input type="text" id="complemento" placeholder="Apto...">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="bairro">Bairro</label>
-                                <input type="text" id="bairro" placeholder="Bairro" readonly>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="cidade">Cidade</label>
-                                    <input type="text" id="cidade" placeholder="Cidade" readonly>
-                                </div>
-                                <div class="form-group">
-                                    <label for="estado">UF</label>
-                                    <input type="text" id="estado" placeholder="UF" readonly maxlength="2">
-                                </div>
-                            </div>
-                            <div class="frete-info" id="freteInfo" style="display:none;">
-                                <span id="freteInfoText"></span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -309,7 +250,8 @@
                             <span id="qnt" class="qty-value">1</span>
                             <button class="qty-btn" id="mais" aria-label="Aumentar quantidade">+</button>
                         </div>
-                        <div class="price-display" style="display:flex; flex-direction:column; align-items:flex-end; min-width: 120px;">
+                        <div class="price-display"
+                            style="display:flex; flex-direction:column; align-items:flex-end; min-width: 120px;">
                             <div style="font-size: 0.8rem; color: var(--text-muted); font-weight:600;">
                                 Unitário: R$ <span id="ppreco">0,00</span>
                             </div>
@@ -341,7 +283,7 @@
     <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
-        <script src="index.js"></script>
+    <script src="index.js"></script>
 </body>
 
 </html>

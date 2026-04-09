@@ -36,8 +36,8 @@ let state = {
     cupomAplicado: null,
     categoriaAtiva: 'todos',
     termoBusca: '',
-    tipoEntrega: 'entrega',   // 'entrega' | 'retirada'
-    freteAtivo: null          // null = não calculado | 0 = grátis | >0 = valor | -1 = fora da área
+    tipoEntrega: 'mesa',      // Sempre 'mesa' agora
+    freteAtivo: 0             // Sempre 0 agora
 };
 
 // --- Seletores DOM ---
@@ -256,52 +256,8 @@ function navegarStep(n) {
     }
 }
 
-function toggleTipoEntrega(tipo) {
-    state.tipoEntrega = tipo;
-
-    const cardRetirada = document.getElementById('cardRetirada');
-    const cardEntrega = document.getElementById('cardEntrega');
-    const blocoRetirada = document.getElementById('blocoRetirada');
-    const blocoEntrega = document.getElementById('blocoEntrega');
-
-    if (cardRetirada) cardRetirada.classList.toggle('selected', tipo === 'retirada');
-    if (cardEntrega) cardEntrega.classList.toggle('selected', tipo === 'entrega');
-    if (blocoRetirada) blocoRetirada.style.display = tipo === 'retirada' ? 'block' : 'none';
-    if (blocoEntrega) blocoEntrega.style.display = tipo === 'entrega' ? 'block' : 'none';
-
-    if (tipo === 'retirada') {
-        state.freteAtivo = 0;
-        const endEl = document.getElementById('enderecoLojaDisplay');
-        if (endEl) {
-            if (CONFIG_LOJA && (CONFIG_LOJA.address_street || CONFIG_LOJA.store_name)) {
-                const parts = [
-                    CONFIG_LOJA.store_name ? `<strong>${CONFIG_LOJA.store_name}</strong>` : '',
-                    (CONFIG_LOJA.address_street && CONFIG_LOJA.address_number)
-                        ? `${CONFIG_LOJA.address_street}, ${CONFIG_LOJA.address_number}`
-                        : (CONFIG_LOJA.address_street || ''),
-                    CONFIG_LOJA.address_complement || '',
-                    CONFIG_LOJA.address_neighborhood
-                        ? `${CONFIG_LOJA.address_neighborhood}${CONFIG_LOJA.address_city ? ' — ' + CONFIG_LOJA.address_city : ''}${CONFIG_LOJA.address_state ? '/' + CONFIG_LOJA.address_state : ''}`
-                        : '',
-                    CONFIG_LOJA.address_zip ? `CEP: ${CONFIG_LOJA.address_zip}` : '',
-                    CONFIG_LOJA.address_reference ? `<em>📌 ${CONFIG_LOJA.address_reference}</em>` : ''
-                ].filter(Boolean);
-                endEl.innerHTML = parts.join('<br>');
-            } else {
-                endEl.innerHTML = '<span style="color:var(--text-muted);font-style:italic;">Endereço não configurado. Configure no painel admin.</span>';
-            }
-        }
-    } else {
-        // Ao voltar para entrega, não recalcula — mantém o estado atual do frete
-        const bairro = document.getElementById('bairro')?.value;
-        if (!bairro) state.freteAtivo = null;
-    }
-
-    renderTotalBreakdown();
-}
-
 // =============================================
-// FRETE
+// FRETE (DESATIVADO)
 // =============================================
 
 function normalizar(str) {
@@ -313,13 +269,7 @@ function normalizar(str) {
 }
 
 function calcularFrete(bairro) {
-    if (!bairro || ZONAS_FRETE.length === 0) return null;
-    const bairroNorm = normalizar(bairro);
-    const zona = ZONAS_FRETE.find(z => {
-        const bairros = z.neighborhoods.split(',').map(b => normalizar(b));
-        return bairros.includes(bairroNorm);
-    });
-    return zona ? parseFloat(zona.delivery_fee) : null;
+    return 0;
 }
 
 // =============================================
@@ -377,131 +327,22 @@ function renderTotalBreakdown() {
         els.descRow.style.display = 'none';
     }
 
-    // Linha de frete
-    let freteValorFinal = 0;
-    if (state.tipoEntrega === 'entrega') {
-        els.freteRow.style.display = 'flex';
-        if (state.freteAtivo === null) {
-            els.frete.textContent = '—';
-            els.frete.style.color = 'var(--text-muted)';
-        } else if (state.freteAtivo === 0) {
-            els.frete.textContent = 'Grátis';
-            els.frete.style.color = '#00B894';
-            freteValorFinal = 0;
-        } else {
-            freteValorFinal = state.freteAtivo;
-            els.frete.textContent = fmt(state.freteAtivo);
-            els.frete.style.color = 'var(--text-main)';
-        }
-    } else {
-        // Retirada — não exibe linha de frete
-        els.freteRow.style.display = 'none';
-        freteValorFinal = 0;
-    }
+    // Linha de frete (oculta agora)
+    if (els.freteRow) els.freteRow.style.display = 'none';
 
-    els.tot.textContent = fmt(subtotal - desconto + freteValorFinal);
+    els.tot.textContent = fmt(subtotal - desconto);
 }
 
 // =============================================
 // CEP — AUTOCOMPLETE DEBOUNCED (sem botão)
 // =============================================
 
-let _cepTimer = null;
+// =============================================
+// CEP (DESATIVADO)
+// =============================================
 
-function onCepInput(e) {
-    // Formata enquanto digita: 00000-000
-    let v = e.target.value.replace(/\D/g, '');
-    if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5, 8);
-    e.target.value = v;
-
-    const digits = v.replace(/\D/g, '');
-    clearTimeout(_cepTimer);
-
-    const status = document.getElementById('cepStatus');
-    const errorEl = document.getElementById('cepError');
-
-    if (digits.length === 8) {
-        if (status) status.textContent = '⏳';
-        if (errorEl) errorEl.style.display = 'none';
-        _cepTimer = setTimeout(buscarCepAuto, 600);
-    } else {
-        if (status) status.textContent = '';
-        // Oculta campos de endereço se CEP incompleto
-        const endFields = document.getElementById('enderecoFields');
-        const freteInfo = document.getElementById('freteInfo');
-        if (endFields) endFields.style.display = 'none';
-        if (freteInfo) freteInfo.style.display = 'none';
-        state.freteAtivo = null;
-        renderTotalBreakdown();
-    }
-}
-
-async function buscarCepAuto() {
-    const cepEl = document.getElementById('cep');
-    const status = document.getElementById('cepStatus');
-    const errorEl = document.getElementById('cepError');
-    const endFields = document.getElementById('enderecoFields');
-    const freteInfo = document.getElementById('freteInfo');
-    const freteInfoText = document.getElementById('freteInfoText');
-
-    const cep = cepEl?.value.replace(/\D/g, '');
-    if (!cep || cep.length !== 8) return;
-
-    if (status) status.textContent = '⏳';
-    if (errorEl) errorEl.style.display = 'none';
-
-    try {
-        const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-        const data = await res.json();
-
-        if (data.erro) {
-            if (status) status.textContent = '❌';
-            if (errorEl) { errorEl.textContent = 'CEP não encontrado.'; errorEl.style.display = 'block'; }
-            if (endFields) endFields.style.display = 'none';
-            if (freteInfo) freteInfo.style.display = 'none';
-            state.freteAtivo = null;
-        } else {
-            if (status) status.textContent = '✅';
-
-            // Preenche campos de endereço
-            const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
-            set('endereco', data.logradouro);
-            set('bairro', data.bairro);
-            set('cidade', data.localidade);
-            set('estado', data.uf);
-
-            if (endFields) endFields.style.display = 'block';
-
-            // Foco no campo número
-            setTimeout(() => document.getElementById('numero')?.focus(), 100);
-
-            // Calcula frete pelo bairro
-            const frete = calcularFrete(data.bairro);
-            state.freteAtivo = frete;
-
-            // Exibe resultado do frete
-            if (freteInfo && freteInfoText) {
-                freteInfo.style.display = 'block';
-                if (frete === null) {
-                    freteInfo.className = 'frete-info frete-erro';
-                    freteInfoText.textContent = `⚠️ ${data.bairro} está fora da área de entrega.`;
-                } else if (frete === 0) {
-                    freteInfo.className = 'frete-info frete-ok';
-                    freteInfoText.textContent = `✅ Entrega grátis para ${data.bairro}!`;
-                } else {
-                    freteInfo.className = 'frete-info frete-ok';
-                    freteInfoText.textContent = `🚗 Frete para ${data.bairro}: ${formatCurrency(frete)}`;
-                }
-            }
-        }
-    } catch {
-        if (status) status.textContent = '❌';
-        if (errorEl) { errorEl.textContent = 'Erro ao buscar CEP. Tente novamente.'; errorEl.style.display = 'block'; }
-        state.freteAtivo = null;
-    }
-
-    renderTotalBreakdown();
-}
+function onCepInput(e) {}
+async function buscarCepAuto() {}
 
 // =============================================
 // AÇÕES DO CARRINHO
@@ -613,22 +454,12 @@ document.getElementById("btnCupom").onclick = async () => {
     }
 };
 
-// CEP — debounced autocomplete
-document.getElementById("cep").oninput = onCepInput;
+// CEP (REMOVIDO)
+const cepInput = document.getElementById("cep");
+if (cepInput) cepInput.oninput = onCepInput;
 
-// Tipo de Entrega — radio buttons + click nos labels
-document.querySelectorAll('input[name="tipoEntrega"]').forEach(radio => {
-    radio.onchange = () => toggleTipoEntrega(radio.value);
-});
-document.querySelectorAll('.delivery-radio-card').forEach(card => {
-    card.addEventListener('click', () => {
-        const radio = card.querySelector('input[type="radio"]');
-        if (radio) {
-            radio.checked = true;
-            toggleTipoEntrega(radio.value);
-        }
-    });
-});
+// Tipo de Entrega (OCULTO)
+function toggleTipoEntrega(tipo) {}
 
 // Wizard — Navegação
 document.getElementById("btnProximaEtapa").onclick = () => {
@@ -662,29 +493,14 @@ document.getElementById("btnEnviar").onclick = async () => {
     if (!nomeCliente) return alert("Por favor, informe seu nome completo.");
     if (!telefoneCliente) return alert("Por favor, informe seu telefone/WhatsApp.");
 
-    const tipoEntrega = state.tipoEntrega;
-    let camposEndereco = null;
-    let freteValor = 0;
+    const mesa = document.getElementById("clienteMesa")?.value.trim() || '';
+    const posicao = document.getElementById("clientePosicao")?.value.trim() || '';
 
-    if (tipoEntrega === 'entrega') {
-        const cep = document.getElementById("cep").value;
-        const logradouro = document.getElementById("endereco").value;
-        const numero = document.getElementById("numero").value;
-        const complemento = document.getElementById("complemento").value || '';
-        const bairro = document.getElementById("bairro").value;
-        const cidade = document.getElementById("cidade").value;
-        const estado = document.getElementById("estado").value;
+    if (!mesa) return alert("Por favor, informe o número da MESA.");
+    if (!posicao) return alert("Por favor, informe a POSIÇÃO.");
 
-        if (!cep || !logradouro || !numero) {
-            return alert("Por favor, preencha o endereço completo (CEP, Logradouro e Número).");
-        }
-        if (state.freteAtivo === null) {
-            return alert("⚠️ O bairro informado está fora da área de entrega. Escolha 'Retirada' ou verifique o CEP.");
-        }
-
-        camposEndereco = { cep, logradouro, numero, complemento, bairro, cidade, estado };
-        freteValor = state.freteAtivo || 0;
-    }
+    const camposEndereco = { mesa, posicao };
+    const freteValor = 0;
 
     btn.disabled = true;
     btn.innerHTML = `<span>Aguarde um momento...</span>`;
@@ -724,9 +540,7 @@ document.getElementById("btnEnviar").onclick = async () => {
         (async () => {
             try {
                 const celularLimpo = telefoneCliente.replace(/\D/g, '');
-                const enderecoStr = camposEndereco
-                    ? `${camposEndereco.logradouro}, ${camposEndereco.numero}${camposEndereco.complemento ? ', ' + camposEndereco.complemento : ''} — ${camposEndereco.bairro}, ${camposEndereco.cidade}/${camposEndereco.estado}`
-                    : null;
+                const enderecoStr = `Mesa ${camposEndereco.mesa}, Posição ${camposEndereco.posicao}`;
 
                 const { data: existente } = await sb
                     .from('clientes')
@@ -735,19 +549,16 @@ document.getElementById("btnEnviar").onclick = async () => {
                     .maybeSingle();
 
                 if (existente) {
-                    // Cliente já existe: atualiza nome e endereço se informado
-                    const updates = { nome: nomeCliente };
-                    if (enderecoStr) {
-                        updates.cep = camposEndereco.cep;
-                        updates.endereco = enderecoStr;
-                    }
-                    await sb.from('clientes').update(updates).eq('id', existente.id);
+                    // Cliente já existe: atualiza nome e localização
+                    await sb.from('clientes').update({ 
+                        nome: nomeCliente,
+                        endereco: enderecoStr 
+                    }).eq('id', existente.id);
                 } else {
                     // Novo cliente: insere
                     await sb.from('clientes').insert({
                         nome: nomeCliente,
                         celular: celularLimpo,
-                        cep: camposEndereco?.cep || null,
                         endereco: enderecoStr
                     });
                 }
@@ -764,18 +575,17 @@ document.getElementById("btnEnviar").onclick = async () => {
         }
         const orderId = window.crypto && crypto.randomUUID ? crypto.randomUUID() : generateUUID();
 
-        // 2. Salvar Pedido no Supabase
         const orderPayload = {
             id: orderId,
             customer_name: nomeCliente,
             customer_phone: telefoneCliente,
-            customer_address: camposEndereco || { tipo: 'retirada' },
+            customer_address: camposEndereco,
             subtotal,
             discount: state.descontoAtivo * 100,
             total: totalFinal,
             status: 'pendente',
-            delivery_type: tipoEntrega,
-            shipping_fee: freteValor
+            delivery_type: state.tipoEntrega,
+            shipping_fee: 0
         };
 
         // Sem usar .select() ou .single() para não exigir permissão de RLS de SELECT na tabela orders
@@ -804,16 +614,7 @@ document.getElementById("btnEnviar").onclick = async () => {
         msg += `*👤 Cliente:* ${nomeCliente}%0A`;
         msg += `*📱 Telefone:* ${telefoneCliente}%0A%0A`;
 
-        if (tipoEntrega === 'retirada') {
-            msg += `*🏠 Tipo:* Retirada no Local%0A%0A`;
-        } else {
-            msg += `*🚗 Tipo:* Entrega%0A`;
-            msg += `*📍 Endereço:*%0A`;
-            msg += `${camposEndereco.logradouro}, ${camposEndereco.numero}%0A`;
-            if (camposEndereco.complemento) msg += `Comp: ${camposEndereco.complemento}%0A`;
-            msg += `${camposEndereco.bairro} — ${camposEndereco.cidade}/${camposEndereco.estado}%0A`;
-            msg += `CEP: ${camposEndereco.cep}%0A%0A`;
-        }
+        msg += `*📍 Localização:* Mesa ${mesa}, Posição ${posicao}%0A%0A`;
 
         msg += `*🛒 Itens:*%0A`;
         state.carrinho.forEach(p => {
@@ -822,8 +623,9 @@ document.getElementById("btnEnviar").onclick = async () => {
         });
         msg += `%0A`;
         msg += `*💵 Subtotal:* ${fmtW(subtotal)}%0A`;
-        if (desconto > 0) msg += `*🎟️ Desconto (${state.cupomAplicado}):* -${fmtW(desconto)}%0A`;
-        if (tipoEntrega === 'entrega') msg += `*🚚 Frete:* ${freteValor === 0 ? 'Grátis' : fmtW(freteValor)}%0A`;
+        if (state.descontoAtivo > 0) {
+            msg += `*🎟️ Desconto (${state.cupomAplicado}):* -${fmtW(desconto)}%0A`;
+        }
         msg += `*💰 TOTAL: ${fmtW(totalFinal)}*`;
 
         window.open(`https://wa.me/${CONFIG.telefone}?text=${msg}`);
