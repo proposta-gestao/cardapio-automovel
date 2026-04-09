@@ -86,6 +86,23 @@ function logout() {
     window.location.reload();
 }
 
+// --- Gestão de Abas (Mobile) ---
+function switchTab(tabName) {
+    // Atualiza botões
+    document.querySelectorAll('.tab-item').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+    });
+
+    // Atualiza colunas
+    document.querySelectorAll('.board-column').forEach(col => {
+        col.classList.remove('active');
+    });
+
+    if (tabName === 'pendente') document.getElementById('colPendente').classList.add('active');
+    if (tabName === 'pago') document.getElementById('colPago').classList.add('active');
+    if (tabName === 'cozinha') document.getElementById('colCozinha').classList.add('active');
+}
+
 // --- Dados ---
 async function loadOrders() {
     // Busca pedidos das últimas 12 horas que não estão 'finalizados' ou 'cancelados'
@@ -215,6 +232,11 @@ function renderBoard() {
     document.getElementById('countPendente').innerText = cPendente;
     document.getElementById('countPago').innerText = cPago;
     document.getElementById('countCozinha').innerText = cCozinha;
+
+    // Atualiza badges das abas mobile
+    document.getElementById('badgeTabPendente').innerText = cPendente;
+    document.getElementById('badgeTabPago').innerText = cPago;
+    document.getElementById('badgeTabCozinha').innerText = cCozinha;
 }
 
 function createOrderCard(order) {
