@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>Admin | Estela Panelas</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+        <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-card">
+            <h1>🍲 Estela Panelas</h1>
+            <p>Painel de Administração</p>
+            <div class="form-group">
+                <label for="loginEmail">E-mail</label>
+                <input type="email" id="loginEmail" placeholder="admin@estelapanelas.com">
+            </div>
+            <div class="form-group">
+                <label for="loginSenha">Senha</label>
+                <input type="password" id="loginSenha" placeholder="••••••••">
+            </div>
+            <button class="btn-login" id="btnLogin">Entrar</button>
+            <p class="login-error" id="loginError"></p>
+        </div>
+    </div>
+
+    <!-- Admin Layout -->
+    <div class="admin-layout" id="adminLayout">
+        <div class="admin-topbar">
+            <header class="admin-header">
+                <h1>🍲 Estela Panelas <span style="font-weight:400;color:var(--text-muted);font-size:0.85rem;">Admin</span></h1>
+                <div class="admin-header-actions">
+                    <a href="index.html" class="btn-link-cardapio" target="_blank">Ver Cardápio ↗</a>
+                    <button class="btn-logout" id="btnLogout">Sair</button>
+                </div>
+            </header>
+
+            <nav class="admin-tabs">
+                <button class="tab-btn active" data-tab="produtos">Produtos</button>
+                <button class="tab-btn" data-tab="dashboard">Vendas & Performance</button>
+                <button class="tab-btn" data-tab="cupons">Cupons</button>
+                <button class="tab-btn" data-tab="configuracoes">⚙️ Configurações</button>
+            </nav>
+        </div>
+
+        <div class="admin-content-wrapper">
+
+        <!-- Dashboard Tab -->
+        <div class="tab-content" id="tab-dashboard">
+            <div class="admin-toolbar">
+                <h2>Visão Geral de Vendas</h2>
+            </div>
+            
+            <div class="stats-row" id="dashboardStatsRow">
+                <div class="stat-card">
+                    <div class="stat-label">Faturamento Total</div>
+                    <div class="stat-value" id="dashTotalValue" style="color:var(--success)">R$ 0,00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Pedidos Realizados</div>
+                    <div class="stat-value" id="dashTotalOrders">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total de Itens</div>
+                    <div class="stat-value" id="dashTotalItems">0</div>
+                </div>
+            </div>
+
+            <!-- Filtros de Busca -->
+            <div class="dashboard-filters">
+                <div class="filters-header">
+                    <span class="filters-title">🔎 Filtrar Pedidos</span>
+                </div>
+                <div class="filters-body">
+                    <div class="filter-row">
+                        <div class="filter-group filter-group--date">
+                            <label for="filtroDataInicio">📅 Período</label>
+                            <div class="filter-date-range">
+                                <input type="date" id="filtroDataInicio" title="Data inicial">
+                                <span class="date-separator">até</span>
+                                <input type="date" id="filtroDataFim" title="Data final">
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <label for="filtroCliente">👤 Cliente</label>
+                            <input type="text" id="filtroCliente" placeholder="Buscar por nome...">
+                        </div>
+                        <div class="filter-group filter-group--range">
+                            <label>💰 Valor (R$)</label>
+                            <div class="filter-value-range">
+                                <input type="number" id="filtroValorMin" min="0" step="0.01" placeholder="Mín.">
+                                <span class="date-separator">—</span>
+                                <input type="number" id="filtroValorMax" min="0" step="0.01" placeholder="Máx.">
+                            </div>
+                        </div>
+                        <div class="filter-group filter-group--status">
+                            <label>🟡 Status</label>
+                            <select id="filtroStatus">
+                                <option value="">Todos os status</option>
+                                <option value="pendente">Pendente</option>
+                                <option value="concluido">Concluído</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filters-actions">
+                        <button class="btn-cancel" id="btnLimparFiltros">✕ Limpar filtros</button>
+                        <button class="btn-primary" id="btnAplicarFiltros">🔍 Aplicar Filtros</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-toolbar" style="margin-top: 1.5rem;">
+                <h2>Pedidos <span id="filtroContador" style="font-size:0.85rem;color:var(--text-muted);font-weight:400;"></span></h2>
+            </div>
+            <div class="admin-table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Cliente</th>
+                            <th>Status</th>
+                            <th>Itens</th>
+                            <th>Total</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pedidosBody">
+                        <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem;">Nenhum pedido encontrado.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Products & Categories Tab -->
+        <div class="tab-content active" id="tab-produtos">
+
+            <!-- Stats row -->
+            <div class="stats-row" id="statsRow" style="display: none;"></div>
+
+            <!-- Painel de Alerta de Baixo Estoque -->
+            <div class="stock-alert-panel" id="stockAlertPanel">
+                <h3>⚠️ Alerta de Baixo Estoque</h3>
+                <ul class="stock-alert-list" id="stockAlertList"></ul>
+            </div>
+
+            <!-- Sub-tabs centered -->
+            <div class="produtos-toolbar">
+                <div class="admin-subtabs">
+                    <button class="subtab-btn active" data-subtab="lista-produtos">Gerenciar Produtos</button>
+                    <button class="subtab-btn" data-subtab="lista-categorias">Gerenciar Categorias</button>
+                </div>
+            </div>
+
+            <!-- Subtab: Gerenciar Produtos -->
+            <div class="subtab-content active" id="subtab-lista-produtos">
+                <div class="admin-toolbar">
+                    <h2>Produtos</h2>
+                    <button class="btn-primary" id="btnNovoProduto">+ Novo Produto</button>
+                </div>
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Imagem</th>
+                                <th>Nome</th>
+                                <th>Categoria</th>
+                                <th>Preço</th>
+                                <th>Estoque</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="produtosBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Subtab: Gerenciar Categorias -->
+            <div class="subtab-content" id="subtab-lista-categorias">
+                <div class="admin-toolbar">
+                    <h2>Categorias</h2>
+                    <button class="btn-primary" id="btnNovaCategoria">+ Nova Categoria</button>
+                </div>
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Slug</th>
+                                <th>Ordem</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriasBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coupons Tab -->
+        <div class="tab-content" id="tab-cupons">
+            <div class="admin-toolbar">
+                <h2>Cupons de Desconto</h2>
+                <button class="btn-primary" id="btnNovoCupom">+ Novo Cupom</button>
+            </div>
+            <div class="admin-table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Desconto</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuponsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Configurações Tab -->
+        <div class="tab-content" id="tab-configuracoes">
+
+            <!-- Store Address -->
+            <div class="config-card">
+                <div class="config-card-header">
+                    <h2>📍 Endereço da Loja</h2>
+                    <button class="btn-primary" id="btnSalvarConfig">Salvar Configurações</button>
+                </div>
+                <div class="config-card-body">
+                    <div class="form-row">
+                        <div class="form-group" style="flex:2">
+                            <label for="confNomeLoja">Nome da Loja</label>
+                            <input type="text" id="confNomeLoja" placeholder="Ex: Estela Panelas">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1">
+                            <label for="confCep">CEP</label>
+                            <div style="display:flex;gap:8px;">
+                                <input type="text" id="confCep" placeholder="00000-000" maxlength="9">
+                                <button class="btn-sm btn-edit" id="btnBuscarCepConfig" style="white-space:nowrap;padding:0 14px;">Buscar</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:2">
+                            <label for="confLogradouro">Logradouro</label>
+                            <input type="text" id="confLogradouro" placeholder="Rua, Avenida...">
+                        </div>
+                        <div class="form-group" style="flex:0.6">
+                            <label for="confNumero">Número</label>
+                            <input type="text" id="confNumero" placeholder="123">
+                        </div>
+                        <div class="form-group" style="flex:1">
+                            <label for="confComplemento">Complemento</label>
+                            <input type="text" id="confComplemento" placeholder="Apto, sala...">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1.5">
+                            <label for="confBairro">Bairro</label>
+                            <input type="text" id="confBairro" placeholder="Bairro">
+                        </div>
+                        <div class="form-group" style="flex:2">
+                            <label for="confCidade">Cidade</label>
+                            <input type="text" id="confCidade" placeholder="Cidade">
+                        </div>
+                        <div class="form-group" style="flex:0.5">
+                            <label for="confEstado">UF</label>
+                            <input type="text" id="confEstado" placeholder="MG" maxlength="2">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="confReferencia">Ponto de Referência</label>
+                        <input type="text" id="confReferencia" placeholder="Ex: Próximo ao mercado X">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shipping Zones -->
+            <div class="config-card" style="margin-top:2rem;">
+                <div class="config-card-header">
+                    <h2>🚗 Tabela de Frete</h2>
+                    <button class="btn-primary" id="btnNovaZonaFrete">+ Nova Zona</button>
+                </div>
+                <div class="admin-table-wrapper" style="border-radius:0 0 var(--radius) var(--radius);">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Zona</th>
+                                <th>Bairros Cobertos</th>
+                                <th>Taxa</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="zonaFreteBody"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem;">Nenhuma zona cadastrada.</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        </div> <!-- Fechamento da admin-content-wrapper -->
+    </div> <!-- Fechamento da admin-layout -->
+
+    <!-- Product Modal -->
+    <div class="admin-modal-backdrop" id="modalProduto">
+        <div class="admin-modal">
+            <h3 id="modalProdutoTitle">Novo Produto</h3>
+            <input type="hidden" id="produtoId">
+            <div class="form-group">
+                <label for="prodNome">Nome</label>
+                <input type="text" id="prodNome" placeholder="Ex: Lasanha Especial">
+            </div>
+            <div class="form-group">
+                <label for="prodDesc">Descrição</label>
+                <textarea id="prodDesc" placeholder="Descrição detalhada do produto..."></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="prodPreco">Preço (R$)</label>
+                    <input type="number" id="prodPreco" step="0.01" min="0" placeholder="30.00">
+                </div>
+                <div class="form-group">
+                    <label for="prodEstoque">Estoque Atual</label>
+                    <input type="number" id="prodEstoque" min="0" placeholder="50">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="prodEstoqueMin">Estoque Mín. (Alerta)</label>
+                    <input type="number" id="prodEstoqueMin" min="0" placeholder="5" title="Abaixo disso, gera alerta vermelho no painel">
+                </div>
+                <div class="form-group">
+                    <label for="prodCategoria">Categoria</label>
+                    <select id="prodCategoria">
+                        <option value="">Selecione...</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="prodAtivo">Status</label>
+                <select id="prodAtivo">
+                    <option value="true">Ativo</option>
+                    <option value="false">Inativo</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Imagem do Produto</label>
+                <div class="image-gallery-container">
+                    <div class="gallery-toolbar">
+                        <input type="text" id="filtroGaleria" class="gallery-search" placeholder="🔍 Buscar imagem..." style="flex:1;">
+                        <label for="btnUploadNovaImagem" class="btn-sm btn-upload-gallery" style="margin-left: 10px; white-space: nowrap;">
+                            + Upload
+                        </label>
+                        <input type="file" id="btnUploadNovaImagem" accept="image/*" style="display:none;">
+                    </div>
+                    <div class="image-gallery-grid" id="imageGalleryGrid">
+                        <!-- Imagens populadas via JS -->
+                        <div style="padding:1rem;color:var(--text-muted);font-size:0.9rem;">Carregando imagens...</div>
+                    </div>
+                    <input type="hidden" id="prodImagemSelecionada">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="fecharModal('modalProduto')">Cancelar</button>
+                <button class="btn-save" id="btnSalvarProduto">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div class="admin-modal-backdrop" id="modalCategoria">
+        <div class="admin-modal">
+            <h3 id="modalCategoriaTitle">Nova Categoria</h3>
+            <input type="hidden" id="catId">
+            <div class="form-group">
+                <label for="catNome">Nome</label>
+                <input type="text" id="catNome" placeholder="Ex: Massas">
+            </div>
+            <div class="form-group">
+                <label for="catSlug">Slug</label>
+                <input type="text" id="catSlug" placeholder="Ex: massas">
+            </div>
+            <div class="form-group">
+                <label for="catOrdem">Ordem de Exibição</label>
+                <input type="number" id="catOrdem" min="0" placeholder="1">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="fecharModal('modalCategoria')">Cancelar</button>
+                <button class="btn-save" id="btnSalvarCategoria">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coupon Modal -->
+    <div class="admin-modal-backdrop" id="modalCupom">
+        <div class="admin-modal">
+            <h3 id="modalCupomTitle">Novo Cupom</h3>
+            <input type="hidden" id="cupomId">
+            <div class="form-group">
+                <label for="cupomCodigo">Código</label>
+                <input type="text" id="cupomCodigo" placeholder="Ex: ESTELA10" style="text-transform:uppercase;">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="cupomDesconto">Desconto (%)</label>
+                    <input type="number" id="cupomDesconto" min="1" max="100" step="1" placeholder="10">
+                </div>
+                <div class="form-group">
+                    <label for="cupomAtivo">Status</label>
+                    <select id="cupomAtivo">
+                        <option value="true">Ativo</option>
+                        <option value="false">Inativo</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="fecharModal('modalCupom')">Cancelar</button>
+                <button class="btn-save" id="btnSalvarCupom">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full Gallery Modal -->
+    <div class="admin-modal-backdrop" id="modalGaleriaCompleta">
+        <div class="admin-modal" style="max-width: 650px; display: flex; flex-direction: column; max-height: 90vh;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin-bottom: 0;">Galeria Completa</h3>
+                <button class="btn-cancel" style="padding: 6px 12px; flex: none;" onclick="fecharModal('modalGaleriaCompleta')">Fechar</button>
+            </div>
+            
+            <div class="gallery-toolbar" style="margin-bottom: 1rem; border-radius: 8px; padding: 0;">
+                <input type="text" id="filtroGaleriaCompleta" class="gallery-search" placeholder="🔍 Busque pelo nome do arquivo..." style="width: 100%; border: none;">
+            </div>
+            
+            <div class="image-gallery-grid" id="imageGalleryGridCompleta" style="max-height: none; overflow-y: auto; flex: 1; border: 1.5px solid var(--border-color); border-radius: 8px; padding: 1rem;">
+                <!-- Full list populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Shipping Zone Modal -->
+    <div class="admin-modal-backdrop" id="modalZonaFrete">
+        <div class="admin-modal">
+            <h3 id="modalZonaFreteTitle">Nova Zona de Frete</h3>
+            <input type="hidden" id="zonaFreteId">
+            <div class="form-group">
+                <label for="zonaFreteName">Nome da Zona</label>
+                <input type="text" id="zonaFreteName" placeholder="Ex: Centro, Zona Sul">
+            </div>
+            <div class="form-group">
+                <label for="zonaFreteNeighborhoods">Bairros Cobertos</label>
+                <textarea id="zonaFreteNeighborhoods" placeholder="Ex: Centro, Savassi, Lourdes
+Separe cada bairro por vírgula" style="height:100px;"></textarea>
+                <small style="color:var(--text-muted);font-size:0.78rem;">Separe os bairros por vírgula. Os nomes devem ser idênticos aos retornados pelo ViaCEP.</small>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="zonaFreteFee">Taxa de Entrega (R$)</label>
+                    <input type="number" id="zonaFreteFee" step="0.50" min="0" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label for="zonaFreteActive">Status</label>
+                    <select id="zonaFreteActive">
+                        <option value="true">Ativo</option>
+                        <option value="false">Inativo</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="fecharModal('modalZonaFrete')">Cancelar</button>
+                <button class="btn-save" id="btnSalvarZonaFrete">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+        <script src="admin.js"></script>
+</body>
+</html>
