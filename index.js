@@ -1,5 +1,5 @@
 /**
- * Estela Panelas - Cardápio Digital
+ * ♠️♦️ACP♥️♣️ - Cardápio Digital
  * Integrado com Supabase: produtos, categorias, cupons e configurações dinâmicas
  */
 
@@ -800,7 +800,7 @@ document.getElementById("btnEnviar").onclick = async () => {
 
         // 4. Montar mensagem WhatsApp
         const fmtW = (v) => formatCurrency(v);
-        let msg = `*📦 NOVO PEDIDO — Estela Panelas*%0A%0A`;
+        let msg = `*📦 NOVO PEDIDO — ♠️♦️ACP♥️♣️*%0A%0A`;
         msg += `*👤 Cliente:* ${nomeCliente}%0A`;
         msg += `*📱 Telefone:* ${telefoneCliente}%0A%0A`;
 

@@ -1,5 +1,5 @@
 /**
-         * Estela Panelas - Admin Panel
+         * ♠️♦️ACP♥️♣️ - Admin Panel
          */
         const SUPABASE_URL = 'https://bpwwdnmhryblhsnywyoz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwd3dkbm1ocnlibGhzbnl3eW96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NTM4NTksImV4cCI6MjA5MTMyOTg1OX0.AKJAzeYdbiiUyGxiWS4QeU5m3URel6kwsLnP6eGbXLg';
