@@ -263,20 +263,24 @@ function abrirModalDetalhes(orderId) {
     `;
 
     btnCozinha.onclick = async () => {
-        if (confirm("Deseja confirmar o pagamento e enviar para a cozinha?")) {
-            btnCozinha.disabled = true;
-            btnCozinha.innerText = "ENVIANDO...";
-            
-            // Fluxo: Marca como pago internamente e envia pra cozinha
-            // Na nossa lógica simplificada, vamos direto para 'cozinha'
-            await updateOrderStatus(orderId, 'cozinha');
-            fecharModalConfirmacao();
-            
-            setTimeout(() => {
-                btnCozinha.disabled = false;
-                btnCozinha.innerText = "CONFIRMAR PAGAMENTO E ENVIAR 🍳";
-            }, 500);
-        }
+        exibirConfirmacao(
+            "Confirmar Envio?", 
+            "Você confirma que o pagamento foi recebido e o pedido deve ir para a cozinha agora?",
+            async () => {
+                btnCozinha.disabled = true;
+                btnCozinha.innerText = "ENVIANDO...";
+                
+                // Fluxo: Marca como pago internamente e envia pra cozinha
+                await updateOrderStatus(orderId, 'cozinha');
+                fecharModalConfirmacao();
+                fecharAviso();
+                
+                setTimeout(() => {
+                    btnCozinha.disabled = false;
+                    btnCozinha.innerText = "CONFIRMAR PAGAMENTO E ENVIAR 🍳";
+                }, 500);
+            }
+        );
     };
 
     modal.style.display = 'flex';
@@ -284,6 +288,26 @@ function abrirModalDetalhes(orderId) {
 
 function fecharModalConfirmacao() {
     document.getElementById('modalConfirmacao').style.display = 'none';
+}
+
+// --- Funções do Popup de Aviso Customizado ---
+function exibirConfirmacao(titulo, texto, callback) {
+    const modal = document.getElementById('modalAviso');
+    document.getElementById('avisoTitle').innerText = titulo;
+    document.getElementById('avisoText').innerText = texto;
+    
+    const btnConfirm = document.getElementById('btnAvisoConfirm');
+    
+    // Usamos um clone para limpar event listeners anteriores
+    const newBtn = btnConfirm.cloneNode(true);
+    btnConfirm.parentNode.replaceChild(newBtn, btnConfirm);
+    
+    newBtn.onclick = callback;
+    modal.style.display = 'flex';
+}
+
+function fecharAviso() {
+    document.getElementById('modalAviso').style.display = 'none';
 }
 
 // --- Renderização ---
