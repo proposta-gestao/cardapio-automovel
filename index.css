@@ -78,9 +78,12 @@
         .logo-main {
             height: 100px;
             width: 100px;
-            object-fit: contain;
             border-radius: 50%;
             background-color: #0b0b0b;
+            background-image: url("logo_automovel.png");
+            background-size:135%; /* Mantendo o mesmo ajuste que você fez no banner */
+            background-position: center;
+            background-repeat: no-repeat;
         }
 
         .brand-text {
