@@ -59,7 +59,7 @@ function checkSession() {
     const saved = sessionStorage.getItem('acp_waiter');
     if (saved) {
         waiter = JSON.parse(saved);
-        showAudioOverlay();
+        startDashboard(); // Entra direto se já estiver logado
     }
 }
 
