@@ -324,3 +324,10 @@ document.getElementById('loginCpf').oninput = (e) => {
 
 // Iniciar
 checkSession();
+
+// Desbloqueia áudio no primeiro clique em qualquer lugar da página para facilitar
+document.body.addEventListener('click', () => {
+    if (document.getElementById('soundAlertBar').style.display === 'block') {
+        unlockAudio();
+    }
+}, { once: true });
