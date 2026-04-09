@@ -69,6 +69,7 @@ function showAudioOverlay() {
 }
 
 function startDashboard() {
+    document.getElementById('loginScreen').style.display = 'none'; // Esconde o login
     document.getElementById('audioOverlay').style.display = 'none';
     document.getElementById('dashboardScreen').style.display = 'block';
     document.getElementById('waiterName').innerText = waiter.nome;
