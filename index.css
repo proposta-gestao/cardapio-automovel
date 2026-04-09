@@ -44,9 +44,11 @@
         .banner-desktop {
             width: 100%;
             height: 220px;
-            background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url("logo_automovel.png");
-            background-size: cover;
+            background-color: #0b0b0b;
+            background-image: url("logo_automovel.png");
+            background-size: auto 280%; /* Prioriza a altura para não cortar o texto, ocupando quase todo o banner */
             background-position: center;
+            background-repeat: no-repeat;
             display: block;
         }
 
@@ -78,6 +80,7 @@
             width: 100px;
             object-fit: contain;
             border-radius: 50%;
+            background-color: #0b0b0b;
         }
 
         .brand-text {
