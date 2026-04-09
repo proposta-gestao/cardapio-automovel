@@ -51,12 +51,12 @@ async function login() {
     }
 
     waiter = data;
-    sessionStorage.setItem('acp_waiter', JSON.stringify(data));
+    localStorage.setItem('acp_waiter', JSON.stringify(data));
     showAudioOverlay();
 }
 
 function checkSession() {
-    const saved = sessionStorage.getItem('acp_waiter');
+    const saved = localStorage.getItem('acp_waiter');
     if (saved) {
         waiter = JSON.parse(saved);
         startDashboard(); // Entra direto se já estiver logado
@@ -82,7 +82,7 @@ function startDashboard() {
 }
 
 function logout() {
-    sessionStorage.removeItem('acp_waiter');
+    localStorage.removeItem('acp_waiter');
     window.location.reload();
 }
 
