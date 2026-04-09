@@ -519,7 +519,7 @@ document.getElementById("btnEnviar").onclick = async () => {
     const freteValor = 0;
 
     btn.disabled = true;
-    btn.innerHTML = `<span>Aguarde um momento...</span>`;
+    btn.innerHTML = `<span>Processando pedido...</span>`;
 
     try {
         // Validação de Estoque em Tempo Real
@@ -542,7 +542,7 @@ document.getElementById("btnEnviar").onclick = async () => {
 
         if (outOfStockItem) {
             btn.disabled = false;
-            btn.innerHTML = `<span>Enviar Pedido via WhatsApp</span><span class="wa-icon">📱</span>`;
+            btn.innerHTML = `<span>Enviar pedido para o atendente</span><span class="atendente-icon">🛎️</span>`;
             alert(`O produto ${outOfStockItem} é tão delicioso que esgotou (ou não tem a quantidade solicitada) =) \nVeja as outras opções que são tão gostosas quanto ele!`);
             toggleCart(false);
             carregarProdutos(); // Recarrega vitrine para atualizar estoque/esgotados
@@ -644,7 +644,7 @@ document.getElementById("btnEnviar").onclick = async () => {
         }
         msg += `*💰 TOTAL: ${fmtW(totalFinal)}*`;
 
-        window.open(`https://wa.me/${CONFIG.telefone}?text=${msg}`);
+        // window.open(`https://wa.me/${CONFIG.telefone}?text=${msg}`);
 
         // 6. Persistir Nome e Telefone para próxima vez
         localStorage.setItem('acp_nome', nomeCliente);
@@ -670,7 +670,7 @@ document.getElementById("btnEnviar").onclick = async () => {
         mostrarToast('Houve um problema ao registrar o pedido. Tente novamente!', 'error');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = `<span>Enviar Pedido via WhatsApp</span><span class="wa-icon">📱</span>`;
+        btn.innerHTML = `<span>Enviar pedido para o atendente</span><span class="atendente-icon">🛎️</span>`;
     }
 };
 
