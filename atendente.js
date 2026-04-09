@@ -253,9 +253,19 @@ function abrirModalConfirmacao(orderId) {
         </div>
     `;
 
-    btnCozinha.onclick = () => {
-        updateOrderStatus(orderId, 'cozinha');
+    btnCozinha.onclick = async () => {
+        // Desabilita o botão para evitar cliques duplos
+        btnCozinha.disabled = true;
+        btnCozinha.innerText = "ENVIANDO...";
+        
+        await updateOrderStatus(orderId, 'cozinha');
         fecharModalConfirmacao();
+        
+        // Pequeno delay para resetar o botão caso o modal seja reaberto depois
+        setTimeout(() => {
+            btnCozinha.disabled = false;
+            btnCozinha.innerText = "ENVIAR PARA COZINHA 🍳";
+        }, 500);
     };
 
     modal.style.display = 'flex';

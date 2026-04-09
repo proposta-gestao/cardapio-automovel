@@ -601,7 +601,8 @@
     <!-- Modal de Confirmação de Pagamento -->
     <div id="modalConfirmacao" class="modal-backdrop">
         <div class="modal-card">
-            <div class="modal-header">
+            <div class="modal-header" style="position: relative;">
+                <button onclick="fecharModalConfirmacao()" style="position: absolute; right: 15px; top: 15px; background: transparent; border: none; color: #555; font-size: 1.5rem; cursor: pointer;">&times;</button>
                 <h2>💰 Pagamento Confirmado!</h2>
                 <p id="modalOrderInfo" style="margin: 5px 0 0; font-size: 0.85rem; color: #888;"></p>
             </div>
@@ -611,9 +612,6 @@
             <div class="modal-footer">
                 <button class="btn-modal-kitchen" id="btnModalEnviarCozinha">
                     ENVIAR PARA COZINHA 🍳
-                </button>
-                <button class="btn-modal-close" onclick="fecharModalConfirmacao()">
-                    Apenas fechar (manter na lista de pagos)
                 </button>
             </div>
         </div>
