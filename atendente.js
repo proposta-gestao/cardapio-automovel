@@ -351,14 +351,16 @@ function createOrderCard(order) {
     }
 
     div.innerHTML = `
-        <div class="card-header" onclick="abrirModalDetalhes('${order.id}')" style="cursor:pointer">
+        <div class="card-header" onclick="abrirModalDetalhes('${order.id}')" style="cursor:pointer; align-items: flex-start;">
             <span class="order-id">#${order.id.slice(0, 8)}</span>
-            <span class="order-time">${timeStr}</span>
+            <div style="text-align: right;">
+                <span class="order-time">${timeStr}</span>
+                ${order.atendente_nome ? `<div style="font-size: 0.7rem; color: var(--status-pago); font-weight: 700; margin-top: 2px; text-transform: uppercase;">${order.atendente_nome}</div>` : ''}
+            </div>
         </div>
         <div style="cursor:pointer" onclick="abrirModalDetalhes('${order.id}')">
             <p class="customer-name">${order.customer_name}</p>
             <div class="order-location" style="margin-top:5px; margin-bottom:5px;">MESA ${localizacao.mesa || '??'} | POS ${localizacao.posicao || '??'}</div>
-            ${waiterInfoView}
             <div class="card-footer" style="margin-top:10px;">
                 <span style="color:#888; font-size: 0.8rem">Total</span>
                 <span class="order-total" style="font-size:1rem;">${formatCurrency(order.total)}</span>
