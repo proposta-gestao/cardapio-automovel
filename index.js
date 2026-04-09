@@ -62,9 +62,25 @@ const dom = {
 // CARREGAMENTO DO SUPABASE
 // =============================================
 
+// --- Inicialização de Dados Salvos ---
+function carregarDadosSalvos() {
+    const nome = localStorage.getItem('acp_nome');
+    const telefone = localStorage.getItem('acp_telefone');
+    
+    if (nome) {
+        const inputNome = document.getElementById('clienteNome');
+        if (inputNome) inputNome.value = nome;
+    }
+    if (telefone) {
+        const inputTelefone = document.getElementById('clienteTelefone');
+        if (inputTelefone) inputTelefone.value = telefone;
+    }
+}
+
 async function inicializar() {
     dom.menu.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:3rem;">Carregando cardápio...</p>';
     try {
+        carregarDadosSalvos();
         await Promise.all([
             carregarCategorias(),
             carregarProdutos(),
@@ -629,6 +645,16 @@ document.getElementById("btnEnviar").onclick = async () => {
         msg += `*💰 TOTAL: ${fmtW(totalFinal)}*`;
 
         window.open(`https://wa.me/${CONFIG.telefone}?text=${msg}`);
+
+        // 6. Persistir Nome e Telefone para próxima vez
+        localStorage.setItem('acp_nome', nomeCliente);
+        localStorage.setItem('acp_telefone', telefoneCliente);
+
+        // 7. Limpar Mesa e Posição
+        const mesaInput = document.getElementById("clienteMesa");
+        const posicaoInput = document.getElementById("clientePosicao");
+        if (mesaInput) mesaInput.value = '';
+        if (posicaoInput) posicaoInput.value = '';
 
         // Limpar carrinho e fechar
         state.carrinho = [];
