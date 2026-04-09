@@ -113,18 +113,31 @@ async function loadOrders() {
 function setupRealtime() {
     if (realtimeChannel) sb.removeChannel(realtimeChannel);
 
+    console.log("Iniciando conexão Realtime...");
+
     realtimeChannel = sb.channel('orders-realtime')
         .on('postgres_changes', { 
             event: 'INSERT', 
             schema: 'public', 
             table: 'orders' 
-        }, handleNewOrder)
+        }, payload => {
+            console.log("Evento INSERT recebido!", payload);
+            handleNewOrder(payload);
+        })
         .on('postgres_changes', { 
             event: 'UPDATE', 
             schema: 'public', 
             table: 'orders' 
-        }, handleUpdatedOrder)
-        .subscribe();
+        }, payload => {
+            console.log("Evento UPDATE recebido!", payload);
+            handleUpdatedOrder(payload);
+        })
+        .subscribe((status) => {
+            console.log("Status da conexão Realtime:", status);
+            if (status === 'SUBSCRIBED') {
+                console.log("Conectado com sucesso ao fluxo de pedidos!");
+            }
+        });
 }
 
 async function handleNewOrder(payload) {
