@@ -381,6 +381,28 @@
             }
         }
 
+        /* Sound Alert Bar */
+        #soundAlertBar {
+            display: none;
+            background: var(--status-pendente);
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
         /* Audio message */
         .audio-permission-overlay {
             position: fixed;
@@ -397,6 +419,11 @@
     </style>
 </head>
 <body>
+
+    <!-- Barra de Ativação de Som -->
+    <div id="soundAlertBar" onclick="unlockAudio()">
+        🔔 Alertas sonoros desativados. Clique aqui para ativar!
+    </div>
 
     <!-- Overlay de Permissão de Áudio -->
     <div id="audioOverlay" class="audio-permission-overlay">

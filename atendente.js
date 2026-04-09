@@ -78,8 +78,23 @@ function startDashboard() {
     loadOrders();
     setupRealtime();
     
-    // Tenta tocar o som (gesto do usuário foi o clique no botão)
-    bell.play().catch(() => console.log("Audio block prevented auto-test"));
+    // Tenta tocar o som para verificar se o navegador bloqueou
+    bell.play()
+        .then(() => {
+            console.log("Áudio liberado!");
+            document.getElementById('soundAlertBar').style.display = 'none';
+        })
+        .catch(() => {
+            console.log("Áudio bloqueado pelo navegador. Mostrando barra de ativação.");
+            document.getElementById('soundAlertBar').style.display = 'block';
+        });
+}
+
+function unlockAudio() {
+    bell.play().then(() => {
+        document.getElementById('soundAlertBar').style.display = 'none';
+        console.log("Sons ativados com sucesso!");
+    }).catch(e => console.error("Falha ao ativar som:", e));
 }
 
 function logout() {
