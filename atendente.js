@@ -276,7 +276,7 @@ function createOrderCard(order) {
         actionButton = `
             <div class="card-actions">
                 <button class="btn-action btn-pay" onclick="updateOrderStatus('${order.id}', 'pago')">Marcar como Pago 💰</button>
-                <button class="btn-action btn-cancel" onclick="updateOrderStatus('${order.id}', 'cancelado')">Limpar</button>
+                <button class="btn-action btn-cancel" onclick="updateOrderStatus('${order.id}', 'cancelado')">Cancelar</button>
             </div>
         `;
     } else if (order.status === 'pago') {
