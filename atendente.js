@@ -291,10 +291,11 @@ function fecharModalConfirmacao() {
 }
 
 // --- Funções do Popup de Aviso Customizado ---
-function exibirConfirmacao(titulo, texto, callback) {
+function exibirConfirmacao(titulo, texto, callback, icone = '💰') {
     const modal = document.getElementById('modalAviso');
     document.getElementById('avisoTitle').innerText = titulo;
     document.getElementById('avisoText').innerText = texto;
+    document.querySelector('.modal-aviso-icon').innerText = icone;
     
     const btnConfirm = document.getElementById('btnAvisoConfirm');
     
@@ -308,6 +309,18 @@ function exibirConfirmacao(titulo, texto, callback) {
 
 function fecharAviso() {
     document.getElementById('modalAviso').style.display = 'none';
+}
+
+function confirmarFinalizacao(orderId) {
+    exibirConfirmacao(
+        "Finalizar Pedido?",
+        "O pedido já está pronto para ser entregue? Isso removerá o card da tela da cozinha.",
+        async () => {
+            await updateOrderStatus(orderId, 'concluido');
+            fecharAviso();
+        },
+        "🏁"
+    );
 }
 
 // --- Renderização ---
@@ -369,7 +382,7 @@ function createOrderCard(order) {
     } else if (order.status === 'cozinha') {
         actionButton = `
             <div class="card-actions">
-                <button class="btn-action btn-done" onclick="updateOrderStatus('${order.id}', 'concluido')">Finalizar Pedido ✅</button>
+                <button class="btn-action btn-done" onclick="confirmarFinalizacao('${order.id}')">Finalizar Pedido ✅</button>
             </div>
         `;
     }
