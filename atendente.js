@@ -216,7 +216,53 @@ async function updateOrderStatus(orderId, newStatus) {
     if (error) {
         alert("Erro ao atualizar status: " + error.message);
         if (btn) btn.disabled = false;
+    } else {
+        // Se marcou como pago, abre o modal de confirmação para enviar p/ cozinha
+        if (newStatus === 'pago') {
+            abrirModalConfirmacao(orderId);
+        }
     }
+}
+
+// --- Funções do Modal de Confirmação ---
+function abrirModalConfirmacao(orderId) {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    const modal = document.getElementById('modalConfirmacao');
+    const info = document.getElementById('modalOrderInfo');
+    const itemsList = document.getElementById('modalOrderItems');
+    const btnCozinha = document.getElementById('btnModalEnviarCozinha');
+
+    info.innerText = `Pedido de ${order.customer_name} | Mesa ${order.customer_address.mesa || '??'}`;
+
+    let itemsHtml = (order.order_items || []).map(item => `
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.95rem;">
+            <span>${item.quantity}x ${item.product_name}</span>
+            <span style="color:var(--accent-waiter); font-weight:700;">${formatCurrency(item.unit_price * item.quantity)}</span>
+        </div>
+    `).join('');
+
+    itemsList.innerHTML = `
+        <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; margin-bottom:15px;">
+            ${itemsHtml}
+            <div style="border-top:1px solid #333; margin-top:10px; padding-top:10px; display:flex; justify-content:space-between; font-weight:700;">
+                <span>Total</span>
+                <span>${formatCurrency(order.total)}</span>
+            </div>
+        </div>
+    `;
+
+    btnCozinha.onclick = () => {
+        updateOrderStatus(orderId, 'cozinha');
+        fecharModalConfirmacao();
+    };
+
+    modal.style.display = 'flex';
+}
+
+function fecharModalConfirmacao() {
+    document.getElementById('modalConfirmacao').style.display = 'none';
 }
 
 // --- Renderização ---
