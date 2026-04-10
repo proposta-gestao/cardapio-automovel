@@ -11,7 +11,6 @@ let categorias = [];
 let cupons = [];
 let pedidos = [];
 let imagensGaleria = [];
-let zonasFrete = [];
 
 // --- Filtros de pedidos ---
 let filtrosPedidos = {
@@ -198,8 +197,7 @@ async function carregarTudo() {
         carregarCupons(),
         carregarAtendentes(),
         carregarDashboard(),
-        carregarConfiguracoes(),
-        carregarZonasFrete()
+        carregarConfiguracoes()
     ]);
     renderStats();
 }
@@ -1023,91 +1021,4 @@ document.getElementById('confCep').oninput = (e) => {
     let v = e.target.value.replace(/\D/g, '');
     if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5, 8);
     e.target.value = v;
-};
-
-// =================== ZONAS DE FRETE ===================
-
-async function carregarZonasFrete() {
-    const { data, error } = await sb.from('shipping_zones').select('*').order('created_at');
-    if (error) { showToast('Erro ao carregar zonas de frete', 'error'); return; }
-    zonasFrete = data || [];
-    renderZonasFrete();
-}
-
-function renderZonasFrete() {
-    const tbody = document.getElementById('zonaFreteBody');
-    if (zonasFrete.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem;">Nenhuma zona cadastrada.</td></tr>';
-        return;
-    }
-    tbody.innerHTML = zonasFrete.map(z => `
-                <tr>
-                    <td><strong>${z.name}</strong></td>
-                    <td style="max-width:220px;white-space:normal;font-size:0.82rem;color:var(--text-muted);">${z.neighborhoods}</td>
-                    <td><strong>${formatCurrency(z.delivery_fee)}</strong></td>
-                    <td><span class="badge ${z.active ? 'badge-active' : 'badge-inactive'}">${z.active ? 'Ativo' : 'Inativo'}</span></td>
-                    <td>
-                        <div class="actions-cell">
-                            <button class="btn-sm btn-edit" onclick="editarZonaFrete('${z.id}')">Editar</button>
-                            <button class="btn-sm btn-delete" onclick="excluirZonaFrete('${z.id}', '${z.name.replace(/'/g, "\\'")}')" >Excluir</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-}
-
-document.getElementById('btnNovaZonaFrete').onclick = () => {
-    document.getElementById('modalZonaFreteTitle').textContent = 'Nova Zona de Frete';
-    document.getElementById('zonaFreteId').value = '';
-    document.getElementById('zonaFreteName').value = '';
-    document.getElementById('zonaFreteNeighborhoods').value = '';
-    document.getElementById('zonaFreteFee').value = '';
-    document.getElementById('zonaFreteActive').value = 'true';
-    abrirModal('modalZonaFrete');
-};
-
-window.editarZonaFrete = (id) => {
-    const z = zonasFrete.find(x => x.id === id);
-    if (!z) return;
-    document.getElementById('modalZonaFreteTitle').textContent = 'Editar Zona de Frete';
-    document.getElementById('zonaFreteId').value = z.id;
-    document.getElementById('zonaFreteName').value = z.name;
-    document.getElementById('zonaFreteNeighborhoods').value = z.neighborhoods;
-    document.getElementById('zonaFreteFee').value = z.delivery_fee;
-    document.getElementById('zonaFreteActive').value = String(z.active);
-    abrirModal('modalZonaFrete');
-};
-
-document.getElementById('btnSalvarZonaFrete').onclick = async () => {
-    const id = document.getElementById('zonaFreteId').value;
-    const name = document.getElementById('zonaFreteName').value.trim();
-    const neighborhoods = document.getElementById('zonaFreteNeighborhoods').value.trim();
-    const fee = parseFloat(document.getElementById('zonaFreteFee').value);
-    const active = document.getElementById('zonaFreteActive').value === 'true';
-
-    if (!name || !neighborhoods || isNaN(fee) || fee < 0) {
-        showToast('Preencha todos os campos corretamente.', 'error');
-        return;
-    }
-
-    const payload = { name, neighborhoods, delivery_fee: fee, active };
-    let error;
-    if (id) {
-        ({ error } = await sb.from('shipping_zones').update(payload).eq('id', id));
-    } else {
-        ({ error } = await sb.from('shipping_zones').insert(payload));
-    }
-
-    if (error) { showToast('Erro ao salvar: ' + error.message, 'error'); return; }
-    showToast(id ? 'Zona atualizada!' : 'Zona criada!', 'success');
-    fecharModal('modalZonaFrete');
-    await carregarZonasFrete();
-};
-
-window.excluirZonaFrete = async (id, nome) => {
-    if (!await customConfirm('Excluir Zona de Frete', `Deseja realmente excluir a zona "${nome}"?`)) return;
-    const { error } = await sb.from('shipping_zones').delete().eq('id', id);
-    if (error) { showToast('Erro ao excluir: ' + error.message, 'error'); return; }
-    showToast('Zona excluída!', 'success');
-    await carregarZonasFrete();
 };

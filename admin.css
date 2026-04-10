@@ -1085,7 +1085,7 @@ body {
     border: 1px solid var(--border-color);
 }
 
-}
+
 
 .gallery-item.selected {
     border-color: var(--primary);
