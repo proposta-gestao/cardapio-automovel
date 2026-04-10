@@ -1179,18 +1179,57 @@ body {
 }
 
 @media (max-width: 480px) {
-    .stats-row {
-        grid-template-columns: 1fr;
+    /* Hide specific dashboard cards */
+    .stats-row .stat-card:nth-child(2),
+    .stats-row .stat-card:nth-child(3) {
+        display: none !important;
     }
 
-    .form-row {
-        flex-direction: column;
-        gap: 0;
+    /* Center the remaining revenue card */
+    .stats-row {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .stats-row .stat-card {
+        width: 100%;
+        max-width: 320px;
+        text-align: center;
     }
 
     .filter-row {
         grid-template-columns: 1fr;
         gap: 12px;
+    }
+
+    /* Stack date and value ranges vertically */
+    .filter-date-range,
+    .filter-value-range {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    /* Hide text separator in vertical layout */
+    .date-separator {
+        display: none;
+    }
+
+    /* Ensure inputs take full width when stacked */
+    .filter-date-range input,
+    .filter-value-range input {
+        width: 100%;
+    }
+
+    /* Force all filters to span 1 column (resetting desktop spans) */
+    .filter-row > div {
+        grid-column: span 1 !important;
+    }
+
+    /* Hide Status Filter on Mobile */
+    .filter-group--status {
+        display: none !important;
     }
 
     .dashboard-filters {
@@ -1207,10 +1246,35 @@ body {
         width: 100%;
     }
 
+    /* Table Mobile Refinement: Show ONLY Client and Total */
+    .admin-table th:nth-child(1), .admin-table td:nth-child(1), /* Data */
+    .admin-table th:nth-child(3), .admin-table td:nth-child(3), /* Atendente */
+    .admin-table th:nth-child(4), .admin-table td:nth-child(4), /* Status */
+    .admin-table th:nth-child(5), .admin-table td:nth-child(5), /* Itens */
+    .admin-table th:nth-child(7), .admin-table td:nth-child(7) { /* Ações */
+        display: none !important;
+    }
+
+    .admin-table th:nth-child(2), .admin-table td:nth-child(2) { /* Cliente */
+        width: 70%;
+        display: table-cell !important;
+    }
+
+    .admin-table th:nth-child(6), .admin-table td:nth-child(6) { /* Total */
+        width: 30%;
+        text-align: right;
+        display: table-cell !important;
+    }
+
+    .admin-table {
+        min-width: auto !important;
+        table-layout: fixed;
+    }
+
     .admin-table th,
     .admin-table td {
-        padding: 10px 8px;
-        font-size: 0.8rem;
+        padding: 12px 8px;
+        font-size: 0.85rem;
     }
 
     .admin-toolbar {
