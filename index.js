@@ -454,7 +454,8 @@ dom.busca.onkeyup = (e) => {
     renderMenu();
 };
 
-// Cupom
+// Cupom (DESATIVADO TEMPORARIAMENTE)
+/*
 document.getElementById("btnCupom").onclick = async () => {
     const codigo = document.getElementById("cupom").value.trim().toUpperCase();
     if (!codigo) return;
@@ -469,6 +470,7 @@ document.getElementById("btnCupom").onclick = async () => {
         mostrarToast('❌ Cupom inválido ou expirado. Tente outro!', 'error');
     }
 };
+*/
 
 // CEP (REMOVIDO)
 const cepInput = document.getElementById("cep");

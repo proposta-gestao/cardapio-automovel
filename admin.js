@@ -41,6 +41,36 @@
             setTimeout(() => { $toast.className = 'toast'; }, 3000);
         }
 
+        function customConfirm(title, message) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('modalConfirmacao');
+                const btnOk = document.getElementById('btnConfirmarOk');
+                const btnCancel = document.getElementById('btnConfirmarCancelar');
+                
+                document.getElementById('confirmTitle').textContent = title;
+                document.getElementById('confirmMessage').textContent = message;
+
+                modal.classList.add('active');
+
+                const handleOk = () => {
+                    modal.classList.remove('active');
+                    btnOk.removeEventListener('click', handleOk);
+                    btnCancel.removeEventListener('click', handleCancel);
+                    resolve(true);
+                };
+
+                const handleCancel = () => {
+                    modal.classList.remove('active');
+                    btnOk.removeEventListener('click', handleOk);
+                    btnCancel.removeEventListener('click', handleCancel);
+                    resolve(false);
+                };
+
+                btnOk.addEventListener('click', handleOk);
+                btnCancel.addEventListener('click', handleCancel);
+            });
+        }
+
         function fecharModal(id) {
             document.getElementById(id).classList.remove('active');
         }
@@ -273,8 +303,22 @@
                 return;
             }
             produtos = data || [];
+
+            // Inativar automaticamente itens com estoque 0
+            const itensParaInativar = produtos.filter(p => p.active && p.stock <= 0 && !p.archived);
+            if (itensParaInativar.length > 0) {
+                const ids = itensParaInativar.map(p => p.id);
+                const { error: updErr } = await sb.from('products').update({ active: false }).in('id', ids);
+                if (!updErr) {
+                    // Update local state and re-render
+                    produtos.forEach(p => { if (ids.includes(p.id)) p.active = false; });
+                    showToast(`${itensParaInativar.length} item(ns) esgotados foram inativados.`, 'success');
+                }
+            }
+
             atualizarAlertaEstoque();
             renderProdutos();
+            renderStats(); // Update stats summary
         }
 
         async function carregarCategorias() {
@@ -309,7 +353,8 @@
         function atualizarAlertaEstoque() {
             const panel = document.getElementById('stockAlertPanel');
             const list = document.getElementById('stockAlertList');
-            const baixoEstoque = produtos.filter(p => !p.archived && p.stock <= (p.min_stock_alert || 0));
+            // Filtra: não arquivado AND estoque <= alerta AND estoque > 0 (zerados somem daqui pois já ficam inativos)
+            const baixoEstoque = produtos.filter(p => !p.archived && p.stock <= (p.min_stock_alert || 0) && p.stock > 0);
 
             if (baixoEstoque.length === 0) {
                 panel.style.display = 'none';
@@ -343,15 +388,15 @@
                 const isEsgotado = p.stock <= 0;
                 let stockColor = isEsgotado ? '#FF4757' : (p.stock <= (p.min_stock_alert || 0) ? '#FAAD14' : 'inherit');
                 
-                let rowStyle = '';
+                let rowClass = '';
                 if (p.archived) {
-                    rowStyle = 'opacity: 0.45; background-color: #ededed; filter: grayscale(15%);';
+                    rowClass = 'row-archived';
                 } else if (!p.active) {
-                    rowStyle = 'opacity: 0.6; background-color: #f9f9f9;';
+                    rowClass = 'row-inactive';
                 }
 
                 const toggleHTML = p.archived 
-                    ? `<span class="badge" style="background:#ddd; color:#666;">Arquivado</span>`
+                    ? `<span class="badge" style="background:rgba(255,255,255,0.1); color:#aaa;">Arquivado</span>`
                     : `
                         <label class="switch">
                             <input type="checkbox" ${p.active ? 'checked' : ''} onchange="toggleProdutoAtivo('${p.id}', this.checked)">
@@ -360,11 +405,11 @@
                     `;
 
                 const actionButton = p.archived
-                    ? `<button class="btn-sm btn-edit" style="background:#ddd;color:#333;" onclick="desarquivarProduto('${p.id}')">Desarquivar</button>`
+                    ? `<button class="btn-sm btn-unarchive" onclick="desarquivarProduto('${p.id}')">Desarquivar</button>`
                     : `<button class="btn-sm btn-archive" onclick="arquivarProduto('${p.id}')">Arquivar</button>`;
 
                 return `
-                <tr style="${rowStyle}">
+                <tr class="${rowClass}">
                     <td><img src="${p.image_url || 'Logo.png'}" alt="Img" style="width:40px;height:40px;object-fit:cover;border-radius:6px;"></td>
                     <td><strong>${p.name}</strong></td>
                     <td>${p.categories?.name || '-'}</td>
@@ -483,7 +528,7 @@
             
             if (!isCompleto && files.length > 9) {
                 html += `
-                    <div class="gallery-item" style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:#F1F2F6;color:var(--primary);font-size:0.8rem;text-align:center;font-weight:700;" onclick="abrirGaleriaCompleta()">
+                    <div class="gallery-item" style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(229, 178, 93, 0.1);color:var(--primary);font-size:0.8rem;text-align:center;font-weight:800;border:1px dashed var(--primary);" onclick="abrirGaleriaCompleta()">
                         <span style="font-size:1.2rem;">+${files.length - 9}</span>
                         Ver Todas
                     </div>
@@ -550,11 +595,11 @@
             
             if (uploadError) {
                 if (uploadError.statusCode === '409' || uploadError.message?.includes('Duplicate')) {
-                    const wantToReplace = confirm(`Já existe uma imagem chamada "${targetName}".\nDeseja SUBSTITUIR a imagem existente no banco de dados?`);
+                    const wantToReplace = await customConfirm('Substituir Imagem?', `Já existe uma imagem chamada "${targetName}".\nDeseja SUBSTITUIR a imagem existente?`);
                     if (wantToReplace) {
                         return await handleImageUpload(file, true, targetName);
                     } else {
-                        const wantToRename = confirm("Deseja então SALVAR COMO UMA CÓPIA?");
+                        const wantToRename = await customConfirm('Salvar Cópia?', "Deseja então SALVAR COMO UMA CÓPIA?");
                         if (wantToRename) {
                             const lastDot = originalName.lastIndexOf('.');
                             let namePart = originalName;
@@ -673,7 +718,7 @@
         };
 
         window.arquivarProduto = async (id) => {
-            if (!confirm('Deseja arquivar este produto? Ele não aparecerá mais no cardápio nem no sistema.')) return;
+            if (!await customConfirm('Arquivar Produto', 'Deseja arquivar este produto? Ele não aparecerá mais no cardápio nem no sistema.')) return;
             const { error } = await sb.from('products').update({ archived: true }).eq('id', id);
             if (error) {
                 showToast('Erro ao arquivar: ' + error.message, 'error');
@@ -685,7 +730,7 @@
         };
 
         window.desarquivarProduto = async (id) => {
-            if (!confirm('Deseja desarquivar este produto? Ele retornará como inativo para que você possa revisá-lo antes de ativar.')) return;
+            if (!await customConfirm('Desarquivar Produto', 'Deseja desarquivar este produto? Ele retornará como inativo para que você possa revisá-lo antes de ativar.')) return;
             // Desarquiva e assegura que continue inativo inicialmente
             const { error } = await sb.from('products').update({ archived: false, active: false }).eq('id', id);
             if (error) {
@@ -762,7 +807,7 @@
         };
 
         window.excluirCategoria = async (id, nome) => {
-            if (!confirm(`Excluir categoria "${nome}"? Os produtos desta categoria ficarão sem categoria.`)) return;
+            if (!await customConfirm('Excluir Categoria', `Excluir categoria "${nome}"? Os produtos desta categoria ficarão sem categoria.`)) return;
             const { error } = await sb.from('categories').delete().eq('id', id);
             if (error) { showToast('Erro ao excluir: ' + error.message, 'error'); return; }
             showToast('Categoria excluída!', 'success');
@@ -823,7 +868,7 @@
         };
 
         window.excluirCupom = async (id, code) => {
-            if (!confirm(`Excluir cupom "${code}"?`)) return;
+            if (!await customConfirm('Excluir Cupom', `Excluir cupom "${code}"?`)) return;
             const { error } = await sb.from('coupons').delete().eq('id', id);
             if (error) { showToast('Erro ao excluir: ' + error.message, 'error'); return; }
             showToast('Cupom excluído!', 'success');
@@ -861,7 +906,7 @@
 
         // --- Finalizar Pedido ---
         window.finalizarPedido = async (id) => {
-            if (!confirm('Deseja marcar este pedido como Concluído?')) return;
+            if (!await customConfirm('Concluir Pedido', 'Deseja marcar este pedido como Concluído?')) return;
             const { error } = await sb.from('orders').update({ status: 'concluido' }).eq('id', id);
             if (error) {
                 showToast('Erro ao finalizar pedido: ' + error.message, 'error');
@@ -1027,8 +1072,8 @@
             await carregarZonasFrete();
         };
 
-        window.excluirZonaFrete = async (id, name) => {
-            if (!confirm(`Excluir zona "${name}"?`)) return;
+        window.excluirZonaFrete = async (id, nome) => {
+            if (!await customConfirm('Excluir Zona de Frete', `Deseja realmente excluir a zona "${nome}"?`)) return;
             const { error } = await sb.from('shipping_zones').delete().eq('id', id);
             if (error) { showToast('Erro ao excluir: ' + error.message, 'error'); return; }
             showToast('Zona excluída!', 'success');

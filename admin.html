@@ -7,7 +7,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
         <link rel="stylesheet" href="admin.css">
 </head>
@@ -38,17 +38,18 @@
     <div class="admin-layout" id="adminLayout">
         <div class="admin-topbar">
             <header class="admin-header">
-                <h1>♠️♦️ACP♥️♣️ <span style="font-weight:400;color:var(--text-muted);font-size:0.85rem;">Admin</span></h1>
+                <h1>♠️♦️ACP♥️♣️ <span class="admin-header-label">Admin</span></h1>
                 <div class="admin-header-actions">
                     <a href="index.html" class="btn-link-cardapio" target="_blank">Ver Cardápio ↗</a>
-                    <button class="btn-logout" id="btnLogout">Sair</button>
+                    <button class="btn-logout" id="btnLogout">Sair 👋</button>
                 </div>
             </header>
 
+
             <nav class="admin-tabs">
-                <button class="tab-btn active" data-tab="produtos">Produtos</button>
-                <button class="tab-btn" data-tab="dashboard">Vendas & Performance</button>
-                <button class="tab-btn" data-tab="cupons">Cupons</button>
+                <button class="tab-btn active" data-tab="produtos">📦 Produtos</button>
+                <button class="tab-btn" data-tab="dashboard">📊 Vendas & Performance</button>
+                <button class="tab-btn" data-tab="cupons">🎫 Cupons</button>
                 <button class="tab-btn" data-tab="configuracoes">⚙️ Configurações</button>
             </nav>
         </div>
@@ -486,9 +487,21 @@ Separe cada bairro por vírgula" style="height:100px;"></textarea>
         </div>
     </div>
 
+    <!-- Custom Confirm Modal -->
+    <div class="admin-modal-backdrop" id="modalConfirmacao">
+        <div class="admin-modal modal-confirm">
+            <div class="confirm-icon">⚠️</div>
+            <h3 id="confirmTitle">Confirmar Ação</h3>
+            <p id="confirmMessage">Deseja realmente prosseguir?</p>
+            <div class="modal-actions">
+                <button class="btn-cancel" id="btnConfirmarCancelar">Cancelar</button>
+                <button class="btn-save btn-confirm-action" id="btnConfirmarOk">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-
-        <script src="admin.js"></script>
+    <script src="admin.js"></script>
 </body>
 </html>
