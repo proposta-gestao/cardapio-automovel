@@ -439,7 +439,9 @@ function renderProdutos() {
         return `
                 <tr class="${rowClass}">
                     <td><img src="${p.image_url || 'Logo.png'}" alt="Img" style="width:40px;height:40px;object-fit:cover;border-radius:6px;"></td>
-                    <td><strong>${p.name}</strong></td>
+                    <td onclick="editarProduto('${p.id}')" style="cursor:pointer;" title="Clique para editar">
+                        <strong class="clickable-row-name">${p.name}</strong>
+                    </td>
                     <td>${p.categories?.name || '-'}</td>
                     <td>${formatCurrency(p.price)}</td>
                     <td style="color:${stockColor}; font-weight: ${stockColor !== 'inherit' ? '700' : 'normal'}">${p.stock}</td>
