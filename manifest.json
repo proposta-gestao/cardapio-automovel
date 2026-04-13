@@ -1,0 +1,17 @@
+{
+  "name": "ACP Cardápio Digital",
+  "short_name": "ACP Cardápio",
+  "description": "Painel de Atendimento e Pedidos do Automóvel Club Poker",
+  "start_url": "/atendente.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#FFC107",
+  "icons": [
+    {
+      "src": "logo_automovel.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

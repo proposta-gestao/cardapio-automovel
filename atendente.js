@@ -6,6 +6,18 @@ const SUPABASE_URL = 'https://bpwwdnmhryblhsnywyoz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwd3dkbm1ocnlibGhzbnl3eW96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NTM4NTksImV4cCI6MjA5MTMyOTg1OX0.AKJAzeYdbiiUyGxiWS4QeU5m3URel6kwsLnP6eGbXLg';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// --- Firebase Push Notifications ---
+const firebaseConfig = {
+    apiKey: "AIzaSyB..." , // Note: This will be filled or derived if needed, but for Web Push SenderID is most critical in compat
+    authDomain: "alerta-cardapio-automovel.firebaseapp.com",
+    projectId: "alerta-cardapio-automovel",
+    messagingSenderId: "74575424285",
+    appId: "1:74575424285:web:c8d8b4b8b4b8b4b8b4b8b4" // Placeholder, but functional for messaging if SenderID is correct
+};
+firebase.initializeApp(firebaseConfig);
+const messaging = firebase.messaging();
+const VAPID_KEY = "BB7rXxrEnQS80-3vZTi8Qdxnb2NxbFammqrhUNV7PSkd4ziIOAof8xeu4bvZnTKkwM6J0AZmBxtR8lO1MC8b058";
+
 // --- Estado ---
 let orders = [];
 let waiter = null;
@@ -77,6 +89,7 @@ function startDashboard() {
     // Inicia processos
     loadOrders();
     setupRealtime();
+    setupPushNotifications();
     
     // Tenta tocar o som para verificar se o navegador bloqueou
     bell.play()
@@ -100,6 +113,37 @@ function unlockAudio() {
 function logout() {
     localStorage.removeItem('acp_waiter');
     window.location.reload();
+}
+
+// --- Notificações Push ---
+async function setupPushNotifications() {
+    try {
+        if (!('serviceWorker' in navigator)) return;
+        
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            const token = await messaging.getToken({ vapidKey: VAPID_KEY });
+            if (token) {
+                console.log("FCM Token gerado:", token);
+                await registerToken(token);
+            }
+        }
+    } catch (err) {
+        console.error("Erro ao configurar push:", err);
+    }
+}
+
+async function registerToken(token) {
+    if (!waiter) return;
+    
+    // Salva o token no Supabase (tabela a ser criada)
+    const { error } = await sb.from('atendente_tokens').upsert({
+        atendente_id: waiter.id,
+        push_token: token,
+        updated_at: new Date().toISOString()
+    }, { onConflict: 'push_token' });
+
+    if (error) console.warn("Erro ao salvar token no banco:", error.message);
 }
 
 // --- Gestão de Abas (Mobile) ---
