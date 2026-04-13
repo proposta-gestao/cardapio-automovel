@@ -2,8 +2,15 @@
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
 
+// Deve ser idêntico ao config do atendente.js para evitar erros de avaliação
 firebase.initializeApp({
-  messagingSenderId: "74575424285"
+  apiKey: "AIzaSyAftUTevxn9QT7TwUAyWRVRvXCBR5-6QKU",
+  authDomain: "alerta-cardapio-automovel.firebaseapp.com",
+  projectId: "alerta-cardapio-automovel",
+  storageBucket: "alerta-cardapio-automovel.firebasestorage.app",
+  messagingSenderId: "74575424285",
+  appId: "1:74575424285:web:c16d1c8433480761cf4ff4",
+  measurementId: "G-4YTG9TPF1D"
 });
 
 const messaging = firebase.messaging();
@@ -12,9 +19,9 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Notificação recebida em background: ', payload);
   
-  const notificationTitle = payload.notification.title;
+  const notificationTitle = payload.notification?.title || "Novo Pedido!";
   const notificationOptions = {
-    body: payload.notification.body,
+    body: payload.notification?.body || "Você tem um novo pedido no painel.",
     icon: '/logo_automovel.png',
     vibrate: [200, 100, 200],
     data: {

@@ -8,11 +8,13 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // --- Firebase Push Notifications ---
 const firebaseConfig = {
-    apiKey: "AIzaSyB..." , // Note: This will be filled or derived if needed, but for Web Push SenderID is most critical in compat
+    apiKey: "AIzaSyAftUTevxn9QT7TwUAyWRVRvXCBR5-6QKU",
     authDomain: "alerta-cardapio-automovel.firebaseapp.com",
     projectId: "alerta-cardapio-automovel",
+    storageBucket: "alerta-cardapio-automovel.firebasestorage.app",
     messagingSenderId: "74575424285",
-    appId: "1:74575424285:web:c8d8b4b8b4b8b4b8b4b8b4" // Placeholder, but functional for messaging if SenderID is correct
+    appId: "1:74575424285:web:c16d1c8433480761cf4ff4",
+    measurementId: "G-4YTG9TPF1D"
 };
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
@@ -118,32 +120,60 @@ function logout() {
 // --- Notificações Push ---
 async function setupPushNotifications() {
     try {
-        if (!('serviceWorker' in navigator)) return;
+        if (!('serviceWorker' in navigator)) {
+            console.warn("Service Worker não suportado neste navegador.");
+            return;
+        }
         
+        console.log("Solicitando permissão para notificações...");
         const permission = await Notification.requestPermission();
+        
         if (permission === 'granted') {
-            const token = await messaging.getToken({ vapidKey: VAPID_KEY });
+            console.log("Permissão concedida! Obtendo token FCM...");
+            
+            // Garantir que o service worker está registrado antes de pedir o token
+            const registration = await navigator.serviceWorker.register('firebase-messaging-sw.js');
+            console.log("Service Worker registrado para Push:", registration.scope);
+
+            const token = await messaging.getToken({ 
+                vapidKey: VAPID_KEY,
+                serviceWorkerRegistration: registration 
+            });
+
             if (token) {
-                console.log("FCM Token gerado:", token);
+                console.log("FCM Token gerado com sucesso.");
                 await registerToken(token);
+            } else {
+                console.warn("Nenhum token FCM recebido.");
             }
+        } else {
+            console.warn("Permissão de notificação negada pelo usuário.");
         }
     } catch (err) {
-        console.error("Erro ao configurar push:", err);
+        console.error("Erro crítico ao configurar push notifications:", err);
     }
 }
 
 async function registerToken(token) {
-    if (!waiter) return;
+    if (!waiter || !waiter.id) {
+        console.error("Impossível registrar token: Atendente não está logado ou ID é inválido.");
+        return;
+    }
     
-    // Salva o token no Supabase (tabela a ser criada)
+    console.log(`Registrando token no Supabase para o atendente: ${waiter.nome} (${waiter.id})`);
+    
+    // Salva o token no Supabase usando upsert (evita duplicidade pelo push_token)
     const { error } = await sb.from('atendente_tokens').upsert({
         atendente_id: waiter.id,
         push_token: token,
         updated_at: new Date().toISOString()
     }, { onConflict: 'push_token' });
 
-    if (error) console.warn("Erro ao salvar token no banco:", error.message);
+    if (error) {
+        console.error("❌ Erro ao salvar token no banco de dados:", error.message);
+    } else {
+        console.log("✅ Token registrado no Supabase com sucesso!");
+    }
 }
 
 // --- Gestão de Abas (Mobile) ---
