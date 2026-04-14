@@ -164,6 +164,15 @@ async function startDashboard() {
     loadOrders();
     setupRealtime();
 
+    // Garante sincronização do Token com o Supabase IMEDIATAMENTE após login/dashboard
+    window.OneSignalDeferred.push(async function(OneSignal) {
+        let currentPushId = OneSignal.User.PushSubscription.id;
+        if (currentPushId && waiter && waiter.id) {
+            console.log('[OneSignal] Celular do atendente sincronizado:', currentPushId);
+            await sb.from('atendentes').update({ onesignal_id: currentPushId }).eq('id', waiter.id);
+        }
+    });
+
     // Inicializa o AudioContext (fica suspended)
     await initAudio();
 
