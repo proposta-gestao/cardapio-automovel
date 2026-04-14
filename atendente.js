@@ -10,7 +10,74 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let orders = [];
 let waiter = null;
 let realtimeChannel = null;
-const bell = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+
+// ─── Sistema de Áudio via AudioContext ────────────────────────────────────
+// O AudioContext é a API correta para PWA/Android pois:
+//   1. Pode ser criado sem gesto do usuário (fica 'suspended')
+//   2. Um único .resume() após gesto desbloqueia para a sessão inteira
+//   3. A barra de aviso reflite o estado REAL via 'statechange'
+let audioCtx = null;
+let bellBuffer = null;
+
+async function initAudio() {
+    if (audioCtx) return;
+    try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Atualiza a barra sempre que o estado muda (suspended -> running -> suspended)
+        audioCtx.addEventListener('statechange', updateAudioBar);
+
+        // Pré-carrega o áudio como ArrayBuffer (mais confiável no Android)
+        const res = await fetch('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        const arrayBuf = await res.arrayBuffer();
+        bellBuffer = await audioCtx.decodeAudioData(arrayBuf);
+        console.log('[Audio] Buffer carregado com sucesso.');
+    } catch (e) {
+        console.warn('[Audio] Erro ao inicializar AudioContext:', e);
+    }
+    updateAudioBar();
+}
+
+// Atualiza a barra refletindo o ESTADO REAL do AudioContext
+function updateAudioBar() {
+    const bar = document.getElementById('soundAlertBar');
+    if (!bar) return;
+    const isReady = audioCtx && audioCtx.state === 'running';
+    bar.style.display = isReady ? 'none' : 'block';
+    console.log('[Audio] Estado atual:', audioCtx ? audioCtx.state : 'não iniciado', '| Barra:', isReady ? 'escondida' : 'visível');
+}
+
+// Toca a campainha (só funciona quando 'running')
+function playBell() {
+    if (!audioCtx || !bellBuffer || audioCtx.state !== 'running') {
+        console.warn('[Audio] AudioContext não está pronto. Estado:', audioCtx?.state);
+        return;
+    }
+    const source = audioCtx.createBufferSource();
+    source.buffer = bellBuffer;
+    source.connect(audioCtx.destination);
+    source.start(0);
+    console.log('[Audio] 🔔 Campainha tocada!');
+}
+
+// Desbloqueia o AudioContext (só funciona após gesto do usuário)
+async function resumeAudio() {
+    if (!audioCtx) await initAudio();
+    if (audioCtx.state === 'suspended') {
+        await audioCtx.resume();
+        console.log('[Audio] AudioContext resumido. Estado:', audioCtx.state);
+    }
+    localStorage.setItem('acp_audio_authorized', 'true');
+    updateAudioBar();
+}
+
+// ─── Detecção de modo PWA (Standalone) ───────────────────────────────────
+const isPWA = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true;
+if (isPWA) {
+    console.log('[PWA] Rodando como aplicativo instalado (standalone).');
+    document.documentElement.classList.add('pwa-mode');
+}
 
 // --- Utils ---
 function formatCurrency(val) {
@@ -69,32 +136,37 @@ function showAudioOverlay() {
 }
 
 function startDashboard() {
-    document.getElementById('loginScreen').style.display = 'none'; // Esconde o login
+    document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('audioOverlay').style.display = 'none';
     document.getElementById('dashboardScreen').style.display = 'block';
     document.getElementById('waiterName').innerText = waiter.nome;
-    
-    // Inicia processos
+
     loadOrders();
     setupRealtime();
-    
-    // Tenta tocar o som para verificar se o navegador bloqueou
-    bell.play()
-        .then(() => {
-            console.log("Áudio liberado!");
-            document.getElementById('soundAlertBar').style.display = 'none';
-        })
-        .catch(() => {
-            console.log("Áudio bloqueado pelo navegador. Mostrando barra de ativação.");
-            document.getElementById('soundAlertBar').style.display = 'block';
-        });
+
+    // Inicializa o AudioContext (fica suspended, não requer gesto ainda)
+    initAudio();
+
+    // Se o usuário já autorizou antes, tenta destravar no primeiro toque qualquer
+    const prevAuth = localStorage.getItem('acp_audio_authorized') === 'true';
+    if (prevAuth) {
+        // Qualquer toque na tela (card, botão) resolve o resume() silenciosamente
+        const events = ['click', 'touchstart', 'keydown'];
+        const handler = async () => {
+            events.forEach(e => document.body.removeEventListener(e, handler));
+            await resumeAudio();
+        };
+        events.forEach(e => document.body.addEventListener(e, handler, { passive: true }));
+        console.log('[Audio] Autorização prévia detectada. Aguardando primeiro toque...');
+    }
+    // A barra de aviso será atualizada pelo updateAudioBar() quando o estado mudar
 }
 
-function unlockAudio() {
-    bell.play().then(() => {
-        document.getElementById('soundAlertBar').style.display = 'none';
-        console.log("Sons ativados com sucesso!");
-    }).catch(e => console.error("Falha ao ativar som:", e));
+// Chamado pelo clique na barra amarela (autorização explícita)
+async function unlockAudio() {
+    await resumeAudio();
+    playBell(); // Confirma que o áudio está funcionando
+    console.log('[Audio] Sons ativados pelo usuário.');
 }
 
 function logout() {
@@ -184,7 +256,7 @@ async function handleNewOrder(payload) {
 
     if (!error && data) {
         orders.unshift(data);
-        bell.play();
+        playBell(); // Toca via AudioContext (só funciona se já desbloqueado)
         renderBoard();
     }
 }

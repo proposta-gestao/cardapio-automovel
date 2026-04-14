@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel do Atendente — ♠️♦️ACP♥️♣️</title>
+
+    <!-- PWA: Manifest e meta tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#c9a84c">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ACP Pedidos">
+    <link rel="apple-touch-icon" href="/logo_automovel.png">
+
     <link rel="stylesheet" href="index.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="atendente.css">
@@ -119,5 +129,16 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="atendente.js"></script>
+
+    <!-- PWA: Registro do Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then((reg) => console.log('[PWA] Service Worker registrado. Scope:', reg.scope))
+                    .catch((err) => console.warn('[PWA] Falha ao registrar Service Worker:', err));
+            });
+        }
+    </script>
 </body>
 </html>

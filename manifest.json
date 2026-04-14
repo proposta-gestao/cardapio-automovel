@@ -1,0 +1,26 @@
+{
+  "name": "ACP — Painel do Atendente",
+  "short_name": "ACP Pedidos",
+  "description": "Painel de atendimento em tempo real para receber e gerenciar novos pedidos.",
+  "start_url": "/atendente.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f0f0f",
+  "theme_color": "#c9a84c",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/logo_automovel.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo_automovel.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
