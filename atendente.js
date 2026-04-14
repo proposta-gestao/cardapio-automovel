@@ -135,7 +135,7 @@ function showAudioOverlay() {
     document.getElementById('audioOverlay').style.display = 'flex';
 }
 
-function startDashboard() {
+async function startDashboard() {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('audioOverlay').style.display = 'none';
     document.getElementById('dashboardScreen').style.display = 'block';
@@ -144,22 +144,34 @@ function startDashboard() {
     loadOrders();
     setupRealtime();
 
-    // Inicializa o AudioContext (fica suspended, não requer gesto ainda)
-    initAudio();
+    // Inicializa o AudioContext (fica suspended)
+    await initAudio();
 
-    // Se o usuário já autorizou antes, tenta destravar no primeiro toque qualquer
+    // Se o usuário já autorizou antes, tenta destravar ativamente sem clique
+    // Navegadores Desktop com Media Engagement Index alto permitem autoplay com som!
     const prevAuth = localStorage.getItem('acp_audio_authorized') === 'true';
     if (prevAuth) {
-        // Qualquer toque na tela (card, botão) resolve o resume() silenciosamente
-        const events = ['click', 'touchstart', 'keydown'];
-        const handler = async () => {
-            events.forEach(e => document.body.removeEventListener(e, handler));
-            await resumeAudio();
-        };
-        events.forEach(e => document.body.addEventListener(e, handler, { passive: true }));
-        console.log('[Audio] Autorização prévia detectada. Aguardando primeiro toque...');
+        try {
+            await audioCtx.resume();
+        } catch(e) {
+            console.warn('[Audio] Tentativa de autoplay inicial bloqueada.', e);
+        }
+
+        if (audioCtx.state === 'running') {
+            console.log('[Audio] Autoplay ativo nativamente pelo navegador (Comportamento Desktop).');
+        } else {
+            // Se o autoplay nativo foi bloqueado (Mobile/Android PWA pós-reload),
+            // programamos o desbloqueio silencioso no primeiro toque (qualquer toque)
+            const events = ['click', 'touchstart', 'keydown'];
+            const handler = async () => {
+                events.forEach(e => document.body.removeEventListener(e, handler));
+                await resumeAudio();
+            };
+            events.forEach(e => document.body.addEventListener(e, handler, { passive: true }));
+            console.log('[Audio] Autoplay restrito. Aguardando primeiro toque para destravar...');
+        }
     }
-    // A barra de aviso será atualizada pelo updateAudioBar() quando o estado mudar
+    // A barra de aviso é automaticamente gerida via event listener 'statechange'
 }
 
 // Chamado pelo clique na barra amarela (autorização explícita)
