@@ -17,6 +17,8 @@ const SHELL_ASSETS = [
     '/atendente.css',
     '/index.css',
     '/logo_automovel.png',
+    '/icon-192x192.png',
+    '/icon-512x512.png',
     '/manifest.json'
 ];
 
