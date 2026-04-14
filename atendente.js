@@ -11,6 +11,30 @@ let orders = [];
 let waiter = null;
 let realtimeChannel = null;
 
+// Inicialização Básica OneSignal (App ID genérico para substituição posterior)
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+window.OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+        appId: "c7223246-03a4-4fff-b9f3-f6217b183917", // App ID atualizado!
+        allowLocalhostAsSecureOrigin: true,
+        notifyButton: { enable: false }
+    });
+
+    // Solicita a permissão de notificação assim que o código carrega
+    OneSignal.Slidedown.promptPush();
+
+    // Quando o PushID (token de notificação) é criado ou alterado
+    OneSignal.User.PushSubscription.addEventListener("change", async (subscription) => {
+        const pushId = subscription.current.id;
+        if (pushId && waiter && waiter.id) {
+            console.log('[OneSignal] ID de Inscrição recebido:', pushId);
+            // Salvar na tabela atendentes do Supabase
+            const { error } = await sb.from('atendentes').update({ onesignal_id: pushId }).eq('id', waiter.id);
+            if (error) console.error('[Supabase] Erro ao salvar onesignal_id:', error);
+        }
+    });
+});
+
 // ─── Sistema de Áudio via AudioContext ────────────────────────────────────
 // O AudioContext é a API correta para PWA/Android pois:
 //   1. Pode ser criado sem gesto do usuário (fica 'suspended')
@@ -175,6 +199,17 @@ async function unlockAudio() {
     await resumeAudio();
     playBell(); // Confirma que o áudio está funcionando
     console.log('[Audio] Sons ativados pelo usuário.');
+
+    // Solicita explicitamente a permissão de Push Notification no Android/Chrome
+    window.OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.Slidedown.promptPush();
+        
+        // Verifica se já existia PushID amarrado, forçando o salvamento
+        if (OneSignal.User.PushSubscription.id && waiter && waiter.id) {
+            const pushId = OneSignal.User.PushSubscription.id;
+            await sb.from('atendentes').update({ onesignal_id: pushId }).eq('id', waiter.id);
+        }
+    });
 }
 
 function logout() {
