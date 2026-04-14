@@ -17,7 +17,7 @@ let realtimeChannel = null;
 //   2. Um único .resume() após gesto desbloqueia para a sessão inteira
 //   3. A barra de aviso reflite o estado REAL via 'statechange'
 let audioCtx = null;
-let bellBuffer = null;
+const bellAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
 async function initAudio() {
     if (audioCtx) return;
@@ -27,11 +27,7 @@ async function initAudio() {
         // Atualiza a barra sempre que o estado muda (suspended -> running -> suspended)
         audioCtx.addEventListener('statechange', updateAudioBar);
 
-        // Pré-carrega o áudio como ArrayBuffer (mais confiável no Android)
-        const res = await fetch('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-        const arrayBuf = await res.arrayBuffer();
-        bellBuffer = await audioCtx.decodeAudioData(arrayBuf);
-        console.log('[Audio] Buffer carregado com sucesso.');
+        console.log('[Audio] AudioContext inicializado. Estado:', audioCtx.state);
     } catch (e) {
         console.warn('[Audio] Erro ao inicializar AudioContext:', e);
     }
@@ -49,14 +45,14 @@ function updateAudioBar() {
 
 // Toca a campainha (só funciona quando 'running')
 function playBell() {
-    if (!audioCtx || !bellBuffer || audioCtx.state !== 'running') {
-        console.warn('[Audio] AudioContext não está pronto. Estado:', audioCtx?.state);
+    if (!audioCtx || audioCtx.state !== 'running') {
+        console.warn('[Audio] Áudio bloqueado ou não iniciado. Estado:', audioCtx?.state);
         return;
     }
-    const source = audioCtx.createBufferSource();
-    source.buffer = bellBuffer;
-    source.connect(audioCtx.destination);
-    source.start(0);
+    // Usamos o elemento Audio direto para evitar bloqueios de CORS (CORS Headers do Mixkit)
+    // Se o AudioContext está running, o navegador já permite o play()
+    bellAudio.currentTime = 0;
+    bellAudio.play().catch(e => console.warn('[Audio] Falha ao executar o bellAudio.play:', e));
     console.log('[Audio] 🔔 Campainha tocada!');
 }
 
@@ -255,6 +251,15 @@ function setupRealtime() {
             }
         });
 }
+
+// Quando o PWA volta minimizado, o websocket pode ter caído ou perdido eventos.
+// Essa verificação regasta a tabela atualizada.
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && waiter) {
+        console.log('[App] Retornou do background. Sincronizando tela...');
+        loadOrders();
+    }
+});
 
 async function handleNewOrder(payload) {
     console.log("Novo pedido recebido!", payload.new);

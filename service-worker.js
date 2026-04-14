@@ -8,7 +8,7 @@
  * Áudio é gerenciado exclusivamente pelo atendente.js na página principal.
  */
 
-const CACHE_NAME = 'acp-atendente-v1';
+const CACHE_NAME = 'acp-atendente-v2';
 
 // Arquivos essenciais que formam o "shell" do app
 const SHELL_ASSETS = [
