@@ -17,7 +17,9 @@ window.OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
         appId: "c7223246-03a4-4fff-b9f3-f6217b183917", // App ID atualizado!
         allowLocalhostAsSecureOrigin: true,
-        notifyButton: { enable: false }
+        notifyButton: { enable: false },
+        serviceWorkerPath: "service-worker.js",
+        serviceWorkerParam: { scope: "/" }
     });
 
     // Solicita a permissão de notificação assim que o código carrega
