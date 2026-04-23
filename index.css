@@ -52,7 +52,7 @@
             height: 220px;
             background-color: #0b0b0b;
             background-image: url("logo_automovel.png");
-            background-size: auto 280%; /* Prioriza a altura para não cortar o texto, ocupando quase todo o banner */
+            background-size: auto 280%; /* Prioriza a altura para nÃ£o cortar o texto, ocupando quase todo o banner */
             background-position: center;
             background-repeat: no-repeat;
             display: block;
@@ -87,7 +87,7 @@
             border-radius: 50%;
             background-color: #0b0b0b;
             background-image: url("logo_automovel.png");
-            background-size:135%; /* Mantendo o mesmo ajuste que você fez no banner */
+            background-size:135%; /* Mantendo o mesmo ajuste que vocÃª fez no banner */
             background-position: center;
             background-repeat: no-repeat;
         }
@@ -394,7 +394,7 @@
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
         }
 
-        /* Wrapper da imagem do produto — tamanho fixo 135x135 em todos os cards */
+        /* Wrapper da imagem do produto â€” tamanho fixo 135x135 em todos os cards */
         .product-img-wrap {
             position: relative;
             width: 135px;
@@ -804,7 +804,7 @@
 
         .modal-image-wrapper img {
             width: 100%;
-            height: clamp(120px, 35vh, 250px); /* Garante que a imagem não esmague os botões em telas pequenas */
+            height: clamp(120px, 35vh, 250px); /* Garante que a imagem nÃ£o esmague os botÃµes em telas pequenas */
             object-fit: cover;
         }
 
@@ -1024,7 +1024,7 @@
            CHECKOUT WIZARD
         ============================================= */
 
-        /* Cart Header — agora com step indicator */
+        /* Cart Header â€” agora com step indicator */
         .cart-header {
             display: flex;
             flex-direction: column;
@@ -1131,7 +1131,7 @@
             to   { opacity: 1; transform: translateX(0); }
         }
 
-        /* Step body (scrollável) */
+        /* Step body (scrollÃ¡vel) */
         .step-body {
             flex: 1;
             overflow-y: auto;
@@ -1162,7 +1162,7 @@
             color: var(--primary);
         }
 
-        /* Botão Continuar */
+        /* BotÃ£o Continuar */
         .btn-continue-step {
             width: 100%;
             background: var(--primary);
@@ -1195,7 +1195,7 @@
             font-size: 1.1rem;
         }
 
-        /* Botão Voltar */
+        /* BotÃ£o Voltar */
         .btn-back-step {
             background: none;
             border: none;
@@ -1214,7 +1214,7 @@
             color: var(--primary);
         }
 
-        /* Seções do formulário */
+        /* SeÃ§Ãµes do formulÃ¡rio */
         .form-section {
             margin-bottom: 1.5rem;
         }
@@ -1228,7 +1228,7 @@
             margin-bottom: 1rem;
         }
 
-        /* Radio Cards — Entrega/Retirada */
+        /* Radio Cards â€” Entrega/Retirada */
         .delivery-type-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -1279,7 +1279,7 @@
             color: var(--text-muted);
         }
 
-        /* Card de endereço da loja (retirada) */
+        /* Card de endereÃ§o da loja (retirada) */
         .store-address-card {
             background: #F0FDF4;
             border: 1.5px solid #A7F3D0;
@@ -1301,7 +1301,7 @@
             color: #A7F3D0;
         }
 
-        /* CEP wrapper (sem botão) */
+        /* CEP wrapper (sem botÃ£o) */
         .cep-wrapper {
             position: relative;
             display: flex;
@@ -1373,7 +1373,7 @@
         }
 
         /* =============================================
-           COUPON BREAKDOWN — Etapa 1
+           COUPON BREAKDOWN â€” Etapa 1
         ============================================= */
         .coupon-breakdown {
             background: rgba(229, 178, 93, 0.05);
@@ -1541,7 +1541,7 @@
             box-shadow: 0 10px 28px rgba(232,93,28,0.4);
         }
 
-        /* ===== Opções de Tipo de Entrega ===== */
+        /* ===== OpÃ§Ãµes de Tipo de Entrega ===== */
         .delivery-options {
             display: flex;
             gap: 12px;
@@ -1609,3 +1609,105 @@
             color: #000;
         }
 
+
+        /* =============================================
+           MODAL PIX — Centralização
+        ============================================= */
+
+        #modalPix {
+            max-width: 340px;
+        }
+
+        #modalPix .modal-content {
+            padding: 28px 24px;
+        }
+
+        #modalPix .modal-body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            text-align: center;
+            padding: 0;
+            width: 100%;
+        }
+
+        #modalPix .modal-body h3 {
+            width: 100%;
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        #modalPix .modal-body p {
+            width: 100%;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        #pixQrContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            min-height: 230px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        #pixQrContainer img {
+            display: block;
+            width: 200px;
+            height: 200px;
+            border-radius: 8px;
+            margin: 0 auto;
+        }
+
+        #pixQrContainer #pixLoading {
+            text-align: center;
+            color: #333;
+            padding: 20px;
+            width: 100%;
+        }
+
+        #modalPix .form-group {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #btnCopiarPix {
+            width: 100%;
+            font-size: 0.85rem;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        #copyPixFeedback {
+            text-align: center;
+            color: var(--success, #2ecc71);
+            font-weight: 700;
+            width: 100%;
+        }
+
+        #pixStatusMessage {
+            margin-top: 15px;
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1rem;
+            width: 100%;
+            text-align: center;
+        }
+
+        #closeModalPix {
+            top: -10px;
+            right: 0;
+            font-size: 1.8rem;
+            color: #999;
+        }

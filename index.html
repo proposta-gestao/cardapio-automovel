@@ -206,6 +206,34 @@
                     </div>
                 </div>
 
+                <!-- 2.1 Forma de Pagamento -->
+                <div class="form-section">
+                    <p class="form-section-title">Forma de Pagamento</p>
+                    <div class="delivery-options">
+                        <label class="delivery-option" for="payPix">
+                            <input type="radio" name="formaPagamento" value="pix" id="payPix">
+                            <span class="delivery-option-label">
+                                <span class="delivery-option-icon">📱</span>
+                                <span>PIX (Automático)</span>
+                            </span>
+                        </label>
+                        <label class="delivery-option" for="payDinheiro">
+                            <input type="radio" name="formaPagamento" value="dinheiro" id="payDinheiro" checked>
+                            <span class="delivery-option-label">
+                                <span class="delivery-option-icon">💵</span>
+                                <span>Dinheiro</span>
+                            </span>
+                        </label>
+                        <label class="delivery-option" for="payCartao">
+                            <input type="radio" name="formaPagamento" value="cartao" id="payCartao">
+                            <span class="delivery-option-label">
+                                <span class="delivery-option-icon">💳</span>
+                                <span>Cartão (na entrega)</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
                 <!-- 3. Endereço de Entrega (Smart Flow) -->
                 <div class="form-section" id="secaoEndereco" style="display:none;">
                     <p class="form-section-title">Endereço de Entrega</p>
@@ -339,6 +367,32 @@
             </div>
         </div>
     </section>
+
+    <!-- PIX Payment Modal -->
+    <div class="modal" id="modalPix" aria-modal="true" role="dialog">
+        <div class="modal-content">
+            <div class="modal-body" id="pixModalBody">
+                <h3>Pague com PIX</h3>
+                <p>Escaneie o QR Code ou copie o código abaixo para pagar.</p>
+
+                <div id="pixQrContainer">
+                    <div id="pixLoading">⏳ Gerando QR Code...</div>
+                    <img id="pixQrImage" src="" alt="QR Code PIX" style="display:none;">
+                </div>
+
+                <div class="form-group">
+                    <button class="btn-checkout" id="btnCopiarPix" style="display:none;">
+                        Copiar Código PIX 📋
+                    </button>
+                    <small id="copyPixFeedback" style="display:none;">Código copiado! ✅</small>
+                </div>
+
+                <div id="pixStatusMessage">Aguardando pagamento...</div>
+
+                <button class="close-modal" id="closeModalPix">&times;</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
