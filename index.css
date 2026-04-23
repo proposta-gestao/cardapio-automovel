@@ -1541,3 +1541,71 @@
             box-shadow: 0 10px 28px rgba(232,93,28,0.4);
         }
 
+        /* ===== Opções de Tipo de Entrega ===== */
+        .delivery-options {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .delivery-option {
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .delivery-option input[type="radio"] {
+            display: none;
+        }
+
+        .delivery-option-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 14px 12px;
+            background: #1a1a1a;
+            border: 2px solid var(--border-color);
+            border-radius: 14px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: all 0.25s ease;
+            text-align: center;
+        }
+
+        .delivery-option input[type="radio"]:checked + .delivery-option-label {
+            border-color: var(--primary);
+            background: rgba(229, 178, 93, 0.1);
+            color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(229, 178, 93, 0.15);
+        }
+
+        .delivery-option-icon {
+            font-size: 1.5rem;
+        }
+
+        @media (max-width: 360px) {
+            .delivery-options {
+                flex-direction: column;
+            }
+        }
+
+        /* Btn buscar CEP no carrinho */
+        .btn-sm.btn-edit {
+            background: rgba(30, 144, 255, 0.1);
+            color: #1E90FF;
+            border: 1px solid rgba(30, 144, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+
+        .btn-sm.btn-edit:hover {
+            background: #1E90FF;
+            color: #000;
+        }
+

@@ -36,8 +36,9 @@ let state = {
     cupomAplicado: null,
     categoriaAtiva: 'todos',
     termoBusca: '',
-    tipoEntrega: 'mesa',      // Sempre 'mesa' agora
-    freteAtivo: 0             // Sempre 0 agora
+    tipoEntrega: 'mesa',   // 'mesa' | 'retirada' | 'entrega'
+    freteAtivo: 0,         // valor em R$ do frete calculado
+    freteHabilitado: false // controlado pelo Admin via store_settings
 };
 
 // --- Seletores DOM ---
@@ -137,11 +138,47 @@ async function carregarConfiguracoesPublicas() {
         sb.from('store_settings').select('*').single(),
         sb.from('shipping_zones').select('*').eq('active', true)
     ]);
+
     if (!settingsRes.error && settingsRes.data) {
         CONFIG_LOJA = settingsRes.data;
+        aplicarPersonalizacaoVisual(CONFIG_LOJA);
+
+        // Atualizar estado de frete
+        state.freteHabilitado = !!CONFIG_LOJA.frete_ativo;
+        if (state.freteHabilitado) {
+            state.tipoEntrega = 'retirada'; // padrão quando frete habilitado
+        }
     }
+
     if (!zonesRes.error) {
         ZONAS_FRETE = zonesRes.data || [];
+    }
+}
+
+function aplicarPersonalizacaoVisual(config) {
+    if (!config) return;
+
+    // Textos
+    if (config.brand_name) {
+        const el = document.querySelector('.brand-name');
+        if (el) el.textContent = config.brand_name;
+        document.title = config.brand_name + ' | Cardápio Digital';
+    }
+    if (config.brand_subtitle) {
+        const el = document.querySelector('.brand-subtitle');
+        if (el) el.textContent = config.brand_subtitle;
+    }
+
+    // Banner
+    if (config.banner_url) {
+        const el = document.querySelector('.banner-desktop');
+        if (el) el.style.backgroundImage = `url(${config.banner_url})`;
+    }
+
+    // Logo
+    if (config.logo_url) {
+        const el = document.querySelector('.logo-main');
+        if (el) el.style.backgroundImage = `url(${config.logo_url})`;
     }
 }
 
@@ -267,13 +304,33 @@ function navegarStep(n) {
         dot2.textContent = '2';
         if (line) line.style.background = 'var(--primary)';
         renderTotalBreakdown();
-        // Inicializa o bloco de entrega selecionado
-        toggleTipoEntrega(state.tipoEntrega);
+        // Inicializa modo de entrega conforme frete habilitado
+        const tipoAtual = state.freteHabilitado ? state.tipoEntrega : 'mesa';
+        toggleTipoEntrega(tipoAtual);
+
+        // Vincular radio buttons se frete habilitado
+        if (state.freteHabilitado) {
+            const optR = document.getElementById('optRetirada');
+            const optE = document.getElementById('optEntrega');
+            if (optR) optR.onchange = () => toggleTipoEntrega('retirada');
+            if (optE) optE.onchange = () => toggleTipoEntrega('entrega');
+            // Manter radio sincronizado com state
+            if (optR && state.tipoEntrega !== 'entrega') optR.checked = true;
+            if (optE && state.tipoEntrega === 'entrega') optE.checked = true;
+        }
+
+        // Vincular btn buscar CEP
+        const btnBuscarCep = document.getElementById('btnBuscarCep');
+        if (btnBuscarCep) btnBuscarCep.onclick = buscarCepAuto;
+
+        // Vincular input CEP
+        const cepEl = document.getElementById('cep');
+        if (cepEl) cepEl.oninput = onCepInput;
     }
 }
 
 // =============================================
-// FRETE (DESATIVADO)
+// FRETE
 // =============================================
 
 function normalizar(str) {
@@ -284,8 +341,28 @@ function normalizar(str) {
         .trim();
 }
 
-function calcularFrete(bairro) {
-    return 0;
+function calcularFrete(cepOuBairro) {
+    if (!state.freteHabilitado || ZONAS_FRETE.length === 0) return 0;
+
+    const cepLimpo = (cepOuBairro || '').replace(/\D/g, '');
+    const bairroNorm = normalizar(cepOuBairro);
+
+    // Tenta match por CEP (range numérico)
+    if (cepLimpo.length === 8) {
+        const por_cep = ZONAS_FRETE.find(z => {
+            const min = (z.min_zip || '').replace(/\D/g, '');
+            const max = (z.max_zip || '').replace(/\D/g, '');
+            if (min && max) return cepLimpo >= min && cepLimpo <= max;
+            return false;
+        });
+        if (por_cep) return parseFloat(por_cep.fee) || 0;
+    }
+
+    // Fallback: match por nome do bairro
+    const por_bairro = ZONAS_FRETE.find(z => normalizar(z.name) === bairroNorm);
+    if (por_bairro) return parseFloat(por_bairro.fee) || 0;
+
+    return -1; // -1 = bairro/CEP não atendido
 }
 
 // =============================================
@@ -343,22 +420,96 @@ function renderTotalBreakdown() {
         els.descRow.style.display = 'none';
     }
 
-    // Linha de frete (oculta agora)
-    if (els.freteRow) els.freteRow.style.display = 'none';
+    // Linha de frete
+    const frete = state.freteHabilitado && state.tipoEntrega === 'entrega' ? state.freteAtivo : 0;
+    if (els.freteRow) {
+        if (frete > 0) {
+            els.frete.textContent = fmt(frete);
+            els.frete.style.color = 'inherit';
+            els.freteRow.style.display = 'flex';
+        } else if (state.freteHabilitado && state.tipoEntrega === 'entrega' && frete === -1) {
+            els.frete.textContent = '⚠ Bairro não atendido';
+            els.frete.style.color = 'var(--danger)';
+            els.freteRow.style.display = 'flex';
+        } else if (state.freteHabilitado && state.tipoEntrega === 'entrega') {
+            els.frete.textContent = 'Informe o CEP';
+            els.frete.style.color = 'var(--text-muted)';
+            els.freteRow.style.display = 'flex';
+        } else {
+            els.freteRow.style.display = 'none';
+        }
+    }
 
-    els.tot.textContent = fmt(subtotal - desconto);
+    const totalFinal = subtotal - desconto + (frete > 0 ? frete : 0);
+    els.tot.textContent = fmt(totalFinal);
 }
 
 // =============================================
-// CEP — AUTOCOMPLETE DEBOUNCED (sem botão)
+// CEP — AUTOCOMPLETE + CÁLCULO DE FRETE
 // =============================================
 
-// =============================================
-// CEP (DESATIVADO)
-// =============================================
+let _cepTimer = null;
 
-function onCepInput(e) {}
-async function buscarCepAuto() {}
+function onCepInput(e) {
+    let v = e.target.value.replace(/\D/g, '');
+    if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5, 8);
+    e.target.value = v;
+
+    clearTimeout(_cepTimer);
+    const digitosLimpos = v.replace(/\D/g, '');
+    if (digitosLimpos.length === 8) {
+        _cepTimer = setTimeout(buscarCepAuto, 600);
+    } else {
+        const status = document.getElementById('cepStatus');
+        if (status) { status.textContent = ''; status.style.color = ''; }
+        state.freteAtivo = 0;
+        renderTotalBreakdown();
+    }
+}
+
+async function buscarCepAuto() {
+    const cepInput = document.getElementById('cep');
+    if (!cepInput) return;
+    const cepLimpo = cepInput.value.replace(/\D/g, '');
+    if (cepLimpo.length !== 8) return;
+
+    const status = document.getElementById('cepStatus');
+    if (status) { status.textContent = '🔍 Buscando...'; status.style.color = 'var(--text-muted)'; }
+
+    try {
+        const res  = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+        const data = await res.json();
+
+        if (data.erro) {
+            if (status) { status.textContent = '❌ CEP não encontrado.'; status.style.color = 'var(--danger)'; }
+            state.freteAtivo = 0;
+            renderTotalBreakdown();
+            return;
+        }
+
+        // Preencher campos
+        const logEl = document.getElementById('endLogradouro');
+        const baiEl = document.getElementById('endBairro');
+        if (logEl) logEl.value = data.logradouro || '';
+        if (baiEl) baiEl.value = data.bairro || '';
+
+        // Calcular frete pelo CEP
+        const frete = calcularFrete(cepLimpo);
+        state.freteAtivo = frete;
+
+        if (frete === -1) {
+            if (status) { status.textContent = '⚠️ Bairro/CEP não atendido para entrega.'; status.style.color = 'var(--danger)'; }
+        } else if (frete === 0) {
+            if (status) { status.textContent = '✅ Frete grátis para este endereço!'; status.style.color = 'var(--success)'; }
+        } else {
+            if (status) { status.textContent = `✅ Frete: ${formatCurrency(frete)}`; status.style.color = 'var(--success)'; }
+        }
+
+        renderTotalBreakdown();
+    } catch {
+        if (status) { status.textContent = '❌ Erro ao buscar CEP.'; status.style.color = 'var(--danger)'; }
+    }
+}
 
 // =============================================
 // AÇÕES DO CARRINHO
@@ -476,8 +627,42 @@ document.getElementById("btnCupom").onclick = async () => {
 const cepInput = document.getElementById("cep");
 if (cepInput) cepInput.oninput = onCepInput;
 
-// Tipo de Entrega (OCULTO)
-function toggleTipoEntrega(tipo) {}
+// Tipo de Entrega
+function toggleTipoEntrega(tipo) {
+    state.tipoEntrega = tipo;
+    const secaoEndereco = document.getElementById('secaoEndereco');
+    const secaoMesa = document.getElementById('secaoMesa');
+
+    if (!state.freteHabilitado) {
+        // Frete desabilitado: sempre modo mesa, esconde opções de entrega
+        if (secaoEndereco) secaoEndereco.style.display = 'none';
+        if (secaoMesa) secaoMesa.style.display = '';
+        state.tipoEntrega = 'mesa';
+        state.freteAtivo = 0;
+        renderTotalBreakdown();
+        return;
+    }
+
+    // Frete habilitado: mostrar opções
+    const secaoTipo = document.getElementById('secaoTipoEntrega');
+    if (secaoTipo) secaoTipo.style.display = '';
+
+    if (tipo === 'entrega') {
+        if (secaoEndereco) secaoEndereco.style.display = '';
+        if (secaoMesa) secaoMesa.style.display = 'none';
+    } else if (tipo === 'retirada') {
+        if (secaoEndereco) secaoEndereco.style.display = 'none';
+        if (secaoMesa) secaoMesa.style.display = 'none';
+        state.freteAtivo = 0;
+        renderTotalBreakdown();
+    } else {
+        // mesa (padrão)
+        if (secaoEndereco) secaoEndereco.style.display = 'none';
+        if (secaoMesa) secaoMesa.style.display = '';
+        state.freteAtivo = 0;
+        renderTotalBreakdown();
+    }
+}
 
 // Wizard — Navegação
 document.getElementById("btnProximaEtapa").onclick = () => {
@@ -505,20 +690,42 @@ document.getElementById("btnEnviar").onclick = async () => {
     const btn = document.getElementById("btnEnviar");
     if (state.carrinho.length === 0) return mostrarToast("Seu carrinho está vazio!", "error");
 
-    const nomeCliente = document.getElementById("clienteNome")?.value.trim() || '';
+    const nomeCliente    = document.getElementById("clienteNome")?.value.trim() || '';
     const telefoneCliente = document.getElementById("clienteTelefone")?.value.trim() || '';
 
-    if (!nomeCliente) return mostrarToast("Por favor, informe seu nome completo.", "error");
+    if (!nomeCliente)    return mostrarToast("Por favor, informe seu nome completo.", "error");
     if (!telefoneCliente) return mostrarToast("Por favor, informe seu telefone/WhatsApp.", "error");
 
-    const mesa = document.getElementById("clienteMesa")?.value.trim() || '';
-    const posicao = document.getElementById("clientePosicao")?.value.trim() || '';
+    // Coletar dados conforme tipo de entrega
+    let camposEndereco = {};
+    let freteValor = 0;
 
-    if (!mesa) return mostrarToast("Por favor, informe o número da MESA.", "error");
-    if (!posicao) return mostrarToast("Por favor, informe a POSIÇÃO.", "error");
+    if (!state.freteHabilitado || state.tipoEntrega === 'mesa') {
+        const mesa    = document.getElementById("clienteMesa")?.value.trim() || '';
+        const posicao = document.getElementById("clientePosicao")?.value.trim() || '';
+        if (!mesa)    return mostrarToast("Por favor, informe o número da MESA.", "error");
+        if (!posicao) return mostrarToast("Por favor, informe a POSIÇÃO.", "error");
+        camposEndereco = { mesa, posicao };
+        freteValor = 0;
 
-    const camposEndereco = { mesa, posicao };
-    const freteValor = 0;
+    } else if (state.tipoEntrega === 'entrega') {
+        const cep         = document.getElementById("cep")?.value.trim() || '';
+        const numero      = document.getElementById("endNumero")?.value.trim() || '';
+        const logradouro  = document.getElementById("endLogradouro")?.value.trim() || '';
+        const bairro      = document.getElementById("endBairro")?.value.trim() || '';
+        const complemento = document.getElementById("endComplemento")?.value.trim() || '';
+
+        if (!cep) return mostrarToast("Por favor, informe o CEP para entrega.", "error");
+        if (!numero) return mostrarToast("Por favor, informe o número do endereço.", "error");
+        if (state.freteAtivo === -1) return mostrarToast("⚠️ Este endereço não é atendido para entrega.", "error");
+
+        camposEndereco = { cep, logradouro, numero, bairro, complemento };
+        freteValor = state.freteAtivo > 0 ? state.freteAtivo : 0;
+
+    } else if (state.tipoEntrega === 'retirada') {
+        camposEndereco = { retirada: true };
+        freteValor = 0;
+    }
 
     btn.disabled = true;
     btn.innerHTML = `<span>Processando pedido...</span>`;
@@ -558,7 +765,11 @@ document.getElementById("btnEnviar").onclick = async () => {
         (async () => {
             try {
                 const celularLimpo = telefoneCliente.replace(/\D/g, '');
-                const enderecoStr = `Mesa ${camposEndereco.mesa}, Posição ${camposEndereco.posicao}`;
+        const enderecoStr = state.freteHabilitado
+            ? (state.tipoEntrega === 'entrega'
+                ? `${camposEndereco.logradouro || ''}, ${camposEndereco.numero || ''} - ${camposEndereco.bairro || ''} (CEP: ${camposEndereco.cep || ''})`
+                : state.tipoEntrega === 'retirada' ? 'Retirada no local' : `Mesa ${camposEndereco.mesa || ''}, Posição ${camposEndereco.posicao || ''}`)
+            : `Mesa ${camposEndereco.mesa || ''}, Posição ${camposEndereco.posicao || ''}`;
 
                 const { data: existente } = await sb
                     .from('clientes')
@@ -632,7 +843,17 @@ document.getElementById("btnEnviar").onclick = async () => {
         msg += `*👤 Cliente:* ${nomeCliente}%0A`;
         msg += `*📱 Telefone:* ${telefoneCliente}%0A%0A`;
 
-        msg += `*📍 Localização:* Mesa ${mesa}, Posição ${posicao}%0A%0A`;
+        msg += `*📍 Localização:*`;
+        if (!state.freteHabilitado || state.tipoEntrega === 'mesa') {
+            msg += ` Mesa ${camposEndereco.mesa || '—'}, Posição ${camposEndereco.posicao || '—'}%0A%0A`;
+        } else if (state.tipoEntrega === 'entrega') {
+            msg += ` Entrega%0A`;
+            msg += `${camposEndereco.logradouro || ''}, ${camposEndereco.numero || ''}`;
+            if (camposEndereco.complemento) msg += ` - ${camposEndereco.complemento}`;
+            msg += `%0A${camposEndereco.bairro || ''} - CEP: ${camposEndereco.cep || ''}%0A%0A`;
+        } else {
+            msg += ` Retirada no local%0A%0A`;
+        }
 
         msg += `*🛒 Itens:*%0A`;
         state.carrinho.forEach(p => {
@@ -643,6 +864,9 @@ document.getElementById("btnEnviar").onclick = async () => {
         msg += `*💵 Subtotal:* ${fmtW(subtotal)}%0A`;
         if (state.descontoAtivo > 0) {
             msg += `*🎟️ Desconto (${state.cupomAplicado}):* -${fmtW(desconto)}%0A`;
+        }
+        if (freteValor > 0) {
+            msg += `*📦 Frete:* ${fmtW(freteValor)}%0A`;
         }
         msg += `*💰 TOTAL: ${fmtW(totalFinal)}*`;
 

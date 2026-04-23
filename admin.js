@@ -951,24 +951,273 @@ window.finalizarPedido = async (id) => {
 
 // =================== CONFIGURAÇÕES ===================
 
+let zonasEntrega = [];
+
 async function carregarConfiguracoes() {
-    const { data, error } = await sb.from('store_settings').select('*').single();
-    if (error && error.code !== 'PGRST116') {
+    const [settingsRes, zonasRes] = await Promise.all([
+        sb.from('store_settings').select('*').single(),
+        sb.from('shipping_zones').select('*').order('created_at')
+    ]);
+
+    if (settingsRes.error && settingsRes.error.code !== 'PGRST116') {
         showToast('Erro ao carregar configurações', 'error');
-        return;
     }
-    if (data) {
-        document.getElementById('confNomeLoja').value = data.store_name || '';
-        document.getElementById('confCep').value = data.address_zip || '';
-        document.getElementById('confLogradouro').value = data.address_street || '';
-        document.getElementById('confNumero').value = data.address_number || '';
-        document.getElementById('confComplemento').value = data.address_complement || '';
-        document.getElementById('confBairro').value = data.address_neighborhood || '';
-        document.getElementById('confCidade').value = data.address_city || '';
-        document.getElementById('confEstado').value = data.address_state || '';
-        document.getElementById('confReferencia').value = data.address_reference || '';
+
+    if (settingsRes.data) {
+        const d = settingsRes.data;
+        // Endereço
+        document.getElementById('confNomeLoja').value        = d.store_name || '';
+        document.getElementById('confCep').value             = d.address_zip || '';
+        document.getElementById('confLogradouro').value      = d.address_street || '';
+        document.getElementById('confNumero').value          = d.address_number || '';
+        document.getElementById('confComplemento').value     = d.address_complement || '';
+        document.getElementById('confBairro').value          = d.address_neighborhood || '';
+        document.getElementById('confCidade').value          = d.address_city || '';
+        document.getElementById('confEstado').value          = d.address_state || '';
+        document.getElementById('confReferencia').value      = d.address_reference || '';
+
+        // Personalização Visual
+        document.getElementById('confBrandName').value       = d.brand_name || '';
+        document.getElementById('confBrandSubtitle').value   = d.brand_subtitle || '';
+        document.getElementById('confBannerUrl').value       = d.banner_url || '';
+        document.getElementById('confLogoUrl').value         = d.logo_url || '';
+        atualizarPreviewBanner(d.banner_url || '');
+        atualizarPreviewLogo(d.logo_url || '');
+
+        // Frete
+        const freteAtivo = !!d.frete_ativo;
+        document.getElementById('confFreteAtivo').checked    = freteAtivo;
+        document.getElementById('freteZonasContainer').style.display = freteAtivo ? 'block' : 'none';
+    }
+
+    if (!zonasRes.error) {
+        zonasEntrega = zonasRes.data || [];
+        renderZonasFrete();
     }
 }
+
+// --- Preview de imagem ---
+function atualizarPreviewBanner(url) {
+    const el = document.getElementById('previewBanner');
+    if (url) {
+        el.style.backgroundImage = `url(${url})`;
+        el.style.backgroundSize = 'cover';
+        el.style.backgroundPosition = 'center';
+        el.querySelector('.visual-preview-placeholder').style.display = 'none';
+    } else {
+        el.style.backgroundImage = '';
+        el.querySelector('.visual-preview-placeholder').style.display = '';
+    }
+}
+
+function atualizarPreviewLogo(url) {
+    const el = document.getElementById('previewLogo');
+    if (url) {
+        el.style.backgroundImage = `url(${url})`;
+        el.style.backgroundSize = 'contain';
+        el.style.backgroundRepeat = 'no-repeat';
+        el.style.backgroundPosition = 'center';
+        el.querySelector('.visual-preview-placeholder').style.display = 'none';
+    } else {
+        el.style.backgroundImage = '';
+        el.querySelector('.visual-preview-placeholder').style.display = '';
+    }
+}
+
+// --- Upload de imagem de visual (banner/logo) ---
+async function handleVisualImageUpload(file, tipo) {
+    showToast('Enviando imagem...', 'success');
+    const targetName = `visual_${tipo}_${Date.now()}_${file.name}`;
+    const { error } = await sb.storage.from('product-images').upload(targetName, file, { upsert: true });
+    if (error) { showToast('Erro ao enviar imagem: ' + error.message, 'error'); return null; }
+    const { data: urlData } = sb.storage.from('product-images').getPublicUrl(targetName);
+    return urlData.publicUrl;
+}
+
+document.getElementById('uploadBanner').onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = await handleVisualImageUpload(file, 'banner');
+    if (url) {
+        document.getElementById('confBannerUrl').value = url;
+        atualizarPreviewBanner(url);
+    }
+    e.target.value = '';
+};
+
+document.getElementById('uploadLogo').onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = await handleVisualImageUpload(file, 'logo');
+    if (url) {
+        document.getElementById('confLogoUrl').value = url;
+        atualizarPreviewLogo(url);
+    }
+    e.target.value = '';
+};
+
+document.getElementById('btnAplicarUrlBanner').onclick = () => {
+    atualizarPreviewBanner(document.getElementById('confBannerUrl').value.trim());
+};
+
+document.getElementById('btnAplicarUrlLogo').onclick = () => {
+    atualizarPreviewLogo(document.getElementById('confLogoUrl').value.trim());
+};
+
+// --- Salvar Personalização Visual ---
+document.getElementById('btnSalvarPersonalizacao').onclick = async () => {
+    const btn = document.getElementById('btnSalvarPersonalizacao');
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+
+    const payload = {
+        id: '00000000-0000-0000-0000-000000000001',
+        brand_name:     document.getElementById('confBrandName').value.trim(),
+        brand_subtitle: document.getElementById('confBrandSubtitle').value.trim(),
+        banner_url:     document.getElementById('confBannerUrl').value.trim(),
+        logo_url:       document.getElementById('confLogoUrl').value.trim(),
+        updated_at:     new Date().toISOString()
+    };
+
+    const { error } = await sb.from('store_settings').upsert(payload);
+    if (error) {
+        showToast('Erro ao salvar visual: ' + error.message, 'error');
+    } else {
+        showToast('Personalização visual salva!', 'success');
+    }
+    btn.disabled = false;
+    btn.textContent = 'Salvar Visual';
+};
+
+// --- Toggle Frete ---
+document.getElementById('confFreteAtivo').onchange = async function () {
+    const ativo = this.checked;
+    document.getElementById('freteZonasContainer').style.display = ativo ? 'block' : 'none';
+
+    const { error } = await sb.from('store_settings').upsert({
+        id: '00000000-0000-0000-0000-000000000001',
+        frete_ativo: ativo,
+        updated_at: new Date().toISOString()
+    });
+    if (error) {
+        showToast('Erro ao salvar configuração de frete: ' + error.message, 'error');
+    } else {
+        showToast(ativo ? '🚚 Frete habilitado!' : 'Frete desabilitado.', 'success');
+    }
+};
+
+// --- Render Zonas de Frete ---
+function renderZonasFrete() {
+    const tbody = document.getElementById('zonasBody');
+    if (!tbody) return;
+    if (zonasEntrega.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem;">Nenhuma zona cadastrada.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = zonasEntrega.map(z => `
+        <tr>
+            <td><strong>${z.name}</strong></td>
+            <td><code>${z.min_zip || '—'}</code></td>
+            <td><code>${z.max_zip || '—'}</code></td>
+            <td><strong>${formatCurrency(z.fee)}</strong></td>
+            <td><span class="badge ${z.active ? 'badge-active' : 'badge-inactive'}">${z.active ? 'Ativa' : 'Inativa'}</span></td>
+            <td>
+                <div class="actions-cell">
+                    <button class="btn-sm btn-edit" onclick="editarZona('${z.id}')">Editar</button>
+                    <button class="btn-sm btn-delete" onclick="excluirZona('${z.id}', '${z.name.replace(/'/g, "\\'")}')">Excluir</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// --- CRUD Zonas de Frete ---
+document.getElementById('btnNovaZona').onclick = () => {
+    document.getElementById('modalZonaTitulo').textContent = 'Nova Zona de Entrega';
+    document.getElementById('zonaId').value = '';
+    document.getElementById('zonaNome').value = '';
+    document.getElementById('zonaMinZip').value = '';
+    document.getElementById('zonaMaxZip').value = '';
+    document.getElementById('zonaFee').value = '';
+    document.getElementById('zonaAtivo').value = 'true';
+    abrirModal('modalZona');
+};
+
+window.editarZona = (id) => {
+    const z = zonasEntrega.find(x => x.id === id);
+    if (!z) return;
+    document.getElementById('modalZonaTitulo').textContent = 'Editar Zona de Entrega';
+    document.getElementById('zonaId').value = z.id;
+    document.getElementById('zonaNome').value = z.name;
+    document.getElementById('zonaMinZip').value = z.min_zip || '';
+    document.getElementById('zonaMaxZip').value = z.max_zip || '';
+    document.getElementById('zonaFee').value = z.fee;
+    document.getElementById('zonaAtivo').value = String(z.active);
+    abrirModal('modalZona');
+};
+
+document.getElementById('btnSalvarZona').onclick = async () => {
+    const btn = document.getElementById('btnSalvarZona');
+    const id = document.getElementById('zonaId').value;
+    const nome = document.getElementById('zonaNome').value.trim();
+    const fee = parseFloat(document.getElementById('zonaFee').value);
+    const ativo = document.getElementById('zonaAtivo').value === 'true';
+
+    if (!nome || isNaN(fee) || fee < 0) {
+        showToast('Preencha o nome e o valor do frete corretamente.', 'error');
+        return;
+    }
+
+    const formatZip = (v) => v.replace(/\D/g, '');
+    const payload = {
+        name: nome,
+        min_zip: formatZip(document.getElementById('zonaMinZip').value) || null,
+        max_zip: formatZip(document.getElementById('zonaMaxZip').value) || null,
+        fee,
+        active: ativo
+    };
+
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+
+    let error;
+    if (id) {
+        ({ error } = await sb.from('shipping_zones').update(payload).eq('id', id));
+    } else {
+        ({ error } = await sb.from('shipping_zones').insert(payload));
+    }
+
+    if (error) {
+        showToast('Erro ao salvar zona: ' + error.message, 'error');
+    } else {
+        showToast(id ? 'Zona atualizada!' : 'Zona criada!', 'success');
+        fecharModal('modalZona');
+        const { data } = await sb.from('shipping_zones').select('*').order('created_at');
+        zonasEntrega = data || [];
+        renderZonasFrete();
+    }
+    btn.disabled = false;
+    btn.textContent = 'Salvar';
+};
+
+window.excluirZona = async (id, nome) => {
+    if (!await customConfirm('Excluir Zona', `Excluir a zona "${nome}"?`)) return;
+    const { error } = await sb.from('shipping_zones').delete().eq('id', id);
+    if (error) { showToast('Erro ao excluir: ' + error.message, 'error'); return; }
+    showToast('Zona excluída!', 'success');
+    zonasEntrega = zonasEntrega.filter(z => z.id !== id);
+    renderZonasFrete();
+};
+
+// --- Formatação CEP Zonas ---
+['zonaMinZip', 'zonaMaxZip'].forEach(inputId => {
+    const el = document.getElementById(inputId);
+    if (el) el.oninput = (e) => {
+        let v = e.target.value.replace(/\D/g, '');
+        if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5, 8);
+        e.target.value = v;
+    };
+});
 
 document.getElementById('btnSalvarConfig').onclick = async () => {
     const btn = document.getElementById('btnSalvarConfig');
@@ -976,17 +1225,17 @@ document.getElementById('btnSalvarConfig').onclick = async () => {
     btn.textContent = 'Salvando...';
 
     const payload = {
-        id: 1,
-        store_name: document.getElementById('confNomeLoja').value.trim(),
-        address_zip: document.getElementById('confCep').value.trim(),
-        address_street: document.getElementById('confLogradouro').value.trim(),
-        address_number: document.getElementById('confNumero').value.trim(),
-        address_complement: document.getElementById('confComplemento').value.trim(),
+        id: '00000000-0000-0000-0000-000000000001',
+        store_name:           document.getElementById('confNomeLoja').value.trim(),
+        address_zip:          document.getElementById('confCep').value.trim(),
+        address_street:       document.getElementById('confLogradouro').value.trim(),
+        address_number:       document.getElementById('confNumero').value.trim(),
+        address_complement:   document.getElementById('confComplemento').value.trim(),
         address_neighborhood: document.getElementById('confBairro').value.trim(),
-        address_city: document.getElementById('confCidade').value.trim(),
-        address_state: document.getElementById('confEstado').value.trim(),
-        address_reference: document.getElementById('confReferencia').value.trim(),
-        updated_at: new Date().toISOString()
+        address_city:         document.getElementById('confCidade').value.trim(),
+        address_state:        document.getElementById('confEstado').value.trim(),
+        address_reference:    document.getElementById('confReferencia').value.trim(),
+        updated_at:           new Date().toISOString()
     };
 
     const { error } = await sb.from('store_settings').upsert(payload);

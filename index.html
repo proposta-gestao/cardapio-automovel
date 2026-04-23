@@ -172,6 +172,58 @@
             <div class="step-body" id="step2Body">
                 <button class="btn-back-step" id="btnVoltarEtapa">← Voltar</button>
 
+                <!-- Tipo de Entrega (só aparece se frete estiver ativo) -->
+                <div class="form-section" id="secaoTipoEntrega" style="display:none;">
+                    <p class="form-section-title">Como prefere receber?</p>
+                    <div class="delivery-options">
+                        <label class="delivery-option" for="optRetirada">
+                            <input type="radio" name="tipoEntrega" value="retirada" id="optRetirada" checked>
+                            <span class="delivery-option-label">
+                                <span class="delivery-option-icon">🏠</span>
+                                <span>Retirada no local</span>
+                            </span>
+                        </label>
+                        <label class="delivery-option" for="optEntrega">
+                            <input type="radio" name="tipoEntrega" value="entrega" id="optEntrega">
+                            <span class="delivery-option-label">
+                                <span class="delivery-option-icon">🚚</span>
+                                <span>Entrega em casa</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Endereço de Entrega (só aparece se "Entrega" selecionado) -->
+                <div class="form-section" id="secaoEndereco" style="display:none;">
+                    <p class="form-section-title">Endereço de Entrega</p>
+                    <div class="form-group">
+                        <label for="cep">CEP *</label>
+                        <div style="display:flex;gap:8px;">
+                            <input type="text" id="cep" placeholder="00000-000" maxlength="9" style="flex:1;">
+                            <button class="btn-sm btn-edit" id="btnBuscarCep" style="white-space:nowrap;padding:0 14px;">Buscar</button>
+                        </div>
+                        <small id="cepStatus" style="display:block;margin-top:6px;font-size:0.8rem;"></small>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:2">
+                            <label for="endLogradouro">Logradouro</label>
+                            <input type="text" id="endLogradouro" placeholder="Rua, Avenida..." readonly>
+                        </div>
+                        <div class="form-group" style="flex:0.6">
+                            <label for="endNumero">Número *</label>
+                            <input type="text" id="endNumero" placeholder="123">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="endBairro">Bairro</label>
+                        <input type="text" id="endBairro" placeholder="Bairro" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="endComplemento">Complemento</label>
+                        <input type="text" id="endComplemento" placeholder="Apto, bloco, referência...">
+                    </div>
+                </div>
+
                 <!-- Dados do Pedido -->
                 <div class="form-section">
                     <p class="form-section-title">Seus Dados</p>
@@ -185,7 +237,7 @@
                     </div>
                 </div>
 
-                <div class="form-section">
+                <div class="form-section" id="secaoMesa">
                     <p class="form-section-title">Onde você está?</p>
                     <div class="form-row">
                         <div class="form-group">

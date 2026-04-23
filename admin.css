@@ -1626,3 +1626,108 @@ input:checked+.slider:before {
         transform: translateY(-5px);
     }
 }
+
+/* ===== Personalização Visual — Preview de Imagem ===== */
+.visual-upload-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.visual-preview {
+    width: 180px;
+    min-width: 180px;
+    height: 100px;
+    border-radius: 12px;
+    border: 2px dashed var(--border-color);
+    background: rgba(255,255,255,0.03);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    transition: var(--transition);
+}
+
+.visual-preview--logo {
+    width: 100px;
+    min-width: 100px;
+    height: 100px;
+    border-radius: 50%;
+}
+
+.visual-preview-placeholder {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 0.5rem;
+}
+
+.visual-upload-controls {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.visual-upload-controls input[type="text"] {
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.05);
+    border: 1.5px solid var(--border-color);
+    border-radius: 10px;
+    color: white;
+    font-size: 0.85rem;
+    font-family: inherit;
+    outline: none;
+    transition: var(--transition);
+}
+
+.visual-upload-controls input[type="text"]:focus {
+    border-color: var(--primary);
+}
+
+/* ===== Config Card ===== */
+.config-card + .config-card {
+    margin-top: 1.5rem;
+}
+
+/* ===== Btn Upload Gallery reutilizado ===== */
+.btn-upload-gallery {
+    background: rgba(229, 178, 93, 0.1);
+    color: var(--primary);
+    border: 1px solid rgba(229, 178, 93, 0.3);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    text-align: center;
+}
+
+.btn-upload-gallery:hover {
+    background: var(--primary);
+    color: #000;
+}
+
+@media (max-width: 600px) {
+    .visual-upload-row {
+        flex-direction: column;
+    }
+    .visual-preview {
+        width: 100%;
+        min-width: unset;
+    }
+    .filter-row {
+        grid-template-columns: 1fr 1fr;
+    }
+    .filter-row > div:nth-child(1),
+    .filter-row > div:nth-child(2),
+    .filter-row > div:nth-child(3),
+    .filter-row > div:nth-child(4),
+    .filter-row > div:nth-child(5) {
+        grid-column: span 1;
+    }
+}

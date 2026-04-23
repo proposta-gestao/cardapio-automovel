@@ -305,6 +305,93 @@
                     </div>
                 </div>
 
+                <!-- Personalização Visual -->
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <h2>🎨 Personalização Visual</h2>
+                        <button class="btn-primary" id="btnSalvarPersonalizacao">Salvar Visual</button>
+                    </div>
+                    <div class="config-card-body">
+                        <div class="form-row">
+                            <div class="form-group" style="flex:1">
+                                <label for="confBrandName">Nome da Marca (brand-name)</label>
+                                <input type="text" id="confBrandName" placeholder="Ex: ♠️♦️ACP♥️♣️">
+                            </div>
+                            <div class="form-group" style="flex:1">
+                                <label for="confBrandSubtitle">Subtítulo (brand-subtitle)</label>
+                                <input type="text" id="confBrandSubtitle" placeholder="Ex: Seu jogo em outro nível">
+                            </div>
+                        </div>
+
+                        <!-- Banner -->
+                        <div class="form-group">
+                            <label>Banner do Cardápio</label>
+                            <div class="visual-upload-row">
+                                <div class="visual-preview" id="previewBanner">
+                                    <span class="visual-preview-placeholder">Sem banner</span>
+                                </div>
+                                <div class="visual-upload-controls">
+                                    <label for="uploadBanner" class="btn-sm btn-upload-gallery">📤 Fazer Upload</label>
+                                    <input type="file" id="uploadBanner" accept="image/*" style="display:none;">
+                                    <input type="text" id="confBannerUrl" placeholder="Ou cole a URL da imagem..." style="margin-top:8px;">
+                                    <button class="btn-sm btn-edit" id="btnAplicarUrlBanner" style="margin-top:6px;">Aplicar URL</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Logo -->
+                        <div class="form-group">
+                            <label>Logo da Marca</label>
+                            <div class="visual-upload-row">
+                                <div class="visual-preview visual-preview--logo" id="previewLogo">
+                                    <span class="visual-preview-placeholder">Sem logo</span>
+                                </div>
+                                <div class="visual-upload-controls">
+                                    <label for="uploadLogo" class="btn-sm btn-upload-gallery">📤 Fazer Upload</label>
+                                    <input type="file" id="uploadLogo" accept="image/*" style="display:none;">
+                                    <input type="text" id="confLogoUrl" placeholder="Ou cole a URL da imagem..." style="margin-top:8px;">
+                                    <button class="btn-sm btn-edit" id="btnAplicarUrlLogo" style="margin-top:6px;">Aplicar URL</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Frete e Entrega -->
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <h2>🚚 Frete e Entrega</h2>
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <span style="font-size:0.9rem;color:var(--text-muted);">Habilitar entrega com frete</span>
+                            <label class="switch">
+                                <input type="checkbox" id="confFreteAtivo">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="config-card-body" id="freteZonasContainer" style="display:none;">
+                        <div class="admin-toolbar" style="margin-bottom:1rem;">
+                            <h3 style="font-size:1rem;margin:0;">Zonas de Entrega</h3>
+                            <button class="btn-primary btn-sm" id="btnNovaZona">+ Nova Zona</button>
+                        </div>
+                        <div class="admin-table-wrapper">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Bairro / Região</th>
+                                        <th>CEP Inicial</th>
+                                        <th>CEP Final</th>
+                                        <th>Valor (R$)</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="zonasBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div> <!-- Fechamento da admin-content-wrapper -->
     </div> <!-- Fechamento da admin-layout -->
@@ -489,6 +576,53 @@
             <div class="modal-actions">
                 <button class="btn-cancel" id="btnConfirmarCancelar">Cancelar</button>
                 <button class="btn-save btn-confirm-action" id="btnConfirmarOk">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Freight Zone Modal -->
+    <div class="admin-modal-backdrop" id="modalZona">
+        <div class="admin-modal">
+            <div class="modal-header">
+                <div class="modal-header-left">
+                    <button class="btn-modal-back" onclick="fecharModal('modalZona')" title="Voltar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                    </button>
+                    <h3 id="modalZonaTitulo">Nova Zona de Entrega</h3>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-save" id="btnSalvarZona">Salvar</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="zonaId">
+                <div class="form-group">
+                    <label for="zonaNome">Bairro / Região</label>
+                    <input type="text" id="zonaNome" placeholder="Ex: Centro, Santa Mônica...">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="zonaMinZip">CEP Inicial</label>
+                        <input type="text" id="zonaMinZip" placeholder="00000-000" maxlength="9">
+                    </div>
+                    <div class="form-group">
+                        <label for="zonaMaxZip">CEP Final</label>
+                        <input type="text" id="zonaMaxZip" placeholder="00000-000" maxlength="9">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="zonaFee">Valor do Frete (R$)</label>
+                        <input type="number" id="zonaFee" min="0" step="0.01" placeholder="8.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="zonaAtivo">Status</label>
+                        <select id="zonaAtivo">
+                            <option value="true">Ativa</option>
+                            <option value="false">Inativa</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
