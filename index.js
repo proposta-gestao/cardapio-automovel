@@ -37,6 +37,7 @@ let state = {
     categoriaAtiva: 'todos',
     termoBusca: '',
     tipoEntrega: 'mesa',   // 'mesa' | 'retirada' | 'entrega'
+    formaPagamento: 'dinheiro', // 'pix', 'dinheiro', 'cartao'
     freteAtivo: 0,         // valor em R$ do frete calculado
     freteHabilitado: false // controlado pelo Admin via store_settings
 };
@@ -247,7 +248,7 @@ function renderCarrinho() {
     if (state.carrinho.length === 0) {
         dom.cartItems.innerHTML = '<div class="empty-cart-msg">Seu carrinho está vazio.</div>';
         dom.contador.innerText = "0";
-        if (dom.total) dom.total.innerText = "0,00"; // keep this as just value if the UI expects it without label
+        if (dom.total) dom.total.innerText = "0,00";
         if (btnProx) btnProx.disabled = true;
         renderTotalBreakdown();
         return;
@@ -279,7 +280,7 @@ function renderCarrinho() {
 }
 
 // =============================================
-// WIZARD — ETAPAS DO CHECKOUT
+// WIZARD ETAPAS DO CHECKOUT
 // =============================================
 
 function navegarStep(n) {
@@ -306,26 +307,21 @@ function navegarStep(n) {
         dot2.textContent = '2';
         if (line) line.style.background = 'var(--primary)';
         renderTotalBreakdown();
-        // Inicializa modo de entrega conforme frete habilitado
+
         const tipoAtual = state.freteHabilitado ? state.tipoEntrega : 'mesa';
         toggleTipoEntrega(tipoAtual);
 
-        // Vincular radio buttons se frete habilitado
         if (state.freteHabilitado) {
             const optR = document.getElementById('optRetirada');
             const optE = document.getElementById('optEntrega');
             if (optR) optR.onchange = () => toggleTipoEntrega('retirada');
             if (optE) optE.onchange = () => toggleTipoEntrega('entrega');
-            // Manter radio sincronizado com state
             if (optR && state.tipoEntrega !== 'entrega') optR.checked = true;
             if (optE && state.tipoEntrega === 'entrega') optE.checked = true;
         }
 
-        // Vincular btn buscar CEP
         const btnBuscarCep = document.getElementById('btnBuscarCep');
         if (btnBuscarCep) btnBuscarCep.onclick = buscarCepAuto;
-
-        // Vincular input CEP
         const cepEl = document.getElementById('cep');
         if (cepEl) cepEl.oninput = onCepInput;
     }
@@ -347,29 +343,19 @@ function calcularFrete(bairro) {
     if (!state.freteHabilitado) return 0;
     if (!bairro) return -1;
 
-    const normalizar = (s) => (s || '').toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const bairroClienteNorm = normalizar(bairro);
+    const normalizarInterno = (s) => (s || '').toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const bairroClienteNorm = normalizarInterno(bairro);
 
-    console.log(`Buscando taxa para o bairro: ${bairro}`);
-
-    // Procura o bairro dentro das listas de cada zona
     const zona = ZONAS_FRETE.find(z => {
         if (!z.neighborhoods) return false;
-        
-        // Divide a string de bairros por vírgula e limpa espaços
-        const listaBairros = z.neighborhoods.split(',').map(b => normalizar(b));
-        
-        // Verifica se o bairro do cliente está na lista dessa zona
+        const listaBairros = z.neighborhoods.split(',').map(b => normalizarInterno(b));
         return listaBairros.includes(bairroClienteNorm);
     });
     
     if (zona) {
-        console.log(`✅ Zona encontrada: ${zona.name} (Taxa: ${zona.fee})`);
         return parseFloat(zona.fee) || 0;
     }
-    
-    console.warn("❌ Bairro não incluído em nenhuma zona de entrega.");
-    return -1; // -1 = fora da área de cobertura
+    return -1;
 }
 
 // =============================================
@@ -384,7 +370,6 @@ function renderTotalBreakdown() {
     const fmt = (v) => formatCurrency(v);
     const fmtNum = (v) => formatNumber(v);
 
-    // --- Etapa 1: breakdown do cupom ---
     const couponBreakdown = document.getElementById('couponBreakdown');
     const cbTotal = document.getElementById('cbTotal');
     const cbDesconto = document.getElementById('cbDesconto');
@@ -401,7 +386,6 @@ function renderTotalBreakdown() {
         }
     }
 
-    // Atualiza subtotal da etapa 1 (com desconto aplicado)
     if (dom.total) {
         dom.total.innerText = fmtNum(subtotalFinal);
     }
@@ -414,11 +398,10 @@ function renderTotalBreakdown() {
         frete:     document.getElementById('breakdownFrete'),
         tot:       document.getElementById('breakdownTotal'),
     };
-    if (!els.sub) return; // etapa 2 não visível ainda
+    if (!els.sub) return;
 
     els.sub.textContent = fmt(subtotal);
 
-    // Linha de desconto
     if (desconto > 0) {
         els.desc.textContent = `- ${fmt(desconto)}`;
         els.desc.style.color = '#00B894';
@@ -427,7 +410,6 @@ function renderTotalBreakdown() {
         els.descRow.style.display = 'none';
     }
 
-    // Linha de frete
     const frete = state.freteHabilitado && state.tipoEntrega === 'entrega' ? state.freteAtivo : 0;
     if (els.freteRow) {
         if (frete > 0) {
@@ -435,7 +417,7 @@ function renderTotalBreakdown() {
             els.frete.style.color = 'inherit';
             els.freteRow.style.display = 'flex';
         } else if (state.freteHabilitado && state.tipoEntrega === 'entrega' && frete === -1) {
-            els.frete.textContent = '⚠ Bairro não atendido';
+            els.frete.textContent = '⚠️ Bairro não atendido';
             els.frete.style.color = 'var(--danger)';
             els.freteRow.style.display = 'flex';
         } else if (state.freteHabilitado && state.tipoEntrega === 'entrega') {
@@ -452,7 +434,7 @@ function renderTotalBreakdown() {
 }
 
 // =============================================
-// CEP — AUTOCOMPLETE + CÁLCULO DE FRETE
+// CEP AUTOCOMPLETE
 // =============================================
 
 let _cepTimer = null;
@@ -499,14 +481,12 @@ async function buscarCepAuto() {
             return;
         }
 
-        // Preencher campos e exibir
         const logEl = document.getElementById('endLogradouro');
         const baiEl = document.getElementById('endBairro');
         if (logEl) logEl.value = data.logradouro || '';
         if (baiEl) baiEl.value = data.bairro || '';
         if (camposExtras) camposExtras.style.display = 'block';
 
-        // Calcular frete pelo BAIRRO
         const frete = calcularFrete(data.bairro);
         state.freteAtivo = frete;
 
@@ -571,7 +551,6 @@ window.removerDoCarrinho = (index) => {
 // EVENT LISTENERS
 // =============================================
 
-// Quantidade no Modal
 document.getElementById("mais").onclick = () => {
     const maxQty = state.produtoSelecionado?.stock || 0;
     if (state.quantidadeAtual < maxQty) {
@@ -591,7 +570,6 @@ document.getElementById("menos").onclick = () => {
     }
 };
 
-// Adicionar ao Carrinho
 document.getElementById("confirmar").onclick = () => {
     const obs = document.getElementById("obs").value;
     state.carrinho.push({ ...state.produtoSelecionado, qnt: state.quantidadeAtual, obs });
@@ -603,7 +581,6 @@ document.getElementById("confirmar").onclick = () => {
 document.getElementById("btnContinuar").onclick = () => toggleModal(false);
 document.getElementById("btnIrCarrinho").onclick = () => { toggleModal(false); toggleCart(true); };
 
-// Filtros de Categoria
 function vincularFiltros() {
     document.querySelectorAll('.cat-btn').forEach(btn => {
         btn.onclick = () => {
@@ -615,36 +592,11 @@ function vincularFiltros() {
     });
 }
 
-// Busca
 dom.busca.onkeyup = (e) => {
     state.termoBusca = e.target.value;
     renderMenu();
 };
 
-// Cupom (DESATIVADO TEMPORARIAMENTE)
-/*
-document.getElementById("btnCupom").onclick = async () => {
-    const codigo = document.getElementById("cupom").value.trim().toUpperCase();
-    if (!codigo) return;
-
-    const cupom = CUPONS.find(c => c.code === codigo);
-    if (cupom) {
-        state.descontoAtivo = parseFloat(cupom.discount_percent) / 100;
-        state.cupomAplicado = codigo;
-        mostrarToast(`🎉 Cupom "${codigo}" aplicado! ${cupom.discount_percent}% de desconto.`, 'success');
-        renderCarrinho();
-    } else {
-        mostrarToast('❌ Cupom inválido ou expirado. Tente outro!', 'error');
-    }
-};
-*/
-
-// CEP (REMOVIDO)
-const cepInput = document.getElementById("cep");
-if (cepInput) cepInput.oninput = onCepInput;
-
-// Tipo de Entrega
-// Tipo de Entrega
 function toggleTipoEntrega(tipo) {
     state.tipoEntrega = tipo;
     const secaoEndereco = document.getElementById('secaoEndereco');
@@ -667,7 +619,6 @@ function toggleTipoEntrega(tipo) {
         if (secaoEndereco) secaoEndereco.style.display = '';
         if (secaoMesa) secaoMesa.style.display = 'none';
     } else {
-        // retirada ou mesa default
         if (secaoEndereco) secaoEndereco.style.display = 'none';
         if (tipo === 'mesa' && !state.freteHabilitado) {
             if (secaoMesa) secaoMesa.style.display = '';
@@ -679,14 +630,12 @@ function toggleTipoEntrega(tipo) {
     }
 }
 
-// Vincular eventos de rádio
 function vincularRadiosEntrega() {
     document.querySelectorAll('input[name="tipoEntrega"]').forEach(radio => {
         radio.addEventListener('change', (e) => toggleTipoEntrega(e.target.value));
     });
 }
 
-// Wizard — Navegação
 document.getElementById("btnProximaEtapa").onclick = () => {
     if (state.carrinho.length === 0) return;
     navegarStep(2);
@@ -694,12 +643,10 @@ document.getElementById("btnProximaEtapa").onclick = () => {
 
 document.getElementById("btnVoltarEtapa").onclick = () => navegarStep(1);
 
-// Limitar telefone a 11 dígitos numéricos
 const telInput = document.getElementById('clienteTelefone');
 if (telInput) {
     telInput.addEventListener('input', () => {
         let digits = telInput.value.replace(/\D/g, '').slice(0, 11);
-        // Formata: (XX) XXXXX-XXXX
         let formatted = digits;
         if (digits.length > 2)  formatted = `(${digits.slice(0,2)}) ${digits.slice(2)}`;
         if (digits.length > 7)  formatted = `(${digits.slice(0,2)}) ${digits.slice(2,7)}-${digits.slice(7)}`;
@@ -707,10 +654,14 @@ if (telInput) {
     });
 }
 
-// Enviar Pedido via WhatsApp
+// Enviar Pedido
 document.getElementById("btnEnviar").onclick = async () => {
     const btn = document.getElementById("btnEnviar");
     if (state.carrinho.length === 0) return mostrarToast("Seu carrinho está vazio!", "error");
+
+    const formaPagamentoEl = document.querySelector('input[name="formaPagamento"]:checked');
+    const formaPagamento = formaPagamentoEl ? formaPagamentoEl.value : 'dinheiro';
+    state.formaPagamento = formaPagamento;
 
     const nomeCliente    = document.getElementById("clienteNome")?.value.trim() || '';
     const telefoneCliente = document.getElementById("clienteTelefone")?.value.trim() || '';
@@ -718,7 +669,6 @@ document.getElementById("btnEnviar").onclick = async () => {
     if (!nomeCliente)    return mostrarToast("Por favor, informe seu nome completo.", "error");
     if (!telefoneCliente) return mostrarToast("Por favor, informe seu telefone/WhatsApp.", "error");
 
-    // Coletar dados conforme tipo de entrega
     let camposEndereco = {};
     let freteValor = 0;
 
@@ -729,7 +679,6 @@ document.getElementById("btnEnviar").onclick = async () => {
         if (!posicao) return mostrarToast("Por favor, informe a POSIÇÃO.", "error");
         camposEndereco = { mesa, posicao };
         freteValor = 0;
-
     } else if (state.tipoEntrega === 'entrega') {
         const cep         = document.getElementById("cep")?.value.trim() || '';
         const numero      = document.getElementById("endNumero")?.value.trim() || '';
@@ -743,7 +692,6 @@ document.getElementById("btnEnviar").onclick = async () => {
 
         camposEndereco = { cep, logradouro, numero, bairro, complemento };
         freteValor = state.freteAtivo > 0 ? state.freteAtivo : 0;
-
     } else if (state.tipoEntrega === 'retirada') {
         camposEndereco = { retirada: true };
         freteValor = 0;
@@ -753,7 +701,6 @@ document.getElementById("btnEnviar").onclick = async () => {
     btn.innerHTML = `<span>Processando pedido...</span>`;
 
     try {
-        // Validação de Estoque em Tempo Real
         const productIds = state.carrinho.map(p => p.id);
         const { data: freshStock, error: stockErr } = await sb
             .from('products')
@@ -776,47 +723,28 @@ document.getElementById("btnEnviar").onclick = async () => {
             btn.innerHTML = `<span>Enviar pedido para o atendente</span><span class="atendente-icon">🛎️</span>`;
             mostrarToast(`Produto esgotado ou quantidade indisponível!`, 'error');
             toggleCart(false);
-            carregarProdutos(); // Recarrega vitrine para atualizar estoque/esgotados
+            carregarProdutos();
             return;
         }
+
         const subtotal = state.carrinho.reduce((acc, p) => acc + (p.preco * p.qnt), 0);
         const desconto = subtotal * state.descontoAtivo;
         const totalFinal = subtotal - desconto + freteValor;
 
-        // 1. Salvar/Atualizar cliente na tabela clientes (upsert por celular)
-        (async () => {
-            try {
-                const celularLimpo = telefoneCliente.replace(/\D/g, '');
+        const celularLimpo = telefoneCliente.replace(/\D/g, '');
         const enderecoStr = state.freteHabilitado
             ? (state.tipoEntrega === 'entrega'
                 ? `${camposEndereco.logradouro || ''}, ${camposEndereco.numero || ''} - ${camposEndereco.bairro || ''} (CEP: ${camposEndereco.cep || ''})`
                 : state.tipoEntrega === 'retirada' ? 'Retirada no local' : `Mesa ${camposEndereco.mesa || ''}, Posição ${camposEndereco.posicao || ''}`)
             : `Mesa ${camposEndereco.mesa || ''}, Posição ${camposEndereco.posicao || ''}`;
 
-                const { data: existente } = await sb
-                    .from('clientes')
-                    .select('id')
-                    .eq('celular', celularLimpo)
-                    .maybeSingle();
+        // Salvar dados do cliente em segundo plano (não trava o processo principal)
+        sb.from('clientes').upsert({
+            celular: celularLimpo,
+            nome: nomeCliente,
+            endereco: enderecoStr
+        }, { onConflict: 'celular' });
 
-                if (existente) {
-                    // Cliente já existe: atualiza nome e localização
-                    await sb.from('clientes').update({ 
-                        nome: nomeCliente,
-                        endereco: enderecoStr 
-                    }).eq('id', existente.id);
-                } else {
-                    // Novo cliente: insere
-                    await sb.from('clientes').insert({
-                        nome: nomeCliente,
-                        celular: celularLimpo,
-                        endereco: enderecoStr
-                    });
-                }
-            } catch (e) {
-                console.warn('Aviso: não foi possível salvar cliente:', e.message);
-            }
-        })();
 
         function generateUUID() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -835,15 +763,15 @@ document.getElementById("btnEnviar").onclick = async () => {
             discount: state.descontoAtivo * 100,
             total: totalFinal,
             status: 'pendente',
+            payment_method: state.formaPagamento,
+            payment_status: 'pendente',
             delivery_type: state.tipoEntrega,
-            shipping_fee: 0
+            shipping_fee: freteValor
         };
 
-        // Sem usar .select() ou .single() para não exigir permissão de RLS de SELECT na tabela orders
         const { error: orderError } = await sb.from('orders').insert(orderPayload);
         if (orderError) throw orderError;
 
-        // 3. Salvar Itens do Pedido
         const itemsPayload = state.carrinho.map(p => ({
             order_id: orderId,
             product_id: p.id,
@@ -856,10 +784,6 @@ document.getElementById("btnEnviar").onclick = async () => {
         const { error: itemsError } = await sb.from('order_items').insert(itemsPayload);
         if (itemsError) throw itemsError;
 
-        // 4. Baixa Automática de Estoque
-        // Observação: a lógica do estoque agora roda atomicamente via banco de dados usando um Trigger (Postgres).
-
-        // 4. Montar mensagem WhatsApp
         const fmtW = (v) => formatCurrency(v);
         let msg = `*📦 NOVO PEDIDO — ♠️♦️ACP♥️♣️*%0A%0A`;
         msg += `*👤 Cliente:* ${nomeCliente}%0A`;
@@ -892,26 +816,27 @@ document.getElementById("btnEnviar").onclick = async () => {
         }
         msg += `*💰 TOTAL: ${fmtW(totalFinal)}*`;
 
-        // window.open(`https://wa.me/${CONFIG.telefone}?text=${msg}`);
-
-        // 6. Persistir Nome e Telefone para próxima vez
         localStorage.setItem('acp_nome', nomeCliente);
         localStorage.setItem('acp_telefone', telefoneCliente);
 
-        // 7. Limpar Mesa e Posição
         const mesaInput = document.getElementById("clienteMesa");
         const posicaoInput = document.getElementById("clientePosicao");
         if (mesaInput) mesaInput.value = '';
         if (posicaoInput) posicaoInput.value = '';
 
-        // Limpar carrinho e fechar
         state.carrinho = [];
         state.descontoAtivo = 0;
         state.cupomAplicado = null;
         renderCarrinho();
         toggleCart(false);
         carregarProdutos();
-        mostrarConfirmacaoPedido(nomeCliente);
+        
+        if (state.formaPagamento === 'pix') {
+            await iniciarFluxoPix(orderId, totalFinal, msg);
+        } else {
+            window.open(`https://wa.me/${CONFIG.telefone}?text=${msg}`);
+            mostrarConfirmacaoPedido(nomeCliente);
+        }
 
     } catch (err) {
         console.error("Erro ao processar pedido:", err);
@@ -964,7 +889,7 @@ const toggleCart = (show) => {
     dom.cart.classList.toggle('open', show);
     dom.backdrop.classList.toggle('active', show);
     dom.cart.setAttribute('aria-hidden', String(!show));
-    if (show) navegarStep(1); // Sempre abre na etapa 1
+    if (show) navegarStep(1);
 };
 
 document.getElementById("btnCart").onclick = () => toggleCart(true);
@@ -973,6 +898,96 @@ document.getElementById("closeModal").onclick = () => toggleModal(false);
 dom.backdrop.onclick = () => { toggleCart(false); toggleModal(false); };
 
 // =============================================
-// INICIALIZAR
+// FLUXO PIX MERCADO PAGO
 // =============================================
+
+async function iniciarFluxoPix(orderId, total, whatsappMsg) {
+    const modal = document.getElementById('modalPix');
+    const qrImage = document.getElementById('pixQrImage');
+    const loading = document.getElementById('pixLoading');
+    const statusMsg = document.getElementById('pixStatusMessage');
+    const btnCopiar = document.getElementById('btnCopiarPix');
+
+    modal.classList.add('active');
+    loading.style.display = 'block';
+    qrImage.style.display = 'none';
+    statusMsg.innerText = 'Gerando seu PIX...';
+    statusMsg.style.color = 'var(--primary)';
+    btnCopiar.disabled = true;
+
+    try {
+        // Resetar modal para estado inicial
+        pixLoading.style.display = 'block';
+        qrImage.style.display = 'none';
+        btnCopiar.style.display = 'none';
+        statusMsg.innerText = 'Gerando cobrança...';
+
+        const { data, error } = await sb.functions.invoke('mercadopago-pix', {
+            body: { orderId }
+        });
+
+        if (error || (data && data.error)) {
+            const msgErro = error?.details || data?.error || 'Erro desconhecido';
+            mostrarToast('Erro do Mercado Pago: ' + msgErro, 'error');
+            throw new Error(msgErro);
+        }
+
+        loading.style.display = 'none';
+        pixLoading.style.display = 'none';
+        qrImage.src = `data:image/png;base64,${data.qr_code_base64}`;
+        qrImage.style.display = 'block';
+        btnCopiar.style.display = 'block'; // Mostrar botão apenas agora
+        statusMsg.innerText = 'Aguardando pagamento...';
+        btnCopiar.disabled = false;
+
+        btnCopiar.onclick = () => {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(data.qr_code);
+                const feedback = document.getElementById('copyPixFeedback');
+                feedback.style.display = 'block';
+                setTimeout(() => feedback.style.display = 'none', 3000);
+            } else {
+                mostrarToast('Seu navegador não suporta cópia automática.', 'warn');
+            }
+        };
+
+        const channel = sb.channel(`order-pix-${orderId}`)
+            .on('postgres_changes', { 
+                event: 'UPDATE', 
+                schema: 'public', 
+                table: 'orders', 
+                filter: `id=eq.${orderId}` 
+            }, payload => {
+                if (payload.new.payment_status === 'pago') {
+                    statusMsg.innerHTML = '✅ PAGAMENTO CONFIRMADO!';
+                    statusMsg.style.color = '#25D366';
+                    
+                    setTimeout(() => {
+                        modal.classList.remove('active');
+                        mostrarToast('Pagamento recebido!', 'success');
+                        window.open(`https://wa.me/${CONFIG.telefone}?text=${whatsappMsg}%0A%0A*✅ PAGAMENTO PIX CONFIRMADO*`);
+                        setTimeout(() => window.location.reload(), 2000);
+                    }, 2000);
+                    
+                    sb.removeChannel(channel);
+                }
+            })
+            .subscribe();
+
+        document.getElementById('closeModalPix').onclick = () => {
+            modal.classList.remove('active');
+            sb.removeChannel(channel);
+        };
+
+    } catch (err) {
+        console.error('Erro no fluxo PIX:', err);
+        mostrarToast('Erro ao gerar PIX.', 'error');
+        modal.classList.remove('active');
+        const btn = document.getElementById('btnEnviar');
+        btn.disabled = false;
+        btn.innerHTML = `<span>Tentar novamente</span>`;
+    }
+}
+
+// Inicializar
 inicializar();

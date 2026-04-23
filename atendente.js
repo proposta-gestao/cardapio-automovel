@@ -533,9 +533,20 @@ function createOrderCard(order) {
         <div style="cursor:pointer" onclick="abrirModalDetalhes('${order.id}')">
             <p class="customer-name">${order.customer_name}</p>
             <div class="order-location" style="margin-top:5px; margin-bottom:5px;">MESA ${localizacao.mesa || '??'} | POS ${localizacao.posicao || '??'}</div>
-            <div class="card-footer" style="margin-top:10px;">
-                <span style="color:#888; font-size: 0.8rem">Total</span>
-                <span class="order-total" style="font-size:1rem;">${formatCurrency(order.total)}</span>
+            <div class="card-footer" style="margin-top:10px; flex-wrap: wrap; gap: 8px;">
+                <div style="flex: 1;">
+                    <span style="color:#888; font-size: 0.8rem">Total</span><br>
+                    <span class="order-total" style="font-size:1rem;">${formatCurrency(order.total)}</span>
+                </div>
+                <div class="payment-badge-status">
+                    ${order.payment_method === 'pix' ? `
+                        ${order.payment_status === 'pago' 
+                            ? '<span class="badge-status status-pago">✅ PIX PAGO</span>' 
+                            : '<span class="badge-status status-pendente">⏳ AGUARDANDO PIX</span>'}
+                    ` : `
+                        <span class="badge-status status-offline">${order.payment_method?.toUpperCase()}</span>
+                    `}
+                </div>
             </div>
         </div>
         ${actionButton}

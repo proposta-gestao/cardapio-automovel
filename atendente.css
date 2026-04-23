@@ -570,3 +570,45 @@ body {
     padding: 20px;
     display: none;
 }
+/* Payment Badges */
+.badge-status {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid transparent;
+}
+
+.status-pago {
+    background: rgba(46, 213, 115, 0.1);
+    color: #2ed573;
+    border-color: rgba(46, 213, 115, 0.2);
+}
+
+.status-pendente {
+    background: rgba(255, 71, 87, 0.1);
+    color: #ff4757;
+    border-color: rgba(255, 71, 87, 0.2);
+    animation: badgePulse 2s infinite;
+}
+
+.status-offline {
+    background: rgba(116, 125, 140, 0.1);
+    color: #a4b0be;
+    border-color: rgba(116, 125, 140, 0.2);
+    font-size: 0.65rem;
+}
+
+@keyframes badgePulse {
+    0% { filter: brightness(1); }
+    50% { filter: brightness(1.5); }
+    100% { filter: brightness(1); }
+}
+
+.payment-badge-status {
+    display: flex;
+    align-items: center;
+}
