@@ -834,8 +834,10 @@ document.getElementById("btnEnviar").onclick = async () => {
         if (state.formaPagamento === 'pix') {
             await iniciarFluxoPix(orderId, totalFinal, msg);
         } else {
-            window.open(`https://wa.me/${CONFIG.telefone}?text=${msg}`);
-            mostrarConfirmacaoPedido(nomeCliente);
+            if (state.freteHabilitado) {
+                window.open(`https://wa.me/${CONFIG.telefone}?text=${msg}`);
+            }
+            mostrarConfirmacaoPedido(nomeCliente, state.formaPagamento, state.freteHabilitado);
         }
 
     } catch (err) {
@@ -868,16 +870,29 @@ function mostrarToast(msg, tipo = 'success') {
     }, 3500);
 }
 
-function mostrarConfirmacaoPedido(nome) {
+function mostrarConfirmacaoPedido(nome, formaPagamento = '', freteHabilitado = true) {
     const overlay = document.createElement('div');
     overlay.id = 'orderConfirmOverlay';
+
+    let detailText = "";
+    
+    if (formaPagamento === 'dinheiro' || formaPagamento === 'cartao') {
+        detailText = `O seu pedido já está na nossa cozinha! 🍳<br><br><strong style="color:var(--primary); font-size: 1.1em;">⚠️ O pagamento deve ser realizado diretamente com o atendente.</strong>`;
+    } else {
+        if (freteHabilitado) {
+            detailText = "Em breve você receberá uma confirmação pelo WhatsApp. <br>Prepara o prato porque vem coisa boa aí! 😋";
+        } else {
+            detailText = "Seu pedido foi encaminhado para nossa cozinha. <br>Prepara o prato porque vem coisa boa aí! 😋";
+        }
+    }
+
     overlay.innerHTML = `
         <div class="order-confirm-box">
             <div class="order-confirm-emoji">🍽️</div>
             <h2 class="order-confirm-title">Pedido Enviado!</h2>
             <p class="order-confirm-sub">Ebaaa, ${nome}! Seu pedido foi registrado com sucesso 🎉</p>
-            <p class="order-confirm-detail">Em breve você receberá uma confirmação pelo WhatsApp. <br>Prepara o prato porque vem coisa boa aí! 😋</p>
-            <button class="order-confirm-btn" onclick="document.getElementById('orderConfirmOverlay').remove()">Maravilha! 🤩</button>
+            <p class="order-confirm-detail">${detailText}</p>
+            <button class="order-confirm-btn" onclick="document.getElementById('orderConfirmOverlay').remove(); window.location.reload();">Maravilha! 🤩</button>
         </div>
     `;
     document.body.appendChild(overlay);
@@ -965,8 +980,10 @@ async function iniciarFluxoPix(orderId, total, whatsappMsg) {
                     setTimeout(() => {
                         modal.classList.remove('active');
                         mostrarToast('Pagamento recebido!', 'success');
-                        window.open(`https://wa.me/${CONFIG.telefone}?text=${whatsappMsg}%0A%0A*✅ PAGAMENTO PIX CONFIRMADO*`);
-                        setTimeout(() => window.location.reload(), 2000);
+                        if (state.freteHabilitado) {
+                            window.open(`https://wa.me/${CONFIG.telefone}?text=${whatsappMsg}%0A%0A*✅ PAGAMENTO PIX CONFIRMADO*`);
+                        }
+                        mostrarConfirmacaoPedido(document.getElementById("clienteNome")?.value.trim(), 'pix', state.freteHabilitado);
                     }, 2000);
                     
                     sb.removeChannel(channel);
