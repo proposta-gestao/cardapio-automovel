@@ -834,6 +834,11 @@ document.getElementById("btnEnviar").onclick = async () => {
         if (state.formaPagamento === 'pix') {
             await iniciarFluxoPix(orderId, totalFinal, msg);
         } else {
+            // Alerta de confirmação para pagamento manual
+            if (state.formaPagamento === 'dinheiro' || state.formaPagamento === 'cartao') {
+                alert("🛎️ Atenção: Seu pedido foi enviado para a cozinha! Lembre-se que o pagamento deve ser realizado diretamente com o atendente.");
+            }
+            
             if (state.freteHabilitado) {
                 window.open(`https://wa.me/${CONFIG.telefone}?text=${msg}`);
             }
