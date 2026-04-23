@@ -206,15 +206,30 @@
                     </div>
                 </div>
 
+                <!-- 4. Mesa (Só aparece se "mesa") -->
+                <div class="form-section" id="secaoMesa">
+                    <p class="form-section-title">Onde você está?</p>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="clienteMesa">MESA *</label>
+                            <input type="text" id="clienteMesa" placeholder="Ex: 05">
+                        </div>
+                        <div class="form-group">
+                            <label for="clientePosicao">POSIÇÃO *</label>
+                            <input type="text" id="clientePosicao" placeholder="Ex: 02">
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 2.1 Forma de Pagamento -->
                 <div class="form-section">
                     <p class="form-section-title">Forma de Pagamento</p>
-                    <div class="delivery-options">
+                    <div class="delivery-options payment-options">
                         <label class="delivery-option" for="payPix">
                             <input type="radio" name="formaPagamento" value="pix" id="payPix">
                             <span class="delivery-option-label">
                                 <span class="delivery-option-icon">📱</span>
-                                <span>PIX (Automático)</span>
+                                <span>PIX</span>
                             </span>
                         </label>
                         <label class="delivery-option" for="payDinheiro">
@@ -228,7 +243,7 @@
                             <input type="radio" name="formaPagamento" value="cartao" id="payCartao">
                             <span class="delivery-option-label">
                                 <span class="delivery-option-icon">💳</span>
-                                <span>Cartão (na entrega)</span>
+                                <span>Cartão</span>
                             </span>
                         </label>
                     </div>
@@ -271,21 +286,7 @@
                     </div>
                 </div>
 
-                <!-- 4. Mesa (Só aparece se "mesa") -->
-                <div class="form-section" id="secaoMesa">
-                    <p class="form-section-title">Onde você está?</p>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="clienteMesa">MESA *</label>
-                            <input type="text" id="clienteMesa" placeholder="Ex: 05">
-                        </div>
-                        <div class="form-group">
-                            <label for="clientePosicao">POSIÇÃO *</label>
-                            <input type="text" id="clientePosicao" placeholder="Ex: 02">
-                        </div>
-                    </div>
-                </div>
-            </div>
+
 
             <!-- Footer Etapa 2 -->
             <div class="step-footer">
