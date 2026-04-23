@@ -541,7 +541,7 @@ function createOrderCard(order) {
                 <div class="payment-badge-status">
                     ${order.payment_method === 'pix' ? `
                         ${order.payment_status === 'pago' 
-                            ? '<span class="badge-status status-pago">✅ PIX PAGO</span>' 
+                            ? '<span class="badge-status status-pago">✅ PAGAMENTO RECEBIDO</span>' 
                             : '<span class="badge-status status-pendente">⏳ AGUARDANDO PIX</span>'}
                     ` : `
                         <span class="badge-status status-offline">${order.payment_method?.toUpperCase()}</span>
