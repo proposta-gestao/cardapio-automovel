@@ -489,7 +489,8 @@ function renderBoard() {
 
 function createOrderCard(order) {
     const div = document.createElement('div');
-    div.className = `order-card card-${order.status}`;
+    const isPaid = order.payment_status === 'pago';
+    div.className = `order-card card-${order.status} ${isPaid ? 'card-is-paid' : ''}`;
     div.dataset.orderId = order.id;
 
     const timeStr = new Date(order.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });

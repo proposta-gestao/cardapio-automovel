@@ -61,12 +61,11 @@ serve(async (req) => {
 
       console.log(`[Webhook] Pagamento aprovado! Atualizando pedido ${orderId} no Supabase...`)
 
-      // 2. Atualiza o status do pedido para PAGO
+      // 2. Atualiza o status do pagamento para PAGO, mas mantém o status do pedido como pendente
       const { error, data } = await supabase
         .from('orders')
         .update({
-          payment_status: 'pago',
-          status: 'preparando'
+          payment_status: 'pago'
         })
         .eq('id', orderId)
         .select()
