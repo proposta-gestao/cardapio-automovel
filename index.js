@@ -88,6 +88,7 @@ async function inicializar() {
             carregarCupons(),
             carregarConfiguracoesPublicas()
         ]);
+        vincularRadiosEntrega();
     } catch (e) {
         dom.menu.innerHTML = '<p style="text-align:center;color:#FF4757;padding:3rem;">Erro ao carregar o cardápio. Tente recarregar a página.</p>';
     }
@@ -151,7 +152,8 @@ async function carregarConfiguracoesPublicas() {
     }
 
     if (!zonesRes.error) {
-        ZONAS_FRETE = zonesRes.data || [];
+        // Ordenar por nome para facilitar visualização
+        ZONAS_FRETE = (zonesRes.data || []).sort((a, b) => a.name.localeCompare(b.name));
     }
 }
 
@@ -341,28 +343,33 @@ function normalizar(str) {
         .trim();
 }
 
-function calcularFrete(cepOuBairro) {
-    if (!state.freteHabilitado || ZONAS_FRETE.length === 0) return 0;
+function calcularFrete(bairro) {
+    if (!state.freteHabilitado) return 0;
+    if (!bairro) return -1;
 
-    const cepLimpo = (cepOuBairro || '').replace(/\D/g, '');
-    const bairroNorm = normalizar(cepOuBairro);
+    const normalizar = (s) => (s || '').toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const bairroClienteNorm = normalizar(bairro);
 
-    // Tenta match por CEP (range numérico)
-    if (cepLimpo.length === 8) {
-        const por_cep = ZONAS_FRETE.find(z => {
-            const min = (z.min_zip || '').replace(/\D/g, '');
-            const max = (z.max_zip || '').replace(/\D/g, '');
-            if (min && max) return cepLimpo >= min && cepLimpo <= max;
-            return false;
-        });
-        if (por_cep) return parseFloat(por_cep.fee) || 0;
+    console.log(`Buscando taxa para o bairro: ${bairro}`);
+
+    // Procura o bairro dentro das listas de cada zona
+    const zona = ZONAS_FRETE.find(z => {
+        if (!z.neighborhoods) return false;
+        
+        // Divide a string de bairros por vírgula e limpa espaços
+        const listaBairros = z.neighborhoods.split(',').map(b => normalizar(b));
+        
+        // Verifica se o bairro do cliente está na lista dessa zona
+        return listaBairros.includes(bairroClienteNorm);
+    });
+    
+    if (zona) {
+        console.log(`✅ Zona encontrada: ${zona.name} (Taxa: ${zona.fee})`);
+        return parseFloat(zona.fee) || 0;
     }
-
-    // Fallback: match por nome do bairro
-    const por_bairro = ZONAS_FRETE.find(z => normalizar(z.name) === bairroNorm);
-    if (por_bairro) return parseFloat(por_bairro.fee) || 0;
-
-    return -1; // -1 = bairro/CEP não atendido
+    
+    console.warn("❌ Bairro não incluído em nenhuma zona de entrega.");
+    return -1; // -1 = fora da área de cobertura
 }
 
 // =============================================
@@ -474,7 +481,11 @@ async function buscarCepAuto() {
     if (cepLimpo.length !== 8) return;
 
     const status = document.getElementById('cepStatus');
-    if (status) { status.textContent = '🔍 Buscando...'; status.style.color = 'var(--text-muted)'; }
+    const loading = document.getElementById('cepLoading');
+    const camposExtras = document.getElementById('camposEnderecoAuto');
+
+    if (status) status.textContent = '';
+    if (loading) loading.style.display = 'block';
 
     try {
         const res  = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
@@ -482,32 +493,37 @@ async function buscarCepAuto() {
 
         if (data.erro) {
             if (status) { status.textContent = '❌ CEP não encontrado.'; status.style.color = 'var(--danger)'; }
+            if (camposExtras) camposExtras.style.display = 'none';
             state.freteAtivo = 0;
             renderTotalBreakdown();
             return;
         }
 
-        // Preencher campos
+        // Preencher campos e exibir
         const logEl = document.getElementById('endLogradouro');
         const baiEl = document.getElementById('endBairro');
         if (logEl) logEl.value = data.logradouro || '';
         if (baiEl) baiEl.value = data.bairro || '';
+        if (camposExtras) camposExtras.style.display = 'block';
 
-        // Calcular frete pelo CEP
-        const frete = calcularFrete(cepLimpo);
+        // Calcular frete pelo BAIRRO
+        const frete = calcularFrete(data.bairro);
         state.freteAtivo = frete;
 
         if (frete === -1) {
-            if (status) { status.textContent = '⚠️ Bairro/CEP não atendido para entrega.'; status.style.color = 'var(--danger)'; }
-        } else if (frete === 0) {
-            if (status) { status.textContent = '✅ Frete grátis para este endereço!'; status.style.color = 'var(--success)'; }
+            if (status) { status.textContent = '⚠️ Bairro não atendido para entrega.'; status.style.color = 'var(--danger)'; }
         } else {
-            if (status) { status.textContent = `✅ Frete: ${formatCurrency(frete)}`; status.style.color = 'var(--success)'; }
+            if (status) { 
+                status.textContent = `✅ Frete para ${data.bairro}: ${frete === 0 ? 'Grátis' : formatCurrency(frete)}`; 
+                status.style.color = 'var(--success)'; 
+            }
         }
 
         renderTotalBreakdown();
     } catch {
         if (status) { status.textContent = '❌ Erro ao buscar CEP.'; status.style.color = 'var(--danger)'; }
+    } finally {
+        if (loading) loading.style.display = 'none';
     }
 }
 
@@ -628,40 +644,46 @@ const cepInput = document.getElementById("cep");
 if (cepInput) cepInput.oninput = onCepInput;
 
 // Tipo de Entrega
+// Tipo de Entrega
 function toggleTipoEntrega(tipo) {
     state.tipoEntrega = tipo;
     const secaoEndereco = document.getElementById('secaoEndereco');
     const secaoMesa = document.getElementById('secaoMesa');
+    const secaoTipo = document.getElementById('secaoTipoRecebimento');
 
     if (!state.freteHabilitado) {
-        // Frete desabilitado: sempre modo mesa, esconde opções de entrega
         if (secaoEndereco) secaoEndereco.style.display = 'none';
         if (secaoMesa) secaoMesa.style.display = '';
+        if (secaoTipo) secaoTipo.style.display = 'none';
         state.tipoEntrega = 'mesa';
         state.freteAtivo = 0;
         renderTotalBreakdown();
         return;
     }
 
-    // Frete habilitado: mostrar opções
-    const secaoTipo = document.getElementById('secaoTipoEntrega');
     if (secaoTipo) secaoTipo.style.display = '';
 
     if (tipo === 'entrega') {
         if (secaoEndereco) secaoEndereco.style.display = '';
         if (secaoMesa) secaoMesa.style.display = 'none';
-    } else if (tipo === 'retirada') {
-        if (secaoEndereco) secaoEndereco.style.display = 'none';
-        if (secaoMesa) secaoMesa.style.display = 'none';
-        state.freteAtivo = 0;
-        renderTotalBreakdown();
     } else {
-        // mesa (padrão)
+        // retirada ou mesa default
         if (secaoEndereco) secaoEndereco.style.display = 'none';
-        if (secaoMesa) secaoMesa.style.display = '';
+        if (tipo === 'mesa' && !state.freteHabilitado) {
+            if (secaoMesa) secaoMesa.style.display = '';
+        } else {
+            if (secaoMesa) secaoMesa.style.display = 'none';
+        }
         state.freteAtivo = 0;
         renderTotalBreakdown();
     }
+}
+
+// Vincular eventos de rádio
+function vincularRadiosEntrega() {
+    document.querySelectorAll('input[name="tipoEntrega"]').forEach(radio => {
+        radio.addEventListener('change', (e) => toggleTipoEntrega(e.target.value));
+    });
 }
 
 // Wizard — Navegação

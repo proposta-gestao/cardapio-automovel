@@ -314,43 +314,67 @@
                     <div class="config-card-body">
                         <div class="form-row">
                             <div class="form-group" style="flex:1">
-                                <label for="confBrandName">Nome da Marca (brand-name)</label>
+                                <label for="confBrandName">Nome da Marca </label>
                                 <input type="text" id="confBrandName" placeholder="Ex: ♠️♦️ACP♥️♣️">
                             </div>
                             <div class="form-group" style="flex:1">
-                                <label for="confBrandSubtitle">Subtítulo (brand-subtitle)</label>
+                                <label for="confBrandSubtitle">Subtítulo</label>
                                 <input type="text" id="confBrandSubtitle" placeholder="Ex: Seu jogo em outro nível">
                             </div>
                         </div>
 
                         <!-- Banner -->
-                        <div class="form-group">
+                        <div class="form-group" style="margin-top: 2rem;">
                             <label>Banner do Cardápio</label>
                             <div class="visual-upload-row">
                                 <div class="visual-preview" id="previewBanner">
-                                    <span class="visual-preview-placeholder">Sem banner</span>
+                                    <div class="visual-preview-placeholder">
+                                        <strong>🖼️ Banner</strong>
+                                        Recomendado: 1200x300px
+                                    </div>
                                 </div>
                                 <div class="visual-upload-controls">
-                                    <label for="uploadBanner" class="btn-sm btn-upload-gallery">📤 Fazer Upload</label>
+                                    <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;">
+                                        <label for="uploadBanner" class="btn-upload-gallery highlight">📤 Fazer Upload</label>
+                                        <button class="btn-url-toggle" onclick="toggleUrlInput('containerBannerUrl')">🔗 Usar URL</button>
+                                    </div>
                                     <input type="file" id="uploadBanner" accept="image/*" style="display:none;">
-                                    <input type="text" id="confBannerUrl" placeholder="Ou cole a URL da imagem..." style="margin-top:8px;">
-                                    <button class="btn-sm btn-edit" id="btnAplicarUrlBanner" style="margin-top:6px;">Aplicar URL</button>
+
+                                    <!-- URL Input Container (Hidden) -->
+                                    <div id="containerBannerUrl" class="url-input-container" style="display:none;">
+                                        <div style="display:flex;gap:8px;">
+                                            <input type="text" id="confBannerUrl" placeholder="Cole a URL da imagem aqui..." style="flex:1;">
+                                            <button class="btn-sm btn-edit" id="btnAplicarUrlBanner">Aplicar</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Logo -->
-                        <div class="form-group">
+                        <div class="form-group" style="margin-top: 1.5rem;">
                             <label>Logo da Marca</label>
                             <div class="visual-upload-row">
                                 <div class="visual-preview visual-preview--logo" id="previewLogo">
-                                    <span class="visual-preview-placeholder">Sem logo</span>
+                                    <div class="visual-preview-placeholder">
+                                        <strong>🎯 Logo</strong>
+                                        500x500px
+                                    </div>
                                 </div>
                                 <div class="visual-upload-controls">
-                                    <label for="uploadLogo" class="btn-sm btn-upload-gallery">📤 Fazer Upload</label>
+                                    <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;">
+                                        <label for="uploadLogo" class="btn-upload-gallery highlight">📤 Fazer Upload</label>
+                                        <button class="btn-url-toggle" onclick="toggleUrlInput('containerLogoUrl')">🔗 Usar URL</button>
+                                    </div>
                                     <input type="file" id="uploadLogo" accept="image/*" style="display:none;">
-                                    <input type="text" id="confLogoUrl" placeholder="Ou cole a URL da imagem..." style="margin-top:8px;">
-                                    <button class="btn-sm btn-edit" id="btnAplicarUrlLogo" style="margin-top:6px;">Aplicar URL</button>
+
+                                    <!-- URL Input Container (Hidden) -->
+                                    <div id="containerLogoUrl" class="url-input-container" style="display:none;">
+                                        <div style="display:flex;gap:8px;">
+                                            <input type="text" id="confLogoUrl" placeholder="Cole a URL da imagem aqui..." style="flex:1;">
+                                            <button class="btn-sm btn-edit" id="btnAplicarUrlLogo">Aplicar</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -378,10 +402,9 @@
                             <table class="admin-table">
                                 <thead>
                                     <tr>
-                                        <th>Bairro / Região</th>
-                                        <th>CEP Inicial</th>
-                                        <th>CEP Final</th>
-                                        <th>Valor (R$)</th>
+                                        <th>Nome da Zona</th>
+                                        <th>Bairros Atendidos</th>
+                                        <th>Taxa (R$)</th>
                                         <th>Status</th>
                                         <th>Ações</th>
                                     </tr>
@@ -597,18 +620,13 @@
             <div class="modal-body">
                 <input type="hidden" id="zonaId">
                 <div class="form-group">
-                    <label for="zonaNome">Bairro / Região</label>
-                    <input type="text" id="zonaNome" placeholder="Ex: Centro, Santa Mônica...">
+                    <label for="zonaNome">Identificação da Zona</label>
+                    <input type="text" id="zonaNome" placeholder="Ex: Zona Norte, Região Central...">
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="zonaMinZip">CEP Inicial</label>
-                        <input type="text" id="zonaMinZip" placeholder="00000-000" maxlength="9">
-                    </div>
-                    <div class="form-group">
-                        <label for="zonaMaxZip">CEP Final</label>
-                        <input type="text" id="zonaMaxZip" placeholder="00000-000" maxlength="9">
-                    </div>
+                <div class="form-group">
+                    <label for="zonaNeighborhoods">Bairros Atendidos (separados por vírgula)</label>
+                    <textarea id="zonaNeighborhoods" rows="3" placeholder="Ex: Centro, Savassi, Funcionários, Barro Preto..."></textarea>
+                    <small style="margin-top: 5px; display: block; color: var(--text-muted);">Dica: Você pode copiar e colar uma lista de bairros separados por vírgula.</small>
                 </div>
                 <div class="form-row">
                     <div class="form-group">

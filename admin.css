@@ -1630,86 +1630,145 @@ input:checked+.slider:before {
 /* ===== Personalização Visual — Preview de Imagem ===== */
 .visual-upload-row {
     display: flex;
-    gap: 16px;
+    gap: 20px;
     align-items: flex-start;
     flex-wrap: wrap;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
 }
 
 .visual-preview {
-    width: 180px;
-    min-width: 180px;
-    height: 100px;
-    border-radius: 12px;
-    border: 2px dashed var(--border-color);
-    background: rgba(255,255,255,0.03);
+    width: 240px;
+    min-width: 240px;
+    height: 120px;
+    border-radius: 14px;
+    border: 2px dashed rgba(229, 178, 93, 0.3);
+    background: rgba(0, 0, 0, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
     flex-shrink: 0;
     transition: var(--transition);
+    position: relative;
 }
 
 .visual-preview--logo {
-    width: 100px;
-    min-width: 100px;
-    height: 100px;
+    width: 120px;
+    min-width: 120px;
+    height: 120px;
     border-radius: 50%;
 }
 
+.visual-preview:hover {
+    border-color: var(--primary);
+    background: rgba(229, 178, 93, 0.05);
+}
+
 .visual-preview-placeholder {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: var(--text-muted);
     text-align: center;
-    padding: 0.5rem;
+    padding: 1rem;
+    line-height: 1.4;
+}
+
+.visual-preview-placeholder strong {
+    display: block;
+    color: var(--primary);
+    margin-bottom: 4px;
+    font-size: 0.9rem;
 }
 
 .visual-upload-controls {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    min-width: 0;
+    justify-content: center;
+    min-width: 280px;
 }
 
-.visual-upload-controls input[type="text"] {
-    width: 100%;
-    padding: 10px 14px;
-    background: rgba(255,255,255,0.05);
-    border: 1.5px solid var(--border-color);
-    border-radius: 10px;
-    color: white;
-    font-size: 0.85rem;
-    font-family: inherit;
-    outline: none;
+/* ===== Botões de Upload Destacados ===== */
+.btn-upload-gallery.highlight {
+    background: var(--primary);
+    color: #000;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    box-shadow: 0 4px 15px rgba(229, 178, 93, 0.3);
+    border: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-upload-gallery.highlight:hover {
+    background: var(--primary-hover);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(229, 178, 93, 0.5);
+}
+
+/* Botão de URL Secundário mas visível */
+.btn-url-toggle {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 11px 18px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
     transition: var(--transition);
 }
 
-.visual-upload-controls input[type="text"]:focus {
+.btn-url-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
     border-color: var(--primary);
+}
+
+.url-input-container {
+    transition: all 0.3s ease;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Edição de Taxa Inline ===== */
+.fee-editable {
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: var(--transition);
+    display: inline-block;
+    border: 1px solid transparent;
+}
+
+.fee-editable:hover {
+    background: rgba(229, 178, 93, 0.1);
+    border-color: rgba(229, 178, 93, 0.3);
+    color: var(--primary);
+}
+
+.inline-fee-input {
+    width: 90px;
+    padding: 6px 10px;
+    background: #000 !important;
+    border: 2px solid var(--primary) !important;
+    border-radius: 8px;
+    color: var(--primary) !important;
+    font-weight: 800;
+    font-size: 0.95rem;
+    outline: none;
+    text-align: center;
 }
 
 /* ===== Config Card ===== */
 .config-card + .config-card {
     margin-top: 1.5rem;
-}
-
-/* ===== Btn Upload Gallery reutilizado ===== */
-.btn-upload-gallery {
-    background: rgba(229, 178, 93, 0.1);
-    color: var(--primary);
-    border: 1px solid rgba(229, 178, 93, 0.3);
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-    text-align: center;
-}
-
-.btn-upload-gallery:hover {
-    background: var(--primary);
-    color: #000;
 }
 
 @media (max-width: 600px) {

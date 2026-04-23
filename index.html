@@ -172,8 +172,21 @@
             <div class="step-body" id="step2Body">
                 <button class="btn-back-step" id="btnVoltarEtapa">← Voltar</button>
 
-                <!-- Tipo de Entrega (só aparece se frete estiver ativo) -->
-                <div class="form-section" id="secaoTipoEntrega" style="display:none;">
+                <!-- 1. Dados do Cliente (Agora no topo) -->
+                <div class="form-section">
+                    <p class="form-section-title">Seus Dados</p>
+                    <div class="form-group">
+                        <label for="clienteNome">Nome completo *</label>
+                        <input type="text" id="clienteNome" placeholder="Ex: Maria Silva">
+                    </div>
+                    <div class="form-group">
+                        <label for="clienteTelefone">Telefone / WhatsApp *</label>
+                        <input type="tel" id="clienteTelefone" placeholder="(31) 99999-9999" maxlength="15">
+                    </div>
+                </div>
+
+                <!-- 2. Como prefere receber -->
+                <div class="form-section" id="secaoTipoRecebimento" style="display:none;">
                     <p class="form-section-title">Como prefere receber?</p>
                     <div class="delivery-options">
                         <label class="delivery-option" for="optRetirada">
@@ -193,50 +206,44 @@
                     </div>
                 </div>
 
-                <!-- Endereço de Entrega (só aparece se "Entrega" selecionado) -->
+                <!-- 3. Endereço de Entrega (Smart Flow) -->
                 <div class="form-section" id="secaoEndereco" style="display:none;">
                     <p class="form-section-title">Endereço de Entrega</p>
                     <div class="form-group">
                         <label for="cep">CEP *</label>
-                        <div style="display:flex;gap:8px;">
-                            <input type="text" id="cep" placeholder="00000-000" maxlength="9" style="flex:1;">
-                            <button class="btn-sm btn-edit" id="btnBuscarCep" style="white-space:nowrap;padding:0 14px;">Buscar</button>
+                        <div style="position:relative;">
+                            <input type="text" id="cep" placeholder="00000-000" maxlength="9" style="width:100%;">
+                            <div id="cepLoading" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:0.8rem;color:var(--primary);">
+                                ⏳ Buscando...
+                            </div>
                         </div>
                         <small id="cepStatus" style="display:block;margin-top:6px;font-size:0.8rem;"></small>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group" style="flex:2">
-                            <label for="endLogradouro">Logradouro</label>
-                            <input type="text" id="endLogradouro" placeholder="Rua, Avenida..." readonly>
+
+                    <!-- Campos que aparecem após o CEP -->
+                    <div id="camposEnderecoAuto" style="display:none;">
+                        <div class="form-row">
+                            <div class="form-group" style="flex:2">
+                                <label for="endLogradouro">Logradouro</label>
+                                <input type="text" id="endLogradouro" placeholder="Rua, Avenida..." readonly>
+                            </div>
+                            <div class="form-group" style="flex:0.6">
+                                <label for="endNumero">Número *</label>
+                                <input type="text" id="endNumero" placeholder="123">
+                            </div>
                         </div>
-                        <div class="form-group" style="flex:0.6">
-                            <label for="endNumero">Número *</label>
-                            <input type="text" id="endNumero" placeholder="123">
+                        <div class="form-group">
+                            <label for="endBairro">Bairro</label>
+                            <input type="text" id="endBairro" placeholder="Bairro" readonly>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="endBairro">Bairro</label>
-                        <input type="text" id="endBairro" placeholder="Bairro" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="endComplemento">Complemento</label>
-                        <input type="text" id="endComplemento" placeholder="Apto, bloco, referência...">
+                        <div class="form-group">
+                            <label for="endComplemento">Complemento</label>
+                            <input type="text" id="endComplemento" placeholder="Apto, bloco, referência...">
+                        </div>
                     </div>
                 </div>
 
-                <!-- Dados do Pedido -->
-                <div class="form-section">
-                    <p class="form-section-title">Seus Dados</p>
-                    <div class="form-group">
-                        <label for="clienteNome">Nome completo *</label>
-                        <input type="text" id="clienteNome" placeholder="Ex: Maria Silva">
-                    </div>
-                    <div class="form-group">
-                        <label for="clienteTelefone">Telefone / WhatsApp *</label>
-                        <input type="tel" id="clienteTelefone" placeholder="(31) 99999-9999" maxlength="15">
-                    </div>
-                </div>
-
+                <!-- 4. Mesa (Só aparece se "mesa") -->
                 <div class="form-section" id="secaoMesa">
                     <p class="form-section-title">Onde você está?</p>
                     <div class="form-row">

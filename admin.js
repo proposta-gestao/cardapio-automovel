@@ -953,6 +953,13 @@ window.finalizarPedido = async (id) => {
 
 let zonasEntrega = [];
 
+// --- Toggle de visibilidade do campo de URL ---
+window.toggleUrlInput = (containerId) => {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+};
+
 async function carregarConfiguracoes() {
     const [settingsRes, zonasRes] = await Promise.all([
         sb.from('store_settings').select('*').single(),
@@ -999,28 +1006,30 @@ async function carregarConfiguracoes() {
 // --- Preview de imagem ---
 function atualizarPreviewBanner(url) {
     const el = document.getElementById('previewBanner');
+    const placeholder = el.querySelector('.visual-preview-placeholder');
     if (url) {
         el.style.backgroundImage = `url(${url})`;
         el.style.backgroundSize = 'cover';
         el.style.backgroundPosition = 'center';
-        el.querySelector('.visual-preview-placeholder').style.display = 'none';
+        if (placeholder) placeholder.style.display = 'none';
     } else {
         el.style.backgroundImage = '';
-        el.querySelector('.visual-preview-placeholder').style.display = '';
+        if (placeholder) placeholder.style.display = '';
     }
 }
 
 function atualizarPreviewLogo(url) {
     const el = document.getElementById('previewLogo');
+    const placeholder = el.querySelector('.visual-preview-placeholder');
     if (url) {
         el.style.backgroundImage = `url(${url})`;
         el.style.backgroundSize = 'contain';
         el.style.backgroundRepeat = 'no-repeat';
         el.style.backgroundPosition = 'center';
-        el.querySelector('.visual-preview-placeholder').style.display = 'none';
+        if (placeholder) placeholder.style.display = 'none';
     } else {
         el.style.backgroundImage = '';
-        el.querySelector('.visual-preview-placeholder').style.display = '';
+        if (placeholder) placeholder.style.display = '';
     }
 }
 
@@ -1057,11 +1066,15 @@ document.getElementById('uploadLogo').onchange = async (e) => {
 };
 
 document.getElementById('btnAplicarUrlBanner').onclick = () => {
-    atualizarPreviewBanner(document.getElementById('confBannerUrl').value.trim());
+    const url = document.getElementById('confBannerUrl').value.trim();
+    atualizarPreviewBanner(url);
+    if(url) toggleUrlInput('containerBannerUrl');
 };
 
 document.getElementById('btnAplicarUrlLogo').onclick = () => {
-    atualizarPreviewLogo(document.getElementById('confLogoUrl').value.trim());
+    const url = document.getElementById('confLogoUrl').value.trim();
+    atualizarPreviewLogo(url);
+    if(url) toggleUrlInput('containerLogoUrl');
 };
 
 // --- Salvar Personalização Visual ---
@@ -1071,7 +1084,7 @@ document.getElementById('btnSalvarPersonalizacao').onclick = async () => {
     btn.textContent = 'Salvando...';
 
     const payload = {
-        id: '00000000-0000-0000-0000-000000000001',
+        id: 1,
         brand_name:     document.getElementById('confBrandName').value.trim(),
         brand_subtitle: document.getElementById('confBrandSubtitle').value.trim(),
         banner_url:     document.getElementById('confBannerUrl').value.trim(),
@@ -1095,7 +1108,7 @@ document.getElementById('confFreteAtivo').onchange = async function () {
     document.getElementById('freteZonasContainer').style.display = ativo ? 'block' : 'none';
 
     const { error } = await sb.from('store_settings').upsert({
-        id: '00000000-0000-0000-0000-000000000001',
+        id: 1,
         frete_ativo: ativo,
         updated_at: new Date().toISOString()
     });
@@ -1117,9 +1130,12 @@ function renderZonasFrete() {
     tbody.innerHTML = zonasEntrega.map(z => `
         <tr>
             <td><strong>${z.name}</strong></td>
-            <td><code>${z.min_zip || '—'}</code></td>
-            <td><code>${z.max_zip || '—'}</code></td>
-            <td><strong>${formatCurrency(z.fee)}</strong></td>
+            <td><span style="font-size:0.85rem; color:var(--text-muted);">${z.neighborhoods || '—'}</span></td>
+            <td>
+                <div class="fee-editable" onclick="window.tornarFeeEditavel(this, '${z.id}')" title="Clique para editar taxa">
+                    <strong>${formatCurrency(z.fee)}</strong>
+                </div>
+            </td>
             <td><span class="badge ${z.active ? 'badge-active' : 'badge-inactive'}">${z.active ? 'Ativa' : 'Inativa'}</span></td>
             <td>
                 <div class="actions-cell">
@@ -1131,13 +1147,45 @@ function renderZonasFrete() {
     `).join('');
 }
 
+// --- Edição de Taxa Inline ---
+window.tornarFeeEditavel = (el, id) => {
+    if (el.querySelector('input')) return;
+    const valorAtual = parseFloat(el.textContent.replace('R$', '').replace('.', '').replace(',', '.').trim());
+    el.innerHTML = `<input type="number" step="0.01" class="inline-fee-input" value="${valorAtual}" onblur="window.salvarTaxaInline(this, '${id}')" onkeydown="if(event.key==='Enter') this.blur()">`;
+    const input = el.querySelector('input');
+    input.focus();
+    input.select();
+};
+
+window.salvarTaxaInline = async (input, id) => {
+    const novoValor = parseFloat(input.value);
+    if (isNaN(novoValor)) {
+        renderZonasFrete(); // Reverte se inválido
+        return;
+    }
+    
+    // Feedback visual imediato
+    const container = input.parentElement;
+    container.innerHTML = '<span style="font-size:0.8rem;opacity:0.6;">⏳...</span>';
+
+    const { error } = await sb.from('shipping_zones').update({ fee: novoValor }).eq('id', id);
+    if (error) {
+        showToast('Erro ao salvar taxa: ' + error.message, 'error');
+        renderZonasFrete();
+    } else {
+        const zona = zonasEntrega.find(z => z.id === id);
+        if (zona) zona.fee = novoValor;
+        renderZonasFrete();
+        showToast('Taxa atualizada!', 'success');
+    }
+};
+
 // --- CRUD Zonas de Frete ---
 document.getElementById('btnNovaZona').onclick = () => {
     document.getElementById('modalZonaTitulo').textContent = 'Nova Zona de Entrega';
     document.getElementById('zonaId').value = '';
     document.getElementById('zonaNome').value = '';
-    document.getElementById('zonaMinZip').value = '';
-    document.getElementById('zonaMaxZip').value = '';
+    document.getElementById('zonaNeighborhoods').value = '';
     document.getElementById('zonaFee').value = '';
     document.getElementById('zonaAtivo').value = 'true';
     abrirModal('modalZona');
@@ -1146,11 +1194,10 @@ document.getElementById('btnNovaZona').onclick = () => {
 window.editarZona = (id) => {
     const z = zonasEntrega.find(x => x.id === id);
     if (!z) return;
-    document.getElementById('modalZonaTitulo').textContent = 'Editar Zona de Entrega';
+    document.getElementById('modalZonaTitulo').textContent = 'Editar Zona';
     document.getElementById('zonaId').value = z.id;
     document.getElementById('zonaNome').value = z.name;
-    document.getElementById('zonaMinZip').value = z.min_zip || '';
-    document.getElementById('zonaMaxZip').value = z.max_zip || '';
+    document.getElementById('zonaNeighborhoods').value = z.neighborhoods || '';
     document.getElementById('zonaFee').value = z.fee;
     document.getElementById('zonaAtivo').value = String(z.active);
     abrirModal('modalZona');
@@ -1160,19 +1207,18 @@ document.getElementById('btnSalvarZona').onclick = async () => {
     const btn = document.getElementById('btnSalvarZona');
     const id = document.getElementById('zonaId').value;
     const nome = document.getElementById('zonaNome').value.trim();
+    const neighborhoods = document.getElementById('zonaNeighborhoods').value.trim();
     const fee = parseFloat(document.getElementById('zonaFee').value);
     const ativo = document.getElementById('zonaAtivo').value === 'true';
 
-    if (!nome || isNaN(fee) || fee < 0) {
-        showToast('Preencha o nome e o valor do frete corretamente.', 'error');
+    if (!nome || !neighborhoods || isNaN(fee) || fee < 0) {
+        showToast('Preencha o nome da zona, os bairros e a taxa.', 'error');
         return;
     }
 
-    const formatZip = (v) => v.replace(/\D/g, '');
     const payload = {
         name: nome,
-        min_zip: formatZip(document.getElementById('zonaMinZip').value) || null,
-        max_zip: formatZip(document.getElementById('zonaMaxZip').value) || null,
+        neighborhoods: neighborhoods,
         fee,
         active: ativo
     };
@@ -1188,11 +1234,11 @@ document.getElementById('btnSalvarZona').onclick = async () => {
     }
 
     if (error) {
-        showToast('Erro ao salvar zona: ' + error.message, 'error');
+        showToast('Erro ao salvar: ' + error.message, 'error');
     } else {
-        showToast(id ? 'Zona atualizada!' : 'Zona criada!', 'success');
+        showToast(id ? 'Bairro atualizado!' : 'Bairro criado!', 'success');
         fecharModal('modalZona');
-        const { data } = await sb.from('shipping_zones').select('*').order('created_at');
+        const { data } = await sb.from('shipping_zones').select('*').order('name');
         zonasEntrega = data || [];
         renderZonasFrete();
     }
@@ -1209,15 +1255,17 @@ window.excluirZona = async (id, nome) => {
     renderZonasFrete();
 };
 
-// --- Formatação CEP Zonas ---
-['zonaMinZip', 'zonaMaxZip'].forEach(inputId => {
-    const el = document.getElementById(inputId);
-    if (el) el.oninput = (e) => {
-        let v = e.target.value.replace(/\D/g, '');
-        if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5, 8);
-        e.target.value = v;
-    };
-});
+// --- Geolocalização Helper ---
+async function getCoordinates(address) {
+    try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`);
+        const data = await res.json();
+        if (data && data.length > 0) {
+            return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+        }
+    } catch (e) { console.error("Erro geocoding: ", e); }
+    return null;
+}
 
 document.getElementById('btnSalvarConfig').onclick = async () => {
     const btn = document.getElementById('btnSalvarConfig');
@@ -1225,7 +1273,7 @@ document.getElementById('btnSalvarConfig').onclick = async () => {
     btn.textContent = 'Salvando...';
 
     const payload = {
-        id: '00000000-0000-0000-0000-000000000001',
+        id: 1,
         store_name:           document.getElementById('confNomeLoja').value.trim(),
         address_zip:          document.getElementById('confCep').value.trim(),
         address_street:       document.getElementById('confLogradouro').value.trim(),
