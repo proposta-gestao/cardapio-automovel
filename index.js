@@ -834,15 +834,18 @@ document.getElementById("btnEnviar").onclick = async () => {
         if (state.formaPagamento === 'pix') {
             await iniciarFluxoPix(orderId, totalFinal, msg);
         } else {
-            // Alerta de confirmação para pagamento manual
+            const concluir = () => {
+                if (state.freteHabilitado) {
+                    window.open(`https://wa.me/${CONFIG.telefone}?text=${msg}`);
+                }
+                mostrarConfirmacaoPedido(nomeCliente, state.formaPagamento, state.freteHabilitado);
+            };
+
             if (state.formaPagamento === 'dinheiro' || state.formaPagamento === 'cartao') {
-                alert("🛎️ Atenção: Seu pedido foi enviado para a cozinha! Lembre-se que o pagamento deve ser realizado diretamente com o atendente.");
+                mostrarAlertaPagamentoManual(concluir);
+            } else {
+                concluir();
             }
-            
-            if (state.freteHabilitado) {
-                window.open(`https://wa.me/${CONFIG.telefone}?text=${msg}`);
-            }
-            mostrarConfirmacaoPedido(nomeCliente, state.formaPagamento, state.freteHabilitado);
         }
 
     } catch (err) {
@@ -875,6 +878,30 @@ function mostrarToast(msg, tipo = 'success') {
     }, 3500);
 }
 
+function mostrarAlertaPagamentoManual(callback) {
+    const overlay = document.createElement('div');
+    overlay.className = 'custom-alert-overlay';
+    overlay.innerHTML = `
+        <div class="custom-alert-box">
+            <div class="custom-alert-icon">🛎️</div>
+            <h2 class="custom-alert-title">Atenção ao Pagamento</h2>
+            <p class="custom-alert-text">Seu pedido foi enviado para a cozinha! 🎉<br><br>Por favor, lembre-se que o pagamento deve ser realizado <strong>diretamente com o atendente</strong>.</p>
+            <button class="custom-alert-btn">Entendido! 👍</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    requestAnimationFrame(() => overlay.classList.add('active'));
+    
+    overlay.querySelector('.custom-alert-btn').onclick = () => {
+        overlay.classList.remove('active');
+        setTimeout(() => {
+            overlay.remove();
+            callback();
+        }, 300);
+    };
+}
+
 function mostrarConfirmacaoPedido(nome, formaPagamento = '', freteHabilitado = true) {
     const overlay = document.createElement('div');
     overlay.id = 'orderConfirmOverlay';
@@ -882,7 +909,7 @@ function mostrarConfirmacaoPedido(nome, formaPagamento = '', freteHabilitado = t
     let detailText = "";
     
     if (formaPagamento === 'dinheiro' || formaPagamento === 'cartao') {
-        detailText = `O seu pedido já está na nossa cozinha! 🍳<br><br><strong style="color:var(--primary); font-size: 1.1em;">⚠️ O pagamento deve ser realizado diretamente com o atendente.</strong>`;
+        detailText = `Seu pedido já está em preparo! 🍳<br><br><strong style="color:var(--primary); font-size: 1.1em;">Agora é só aguardar o atendente para realizar o pagamento.</strong>`;
     } else {
         if (freteHabilitado) {
             detailText = "Em breve você receberá uma confirmação pelo WhatsApp. <br>Prepara o prato porque vem coisa boa aí! 😋";
