@@ -111,10 +111,10 @@ function customPrompt(title, message, defaultValue = '') {
     });
 }
 
-let currentPromoType = 'val';
+window.currentPromoType = 'val';
 
 window.setPromoType = (type) => {
-    currentPromoType = type;
+    window.currentPromoType = type;
     document.querySelectorAll('.promo-type-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.type === type);
     });
@@ -134,7 +134,7 @@ function atualizarPromoPreview() {
     let finalPromo = inputVal;
     let pctLabel = "";
 
-    if (currentPromoType === 'pct') {
+    if (window.currentPromoType === 'pct') {
         if (inputVal > 100) {
             previewEl.style.display = 'block';
             previewEl.textContent = `⚠️ Desconto não pode ser maior que 100%`;
@@ -933,16 +933,16 @@ document.getElementById('btnSalvarProduto').onclick = async () => {
     const motivoId = document.getElementById('prodMotivoSaidaId').value;
     const obs = document.getElementById('prodObsSaida').value.trim();
 
-    const basePrice = parseFloat(document.getElementById('prodPreco').value);
-    const promoVal = parseFloat(document.getElementById('prodPrecoPromo').value);
+    const basePrice = parseFloat(document.getElementById('prodPreco').value) || 0;
+    const promoVal = parseFloat(document.getElementById('prodPrecoPromo').value) || 0;
     
     if (promoVal > 0) {
-        if (currentPromoType === 'pct' && promoVal > 100) {
+        if (window.currentPromoType === 'pct' && promoVal > 100) {
             showToast('O desconto não pode ser maior que 100%.', 'error');
             return;
         }
-        if (currentPromoType === 'val' && promoVal >= basePrice) {
-            showToast('O preço promocional deve ser menor que o preço original.', 'error');
+        if (window.currentPromoType === 'val' && promoVal >= basePrice) {
+            showToast('O preço promocional deve ser menor que o original.', 'error');
             return;
         }
     }
@@ -958,7 +958,7 @@ document.getElementById('btnSalvarProduto').onclick = async () => {
         promo_price:     (() => {
             const val = parseFloat(document.getElementById('prodPrecoPromo').value);
             if (!val || val <= 0) return null;
-            if (currentPromoType === 'pct') {
+            if (window.currentPromoType === 'pct') {
                 const base = parseFloat(document.getElementById('prodPreco').value) || 0;
                 return base * (1 - val / 100);
             }
