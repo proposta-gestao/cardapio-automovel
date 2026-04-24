@@ -1198,8 +1198,8 @@ document.getElementById('loginSenha').onkeydown = (e) => {
     if (e.key === 'Enter') document.getElementById('btnLogin').click();
 };
 
-// --- Filtros de Pedidos ---
-document.getElementById('btnAplicarFiltros').onclick = () => {
+// --- Filtros de Pedidos (Live) ---
+function aplicarFiltrosPedidos() {
     filtrosPedidos = {
         dataInicio: document.getElementById('filtroDataInicio').value,
         dataFim: document.getElementById('filtroDataFim').value,
@@ -1210,7 +1210,23 @@ document.getElementById('btnAplicarFiltros').onclick = () => {
         status: document.getElementById('filtroStatus').value
     };
     renderPedidosFiltrados();
-};
+}
+
+// Debounce para inputs de texto e números para não sobrecarregar o render
+let filterTimeout;
+function aplicarFiltrosPedidosLive() {
+    clearTimeout(filterTimeout);
+    filterTimeout = setTimeout(aplicarFiltrosPedidos, 350);
+}
+
+// Listeners para filtros ao vivo
+document.getElementById('filtroCliente').oninput = aplicarFiltrosPedidosLive;
+document.getElementById('filtroAtendente').onchange = aplicarFiltrosPedidos;
+document.getElementById('filtroDataInicio').onchange = aplicarFiltrosPedidos;
+document.getElementById('filtroDataFim').onchange = aplicarFiltrosPedidos;
+document.getElementById('filtroValorMin').oninput = aplicarFiltrosPedidosLive;
+document.getElementById('filtroValorMax').oninput = aplicarFiltrosPedidosLive;
+document.getElementById('filtroStatus').onchange = aplicarFiltrosPedidos;
 
 document.getElementById('btnLimparFiltros').onclick = () => {
     filtrosPedidos = { dataInicio: '', dataFim: '', cliente: '', atendente: '', valorMin: '', valorMax: '', status: '' };
