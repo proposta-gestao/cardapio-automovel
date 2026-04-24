@@ -1083,7 +1083,11 @@ async function carregarConfiguracoes() {
         document.getElementById('freteZonasContainer').style.display = freteAtivo ? 'block' : 'none';
 
         // Justificativas
-        cancellationReasons = d.cancellation_reasons || [];
+        let cr = d.cancellation_reasons;
+        if (typeof cr === 'string') {
+            try { cr = JSON.parse(cr); } catch(e) { cr = []; }
+        }
+        cancellationReasons = Array.isArray(cr) ? cr : [];
         renderJustificativas();
     }
 
@@ -1415,12 +1419,13 @@ function renderJustificativas() {
     const tbody = document.getElementById('justificativasBody');
     if (!tbody) return;
     if (cancellationReasons.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:var(--text-muted);padding:1rem;">Nenhuma justificativa cadastrada.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:1rem;">Nenhuma justificativa cadastrada.</td></tr>';
         return;
     }
     
     tbody.innerHTML = cancellationReasons.map((r, i) => `
-        <tr>
+        <tr draggable="true" ondragstart="dragStart(event, ${i})" ondragover="dragOver(event)" ondrop="drop(event, ${i})" style="cursor: grab;">
+            <td style="color: var(--text-muted); text-align: center; font-size: 1.2rem;">☰</td>
             <td>${r}</td>
             <td>
                 <button class="btn-sm btn-delete" onclick="removerJustificativa(${i})">Excluir</button>
@@ -1428,6 +1433,30 @@ function renderJustificativas() {
         </tr>
     `).join('');
 }
+
+let draggedItemIndex = null;
+
+window.dragStart = (e, index) => {
+    draggedItemIndex = index;
+    e.dataTransfer.effectAllowed = 'move';
+};
+
+window.dragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+};
+
+window.drop = (e, dropIndex) => {
+    e.preventDefault();
+    if (draggedItemIndex === null || draggedItemIndex === dropIndex) return;
+
+    // Reorder array
+    const item = cancellationReasons.splice(draggedItemIndex, 1)[0];
+    cancellationReasons.splice(dropIndex, 0, item);
+    
+    draggedItemIndex = null;
+    renderJustificativas();
+};
 
 document.getElementById('btnAdicionarJustificativa').onclick = () => {
     const input = document.getElementById('inputNovaJustificativa');
@@ -1452,11 +1481,10 @@ document.getElementById('btnSalvarJustificativas').onclick = async () => {
     btn.disabled = true;
     btn.innerText = 'Salvando...';
 
-    const { error } = await sb.from('store_settings').upsert({
-        id: 1,
+    const { error } = await sb.from('store_settings').update({
         cancellation_reasons: cancellationReasons,
         updated_at: new Date().toISOString()
-    });
+    }).eq('id', 1);
 
     if (error) {
         showToast('Erro ao salvar justificativas: ' + error.message, 'error');
