@@ -538,22 +538,24 @@
 
         .price-old {
             font-size: 0.75rem;
-            color: var(--text-muted);
+            color: #FF4757;
             text-decoration: line-through;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .product-price.promo {
-            color: #FF4757; /* Destaque para o preço promocional */
-            font-weight: 800;
+            color: var(--primary); /* Amarelo/Dourado Premium */
+            font-weight: 900;
+            font-size: 1.2rem;
+            text-shadow: 0 0 10px rgba(229, 178, 93, 0.2);
         }
 
         .price-old-modal {
             font-size: 1rem;
-            color: var(--text-muted);
+            color: #FF4757;
             text-decoration: line-through;
             margin-right: 8px;
-            font-weight: 400;
+            font-weight: 600;
         }
 
         /* Sidebar Cart */
