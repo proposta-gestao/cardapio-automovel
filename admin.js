@@ -598,7 +598,7 @@ function renderCategorias() {
 
     tbody.innerHTML = categorias.map(c => `
                 <tr>
-                    <td><strong>${c.name}</strong></td>
+                    <td onclick="editarCategoria('${c.id}')" style="cursor:pointer;" title="Clique para editar"><strong>${c.name}</strong></td>
                     <td><code>${c.slug}</code></td>
                     <td>${c.order_position}</td>
                     <td>
@@ -1637,7 +1637,7 @@ function renderizarMotivosEstoque() {
 
     tbody.innerHTML = motivosEstoque.map(m => `
         <tr>
-            <td style="font-weight:600;">${m.name}</td>
+            <td style="font-weight:600; cursor:pointer;" onclick="editarMotivoEstoque('${m.id}')" title="Clique para editar">${m.name}</td>
             <td>
                 <span class="status-badge ${m.active ? 'status-pago' : 'status-cancelado'}" style="cursor:pointer;" onclick="toggleStatusMotivoEstoque('${m.id}', ${m.active})">
                     ${m.active ? 'Ativo' : 'Inativo'}
