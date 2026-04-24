@@ -1654,9 +1654,10 @@ function renderizarMotivosEstoque() {
         <tr>
             <td style="font-weight:600; cursor:pointer;" onclick="editarMotivoEstoque('${m.id}')" title="Clique para editar">${m.name}</td>
             <td>
-                <span class="status-badge ${m.active ? 'status-pago' : 'status-cancelado'}" style="cursor:pointer;" onclick="toggleStatusMotivoEstoque('${m.id}', ${m.active})">
-                    ${m.active ? 'Ativo' : 'Inativo'}
-                </span>
+                <label class="switch">
+                    <input type="checkbox" ${m.active ? 'checked' : ''} onchange="toggleStatusMotivoEstoque('${m.id}', this.checked)">
+                    <span class="slider"></span>
+                </label>
             </td>
             <td>
                 <div style="display:flex;gap:8px;justify-content:center;">
@@ -1693,8 +1694,8 @@ window.editarMotivoEstoque = async (id) => {
     }
 };
 
-window.toggleStatusMotivoEstoque = async (id, currentStatus) => {
-    const { error } = await sb.from('stock_reasons').update({ active: !currentStatus }).eq('id', id);
+window.toggleStatusMotivoEstoque = async (id, newStatus) => {
+    const { error } = await sb.from('stock_reasons').update({ active: newStatus }).eq('id', id);
     if (error) showToast('Erro ao alterar status.', 'error');
     else carregarMotivosEstoque();
 };
