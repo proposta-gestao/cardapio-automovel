@@ -135,14 +135,27 @@ function atualizarPromoPreview() {
     let pctLabel = "";
 
     if (currentPromoType === 'pct') {
+        if (inputVal > 100) {
+            previewEl.style.display = 'block';
+            previewEl.textContent = `⚠️ Desconto não pode ser maior que 100%`;
+            previewEl.style.color = 'var(--danger)';
+            return;
+        }
         finalPromo = precoBase * (1 - inputVal / 100);
         pctLabel = `(${inputVal}% OFF)`;
     } else {
+        if (inputVal >= precoBase) {
+            previewEl.style.display = 'block';
+            previewEl.textContent = `⚠️ Preço promo deve ser menor que o original`;
+            previewEl.style.color = 'var(--danger)';
+            return;
+        }
         const pctCalculado = Math.round((1 - (inputVal / precoBase)) * 100);
         pctLabel = isFinite(pctCalculado) && pctCalculado > 0 ? `(${pctCalculado}% OFF)` : "";
     }
     
     previewEl.style.display = 'block';
+    previewEl.style.color = 'var(--warning)';
     previewEl.textContent = `Preço Final: ${formatCurrency(finalPromo)} ${pctLabel}`;
 }
 
@@ -919,6 +932,20 @@ document.getElementById('btnSalvarProduto').onclick = async () => {
     const tipoMov = document.getElementById('prodTipoMovimentacao').value;
     const motivoId = document.getElementById('prodMotivoSaidaId').value;
     const obs = document.getElementById('prodObsSaida').value.trim();
+
+    const basePrice = parseFloat(document.getElementById('prodPreco').value);
+    const promoVal = parseFloat(document.getElementById('prodPrecoPromo').value);
+    
+    if (promoVal > 0) {
+        if (currentPromoType === 'pct' && promoVal > 100) {
+            showToast('O desconto não pode ser maior que 100%.', 'error');
+            return;
+        }
+        if (currentPromoType === 'val' && promoVal >= basePrice) {
+            showToast('O preço promocional deve ser menor que o preço original.', 'error');
+            return;
+        }
+    }
 
     const payload = {
         name:            document.getElementById('prodNome').value.trim(),
