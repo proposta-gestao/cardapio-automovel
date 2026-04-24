@@ -564,7 +564,7 @@ body {
 .admin-table th {
     background: rgba(255, 255, 255, 0.03);
     padding: 16px 20px;
-    text-align: left;
+    text-align: center;
     font-size: 0.8rem;
     font-weight: 800;
     color: var(--primary);
@@ -579,6 +579,25 @@ body {
     font-size: 0.95rem;
     vertical-align: middle;
     color: white;
+    text-align: center;
+}
+
+.admin-table th:first-child,
+.admin-table td:first-child {
+    width: 30px !important;
+    min-width: 30px !important;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.admin-table tr {
+    transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+}
+
+.admin-table tr.dragging {
+    opacity: 0.4;
+    background: rgba(229, 178, 93, 0.1) !important;
+    cursor: grabbing;
 }
 
 .admin-table tr:hover {

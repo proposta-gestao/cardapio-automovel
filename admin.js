@@ -361,8 +361,9 @@ async function carregarProdutos() {
     const { data, error } = await sb
         .from('products')
         .select('*, categories(name)')
-        .order('sort_order', { ascending: true })
-        .order('created_at', { ascending: false });
+        .order('archived', { ascending: true })
+        .order('active', { ascending: false })
+        .order('sort_order', { ascending: true });
     if (error) {
         showToast('Erro ao carregar produtos', 'error');
         return;
@@ -446,6 +447,10 @@ function renderProdutos() {
 
     tbody.innerHTML = produtos.map((p, i) => {
         const isEsgotado = p.stock <= 0;
+        const canDrag = !p.archived && p.active;
+        const dragAttrs = canDrag ? `draggable="true" ondragstart="dragStartProdutos(event, ${i})" ondragover="dragOverProdutos(event)" ondrop="dropProdutos(event, ${i})" ondragend="dragEndProdutos(event)"` : '';
+        const handleContent = canDrag ? '☰' : '';
+        const rowStyle = canDrag ? 'cursor: grab;' : 'cursor: default;';
         let stockColor = isEsgotado ? '#FF4757' : (p.stock <= (p.min_stock_alert || 0) ? '#FAAD14' : 'inherit');
 
         let rowClass = '';
@@ -469,8 +474,8 @@ function renderProdutos() {
             : `<button class="btn-sm btn-archive" onclick="arquivarProduto('${p.id}')">Arquivar</button>`;
 
         return `
-                <tr class="${rowClass}" draggable="true" ondragstart="dragStartProdutos(event, ${i})" ondragover="dragOverProdutos(event)" ondrop="dropProdutos(event, ${i})" style="cursor: grab;">
-                    <td style="color: var(--text-muted); text-align: center; font-size: 1.2rem;">☰</td>
+                <tr class="${rowClass}" ${dragAttrs} style="${rowStyle}">
+                    <td style="color: var(--text-muted); text-align: center; font-size: 1.2rem;">${handleContent}</td>
                     <td><img src="${p.image_url || 'Logo.png'}" alt="Img" style="width:40px;height:40px;object-fit:cover;border-radius:6px;"></td>
                     <td onclick="editarProduto('${p.id}')" style="cursor:pointer;" title="Clique para editar">
                         <strong class="clickable-row-name">${p.name}</strong>
@@ -507,6 +512,12 @@ let draggedProdutoIndex = null;
 window.dragStartProdutos = (e, index) => {
     draggedProdutoIndex = index;
     e.dataTransfer.effectAllowed = 'move';
+    e.target.classList.add('dragging');
+};
+
+window.dragEndProdutos = (e) => {
+    e.target.classList.remove('dragging');
+    document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
 };
 
 window.dragOverProdutos = (e) => {
@@ -517,6 +528,14 @@ window.dragOverProdutos = (e) => {
 window.dropProdutos = async (e, dropIndex) => {
     e.preventDefault();
     if (draggedProdutoIndex === null || draggedProdutoIndex === dropIndex) return;
+
+    // Verificar se ambos são ativos (só permitimos reordenar ativos)
+    const p1 = produtos[draggedProdutoIndex];
+    const p2 = produtos[dropIndex];
+    if (!p1.active || p1.archived || !p2.active || p2.archived) {
+        draggedProdutoIndex = null;
+        return;
+    }
 
     // Reordenar array local
     const item = produtos.splice(draggedProdutoIndex, 1)[0];
@@ -1464,7 +1483,7 @@ function renderJustificativas() {
     }
     
     tbody.innerHTML = cancellationReasons.map((r, i) => `
-        <tr draggable="true" ondragstart="dragStart(event, ${i})" ondragover="dragOver(event)" ondrop="drop(event, ${i})" style="cursor: grab;">
+        <tr draggable="true" ondragstart="dragStart(event, ${i})" ondragover="dragOver(event)" ondrop="drop(event, ${i})" ondragend="dragEnd(event)" style="cursor: grab;">
             <td style="color: var(--text-muted); text-align: center; font-size: 1.2rem;">☰</td>
             <td>${r}</td>
             <td>
@@ -1479,6 +1498,12 @@ let draggedItemIndex = null;
 window.dragStart = (e, index) => {
     draggedItemIndex = index;
     e.dataTransfer.effectAllowed = 'move';
+    e.target.classList.add('dragging');
+};
+
+window.dragEnd = (e) => {
+    e.target.classList.remove('dragging');
+    document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
 };
 
 window.dragOver = (e) => {
