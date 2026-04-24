@@ -327,6 +327,8 @@ function renderPedidosFiltrados() {
                     </tr>
                 `;
     }).join('');
+
+    initSortableProdutos();
 }
 
 let adminRealtimeChannel = null;
@@ -361,7 +363,9 @@ async function carregarProdutos() {
     const { data, error } = await sb
         .from('products')
         .select('*, categories(name)')
-        .order('created_at', { ascending: false });
+        .order('archived', { ascending: true })
+        .order('active', { ascending: false })
+        .order('sort_order', { ascending: true });
     if (error) {
         showToast('Erro ao carregar produtos', 'error');
         return;
@@ -437,19 +441,17 @@ function atualizarAlertaEstoque() {
 // --- Render Products ---
 function renderProdutos() {
     const tbody = document.getElementById('produtosBody');
+    if (!tbody) return;
     if (produtos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;">Nenhum produto encontrado.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:2rem;">Nenhum produto encontrado.</td></tr>';
         return;
     }
 
-    // Separar e ordenar: Ativos primeiro, Inativos depois, Arquivados
-    const ativos = produtos.filter(p => p.active && !p.archived);
-    const inativos = produtos.filter(p => !p.active && !p.archived);
-    const arquivados = produtos.filter(p => p.archived);
-    const sortedProdutos = [...ativos, ...inativos, ...arquivados];
-
-    tbody.innerHTML = sortedProdutos.map(p => {
+    tbody.innerHTML = produtos.map((p, i) => {
         const isEsgotado = p.stock <= 0;
+        const canDrag = !p.archived && p.active;
+        const handleContent = canDrag ? '<span class="drag-handle" style="cursor:grab;">☰</span>' : '';
+        const rowStyle = canDrag ? '' : 'cursor: default;';
         let stockColor = isEsgotado ? '#FF4757' : (p.stock <= (p.min_stock_alert || 0) ? '#FAAD14' : 'inherit');
 
         let rowClass = '';
@@ -473,7 +475,8 @@ function renderProdutos() {
             : `<button class="btn-sm btn-archive" onclick="arquivarProduto('${p.id}')">Arquivar</button>`;
 
         return `
-                <tr class="${rowClass}">
+                <tr class="${rowClass}" data-id="${p.id}" style="${rowStyle}">
+                    <td style="color: var(--text-muted); text-align: center; font-size: 1.2rem;">${handleContent}</td>
                     <td><img src="${p.image_url || 'Logo.png'}" alt="Img" style="width:40px;height:40px;object-fit:cover;border-radius:6px;"></td>
                     <td onclick="editarProduto('${p.id}')" style="cursor:pointer;" title="Clique para editar">
                         <strong class="clickable-row-name">${p.name}</strong>
@@ -503,6 +506,46 @@ window.toggleProdutoAtivo = async (id, isActive) => {
         carregarProdutos(); // Relocates product to correct group instantly
     }
 };
+
+function initSortableProdutos() {
+    const el = document.getElementById('produtosBody');
+    if (!el || el.sortable) return;
+    
+    el.sortable = new Sortable(el, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        dragClass: 'dragging',
+        chosenClass: 'dragging',
+        onStart: () => el.classList.add('is-dragging'),
+        onEnd: async (evt) => {
+            el.classList.remove('is-dragging');
+            if (evt.oldIndex === evt.newIndex) return;
+
+            // Reordenar o array local 'produtos' baseado na nova ordem do DOM
+            const newOrderIds = Array.from(el.querySelectorAll('tr')).map(tr => tr.dataset.id);
+            const reordered = newOrderIds.map(id => produtos.find(p => p.id === id));
+            produtos = reordered;
+
+            await salvarOrdemProdutosBanco();
+        }
+    });
+}
+
+async function salvarOrdemProdutosBanco() {
+    // Apenas produtos ativos e não arquivados devem ser reordenados (conforme regra de negócio)
+    // Mas aqui salvamos a ordem atual de todos para simplificar a persistência
+    const updates = produtos.map((p, i) => 
+        sb.from('products').update({ sort_order: i }).eq('id', p.id)
+    );
+
+    const results = await Promise.all(updates);
+    if (results.some(r => r.error)) {
+        showToast('Erro ao salvar nova ordem dos produtos.', 'error');
+    } else {
+        showToast('Ordem atualizada!', 'success');
+    }
+}
 
 // --- Render Categories ---
 function renderCategorias() {
@@ -1424,40 +1467,50 @@ function renderJustificativas() {
     }
     
     tbody.innerHTML = cancellationReasons.map((r, i) => `
-        <tr draggable="true" ondragstart="dragStart(event, ${i})" ondragover="dragOver(event)" ondrop="drop(event, ${i})" style="cursor: grab;">
-            <td style="color: var(--text-muted); text-align: center; font-size: 1.2rem;">☰</td>
+        <tr class="justificativa-row" data-index="${i}">
+            <td style="color: var(--text-muted); text-align: center; font-size: 1.2rem;"><span class="drag-handle-just" style="cursor:grab;">☰</span></td>
             <td>${r}</td>
             <td>
                 <button class="btn-sm btn-delete" onclick="removerJustificativa(${i})">Excluir</button>
             </td>
         </tr>
     `).join('');
+
+    initSortableJustificativas();
+}
+
+function initSortableJustificativas() {
+    const el = document.getElementById('justificativasBody');
+    if (!el || el.sortable) return;
+
+    el.sortable = new Sortable(el, {
+        animation: 150,
+        handle: '.drag-handle-just',
+        ghostClass: 'sortable-ghost',
+        dragClass: 'dragging',
+        chosenClass: 'dragging',
+        onStart: () => el.classList.add('is-dragging'),
+        onEnd: async (evt) => {
+            el.classList.remove('is-dragging');
+            if (evt.oldIndex === evt.newIndex) return;
+
+            // Reordenar baseado no novo estado do DOM
+            const newOrder = Array.from(el.querySelectorAll('.justificativa-row')).map(tr => {
+                const idx = parseInt(tr.dataset.index);
+                return cancellationReasons[idx];
+            });
+            cancellationReasons = newOrder;
+
+            renderJustificativas(); // Re-render para atualizar os data-index
+            await salvarJustificativasNoBanco();
+            showToast('Ordem atualizada!', 'success');
+        }
+    });
 }
 
 let draggedItemIndex = null;
 
-window.dragStart = (e, index) => {
-    draggedItemIndex = index;
-    e.dataTransfer.effectAllowed = 'move';
-};
-
-window.dragOver = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-};
-
-window.drop = async (e, dropIndex) => {
-    e.preventDefault();
-    if (draggedItemIndex === null || draggedItemIndex === dropIndex) return;
-
-    // Reorder array
-    const item = cancellationReasons.splice(draggedItemIndex, 1)[0];
-    cancellationReasons.splice(dropIndex, 0, item);
-    
-    draggedItemIndex = null;
-    renderJustificativas();
-    await salvarJustificativasNoBanco();
-};
+// Removido drag functions manuais em favor do SortableJS
 
 async function salvarJustificativasNoBanco() {
     const { error } = await sb.from('store_settings').update({
