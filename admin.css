@@ -638,6 +638,12 @@ body {
     border-color: rgba(255, 71, 87, 0.3);
 }
 
+.badge-danger {
+    background: rgba(255, 71, 87, 0.15);
+    color: #ff4757;
+    border-color: rgba(255, 71, 87, 0.3);
+}
+
 .actions-cell {
     display: flex;
     gap: 6px;

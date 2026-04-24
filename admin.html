@@ -246,7 +246,14 @@
 
             <!-- Configurações Tab -->
             <div class="tab-content" id="tab-configuracoes">
+                <div class="produtos-toolbar">
+                    <div class="admin-subtabs">
+                        <button class="subtab-btn active" data-subtab="config-gerais">Configurações Gerais</button>
+                        <button class="subtab-btn" data-subtab="config-loja">Configurações Loja</button>
+                    </div>
+                </div>
 
+                <div class="subtab-content" id="subtab-config-loja">
                 <!-- Store Address -->
                 <div class="config-card">
                     <div class="config-card-header">
@@ -380,7 +387,9 @@
                         </div>
                     </div>
                 </div>
+                </div> <!-- Fechamento da sub-aba config-loja -->
 
+                <div class="subtab-content active" id="subtab-config-gerais">
                 <!-- Frete e Entrega -->
                 <div class="config-card">
                     <div class="config-card-header">
@@ -414,6 +423,39 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Justificativas de Cancelamento -->
+                <div class="config-card" style="margin-top: 1.5rem;">
+                    <div class="config-card-header">
+                        <h2>🚫 Justificativas de Cancelamento</h2>
+                        <button class="btn-primary" id="btnSalvarJustificativas">Salvar Justificativas</button>
+                    </div>
+                    <div class="config-card-body">
+                        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom: 1rem;">
+                            Cadastre os motivos que os atendentes poderão escolher ao cancelar um pedido.
+                        </p>
+                        
+                        <div style="display:flex; gap:10px; margin-bottom: 1rem;">
+                            <input type="text" id="inputNovaJustificativa" placeholder="Ex: Falta de Estoque, Cliente não quis esperar..." style="flex:1;">
+                            <button class="btn-primary btn-sm" id="btnAdicionarJustificativa" style="white-space:nowrap;">+ Adicionar</button>
+                        </div>
+
+                        <div class="admin-table-wrapper">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Motivo</th>
+                                        <th style="width: 80px;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="justificativasBody">
+                                    <tr><td colspan="2" style="text-align:center;color:var(--text-muted);padding:1rem;">Nenhuma justificativa cadastrada.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                </div> <!-- Fechamento da sub-aba config-gerais -->
 
             </div>
         </div> <!-- Fechamento da admin-content-wrapper -->
@@ -641,6 +683,28 @@
                         </select>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cancelar Pedido -->
+    <div class="admin-modal-backdrop" id="modalCancelarPedido">
+        <div class="admin-modal modal-confirm">
+            <div class="confirm-icon" style="color: #ff4757;">❌</div>
+            <h3>Cancelar Pedido</h3>
+            <p style="margin-bottom: 15px; color: var(--text-muted);">Por favor, selecione o motivo do cancelamento.</p>
+            
+            <input type="hidden" id="cancelOrderId">
+            <div class="form-group" style="text-align: left; margin-bottom: 20px;">
+                <label for="selectCancelReason">Motivo do Cancelamento</label>
+                <select id="selectCancelReason" style="margin-top: 5px;">
+                    <option value="">Selecione um motivo...</option>
+                </select>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 10px;">
+                <button class="btn-cancel" onclick="fecharModal('modalCancelarPedido')">Voltar</button>
+                <button class="btn-save btn-confirm-action" id="btnConfirmarCancelamento" style="background: var(--danger); color: white;">Confirmar Cancelamento</button>
             </div>
         </div>
     </div>

@@ -179,11 +179,13 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.onclick = () => switchTab(btn.dataset.tab, btn);
 });
 
-// Sub-tabs handling (inside Produtos)
+// Sub-tabs handling
 document.querySelectorAll('.subtab-btn').forEach(btn => {
-    btn.onclick = () => {
-        document.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.subtab-content').forEach(c => c.classList.remove('active'));
+    btn.onclick = (e) => {
+        const tabContent = e.target.closest('.tab-content');
+        if (!tabContent) return;
+        tabContent.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
+        tabContent.querySelectorAll('.subtab-content').forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById('subtab-' + btn.dataset.subtab).classList.add('active');
     };
@@ -300,7 +302,9 @@ function renderPedidosFiltrados() {
         const qtdItens = p.order_items ? p.order_items.reduce((acc, curr) => acc + curr.quantity, 0) : 0;
         const isPendente = p.status === 'pendente';
         const isPago = p.payment_status === 'pago';
-        const badgeClass = isPendente ? 'badge-inactive' : 'badge-active';
+        let badgeClass = 'badge-inactive';
+        if (p.status === 'concluido') badgeClass = 'badge-active';
+        if (p.status === 'cancelado') badgeClass = 'badge-danger';
         const statusLabel = p.status === 'concluido' ? 'Concluído' : p.status?.charAt(0).toUpperCase() + p.status?.slice(1);
         return `
                     <tr id="pedido-row-${p.id}">
@@ -984,23 +988,56 @@ window.finalizarPedido = async (id) => {
 };
 
 // --- Cancelar Pedido ---
-window.cancelarPedido = async (id) => {
-    if (!await customConfirm('Cancelar Pedido', 'Tem certeza que deseja cancelar este pedido? O status será alterado para Cancelado.')) return;
-    const { error } = await sb.from('orders').update({ status: 'cancelado' }).eq('id', id);
-    if (error) {
-        showToast('Erro ao cancelar pedido: ' + error.message, 'error');
+window.cancelarPedido = (id) => {
+    document.getElementById('cancelOrderId').value = id;
+    
+    // popular select
+    const select = document.getElementById('selectCancelReason');
+    select.innerHTML = '<option value="">Selecione um motivo...</option>' + 
+        cancellationReasons.map(r => `<option value="${r}">${r}</option>`).join('');
+
+    abrirModal('modalCancelarPedido');
+};
+
+document.getElementById('btnConfirmarCancelamento').onclick = async () => {
+    const id = document.getElementById('cancelOrderId').value;
+    const reason = document.getElementById('selectCancelReason').value;
+
+    if (!reason) {
+        showToast('Por favor, selecione um motivo para o cancelamento.', 'error');
         return;
     }
+
+    const btn = document.getElementById('btnConfirmarCancelamento');
+    btn.disabled = true;
+    btn.innerText = 'Cancelando...';
+
+    const { error } = await sb.from('orders').update({ status: 'cancelado', cancellation_reason: reason }).eq('id', id);
+    if (error) {
+        showToast('Erro ao cancelar pedido: ' + error.message, 'error');
+        btn.disabled = false;
+        btn.innerText = 'Confirmar Cancelamento';
+        return;
+    }
+
     // Atualiza o pedido na memória
     const idx = pedidos.findIndex(p => p.id === id);
-    if (idx !== -1) pedidos[idx].status = 'cancelado';
+    if (idx !== -1) {
+        pedidos[idx].status = 'cancelado';
+        pedidos[idx].cancellation_reason = reason;
+    }
     renderPedidosFiltrados();
     showToast('Pedido cancelado com sucesso!', 'success');
+    fecharModal('modalCancelarPedido');
+    
+    btn.disabled = false;
+    btn.innerText = 'Confirmar Cancelamento';
 };
 
 // =================== CONFIGURAÇÕES ===================
 
 let zonasEntrega = [];
+let cancellationReasons = [];
 
 // --- Toggle de visibilidade do campo de URL ---
 window.toggleUrlInput = (containerId) => {
@@ -1044,6 +1081,10 @@ async function carregarConfiguracoes() {
         const freteAtivo = !!d.frete_ativo;
         document.getElementById('confFreteAtivo').checked    = freteAtivo;
         document.getElementById('freteZonasContainer').style.display = freteAtivo ? 'block' : 'none';
+
+        // Justificativas
+        cancellationReasons = d.cancellation_reasons || [];
+        renderJustificativas();
     }
 
     if (!zonasRes.error) {
@@ -1367,4 +1408,62 @@ document.getElementById('confCep').oninput = (e) => {
     let v = e.target.value.replace(/\D/g, '');
     if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5, 8);
     e.target.value = v;
+};
+
+// --- Justificativas de Cancelamento ---
+function renderJustificativas() {
+    const tbody = document.getElementById('justificativasBody');
+    if (!tbody) return;
+    if (cancellationReasons.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:var(--text-muted);padding:1rem;">Nenhuma justificativa cadastrada.</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = cancellationReasons.map((r, i) => `
+        <tr>
+            <td>${r}</td>
+            <td>
+                <button class="btn-sm btn-delete" onclick="removerJustificativa(${i})">Excluir</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+document.getElementById('btnAdicionarJustificativa').onclick = () => {
+    const input = document.getElementById('inputNovaJustificativa');
+    const val = input.value.trim();
+    if (!val) return;
+    if (cancellationReasons.includes(val)) {
+        showToast('Esta justificativa já existe.', 'error');
+        return;
+    }
+    cancellationReasons.push(val);
+    input.value = '';
+    renderJustificativas();
+};
+
+window.removerJustificativa = (index) => {
+    cancellationReasons.splice(index, 1);
+    renderJustificativas();
+};
+
+document.getElementById('btnSalvarJustificativas').onclick = async () => {
+    const btn = document.getElementById('btnSalvarJustificativas');
+    btn.disabled = true;
+    btn.innerText = 'Salvando...';
+
+    const { error } = await sb.from('store_settings').upsert({
+        id: 1,
+        cancellation_reasons: cancellationReasons,
+        updated_at: new Date().toISOString()
+    });
+
+    if (error) {
+        showToast('Erro ao salvar justificativas: ' + error.message, 'error');
+    } else {
+        showToast('Justificativas salvas com sucesso!', 'success');
+    }
+
+    btn.disabled = false;
+    btn.innerText = 'Salvar Justificativas';
 };
