@@ -1382,28 +1382,65 @@ body {
     }
 
     /* ===== Table Mobile Refinement: Products List ===== */
-    #subtab-lista-produtos .admin-table th:nth-child(1), #subtab-lista-produtos .admin-table td:nth-child(1), /* Imagem */
-    #subtab-lista-produtos .admin-table th:nth-child(3), #subtab-lista-produtos .admin-table td:nth-child(3), /* Categoria */
-    #subtab-lista-produtos .admin-table th:nth-child(5), #subtab-lista-produtos .admin-table td:nth-child(5), /* Estoque */
-    #subtab-lista-produtos .admin-table th:nth-child(6), #subtab-lista-produtos .admin-table td:nth-child(6) { /* Status */
+    /* Esconder colunas desnecessárias no mobile para dar espaço ao botão editar */
+    /* 1: Handle, 2: Imagem, 4: Categoria, 6: Estoque, 7: Status */
+    #subtab-lista-produtos .admin-table th:nth-child(1), #subtab-lista-produtos .admin-table td:nth-child(1),
+    #subtab-lista-produtos .admin-table th:nth-child(2), #subtab-lista-produtos .admin-table td:nth-child(2),
+    #subtab-lista-produtos .admin-table th:nth-child(4), #subtab-lista-produtos .admin-table td:nth-child(4),
+    #subtab-lista-produtos .admin-table th:nth-child(6), #subtab-lista-produtos .admin-table td:nth-child(6),
+    #subtab-lista-produtos .admin-table th:nth-child(7), #subtab-lista-produtos .admin-table td:nth-child(7) {
         display: none !important;
     }
 
-    #subtab-lista-produtos .admin-table th:nth-child(2), #subtab-lista-produtos .admin-table td:nth-child(2) { /* Nome */
+    #subtab-lista-produtos .admin-table th:nth-child(3), #subtab-lista-produtos .admin-table td:nth-child(3) { /* Nome */
         width: 50% !important;
         display: table-cell !important;
     }
 
-    #subtab-lista-produtos .admin-table th:nth-child(4), #subtab-lista-produtos .admin-table td:nth-child(4) { /* Preço */
+    #subtab-lista-produtos .admin-table th:nth-child(5), #subtab-lista-produtos .admin-table td:nth-child(5) { /* Preço */
         width: 25% !important;
         text-align: center !important;
         display: table-cell !important;
     }
 
-    #subtab-lista-produtos .admin-table th:nth-child(7), #subtab-lista-produtos .admin-table td:nth-child(7) { /* Ações */
+    #subtab-lista-produtos .admin-table th:nth-child(8), #subtab-lista-produtos .admin-table td:nth-child(8) { /* Ações */
         width: 25% !important;
         text-align: right !important;
         display: table-cell !important;
+    }
+
+    /* ===== Table Mobile Refinement: Categories List ===== */
+    /* 1: Nome, 2: Slug, 3: Ordem, 4: Ações */
+    #subtab-lista-categorias .admin-table th:nth-child(2), #subtab-lista-categorias .admin-table td:nth-child(2),
+    #subtab-lista-categorias .admin-table th:nth-child(3), #subtab-lista-categorias .admin-table td:nth-child(3) {
+        display: none !important;
+    }
+
+    #subtab-lista-categorias .admin-table th:nth-child(1), #subtab-lista-categorias .admin-table td:nth-child(1) { /* Nome */
+        width: 70% !important;
+        display: table-cell !important;
+    }
+
+    #subtab-lista-categorias .admin-table th:nth-child(4), #subtab-lista-categorias .admin-table td:nth-child(4) { /* Ações */
+        width: 30% !important;
+        text-align: right !important;
+        display: table-cell !important;
+    }
+
+    /* ===== Table Mobile Refinement: Stock Adjustments ===== */
+    /* 1: Nome, 2: Status, 3: Ações */
+    #subtab-lista-estoque .admin-table th:nth-child(1), #subtab-lista-estoque .admin-table td:nth-child(1) { /* Nome */
+        display: table-cell !important;
+        width: auto !important;
+    }
+    #subtab-lista-estoque .admin-table th:nth-child(2), #subtab-lista-estoque .admin-table td:nth-child(2) { /* Status */
+        display: table-cell !important;
+        width: 80px !important;
+        text-align: center !important;
+    }
+    #subtab-lista-estoque .admin-table th:nth-child(3), #subtab-lista-estoque .admin-table td:nth-child(3) { /* Ações */
+        display: table-cell !important;
+        text-align: right !important;
     }
 
     .admin-table {
@@ -1815,7 +1852,90 @@ input:checked+.slider:before {
     margin-top: 1.5rem;
 }
 
+}
+
+/* ===== Seção de Estoque Premium ===== */
+.inventory-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    margin: 20px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.inventory-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--primary);
+}
+
+.inventory-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.inventory-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.inventory-current-badge {
+    background: rgba(229, 178, 93, 0.1);
+    color: var(--primary);
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    border: 1px solid rgba(229, 178, 93, 0.2);
+}
+
+.inventory-body {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.inventory-reason-box {
+    background: rgba(255, 71, 87, 0.05);
+    border: 1px dashed rgba(255, 71, 87, 0.3);
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 10px;
+    animation: fadeInSlide 0.3s ease;
+}
+
+@keyframes fadeInSlide {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 @media (max-width: 600px) {
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    .inventory-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .inventory-card {
+        padding: 15px;
+    }
     .visual-upload-row {
         flex-direction: column;
     }
@@ -1825,12 +1945,50 @@ input:checked+.slider:before {
     }
     .filter-row {
         grid-template-columns: 1fr 1fr;
+        gap: 15px;
     }
-    .filter-row > div:nth-child(1),
+    
+    /* Período ocupa a linha toda */
+    .filter-row > div:nth-child(1) {
+        grid-column: span 2;
+    }
+
+    /* Cliente e Atendente lado a lado */
     .filter-row > div:nth-child(2),
-    .filter-row > div:nth-child(3),
-    .filter-row > div:nth-child(4),
-    .filter-row > div:nth-child(5) {
+    .filter-row > div:nth-child(3) {
         grid-column: span 1;
     }
+
+    /* Valor e Status ocupam a linha toda */
+    .filter-row > div:nth-child(4),
+    .filter-row > div:nth-child(5) {
+        grid-column: span 2;
+    }
+
+    /* Forçar inputs de data lado a lado */
+    .filter-date-range {
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+    .filter-date-range input {
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* Ocultar botões de excluir no mobile conforme solicitado */
+    .admin-table .btn-delete {
+        display: none !important;
+    }
+}
+
+/* Ocultar setas de aumentar/diminuir (spinners) em campos numéricos */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
 }

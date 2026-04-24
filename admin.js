@@ -71,6 +71,46 @@ function customConfirm(title, message) {
     });
 }
 
+function customPrompt(title, message, defaultValue = '') {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('modalPrompt');
+        const input = document.getElementById('promptInput');
+        const btnOk = document.getElementById('btnPromptOk');
+        const btnCancel = document.getElementById('btnPromptCancelar');
+
+        document.getElementById('promptTitle').textContent = title;
+        document.getElementById('promptMessage').textContent = message;
+        input.value = defaultValue;
+
+        modal.classList.add('active');
+        setTimeout(() => input.focus(), 100);
+
+        const handleOk = () => {
+            const val = input.value;
+            modal.classList.remove('active');
+            btnOk.removeEventListener('click', handleOk);
+            btnCancel.removeEventListener('click', handleCancel);
+            resolve(val);
+        };
+
+        const handleCancel = () => {
+            modal.classList.remove('active');
+            btnOk.removeEventListener('click', handleOk);
+            btnCancel.removeEventListener('click', handleCancel);
+            resolve(null);
+        };
+
+        btnOk.addEventListener('click', handleOk);
+        btnCancel.addEventListener('click', handleCancel);
+
+        // Enter key support
+        input.onkeydown = (e) => {
+            if (e.key === 'Enter') handleOk();
+            if (e.key === 'Escape') handleCancel();
+        };
+    });
+}
+
 function fecharModal(id) {
     document.getElementById(id).classList.remove('active');
 }
@@ -78,6 +118,21 @@ function fecharModal(id) {
 function abrirModal(id) {
     document.getElementById(id).classList.add('active');
 }
+
+// Fechar modal ao clicar fora (no backdrop)
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('admin-modal-backdrop')) {
+        const modalId = e.target.id;
+        // Se for um modal de confirmação ou prompt, simulamos o clique no cancelar para resolver a Promise
+        if (modalId === 'modalConfirmacao') {
+            document.getElementById('btnConfirmarCancelar').click();
+        } else if (modalId === 'modalPrompt') {
+            document.getElementById('btnPromptCancelar').click();
+        } else {
+            fecharModal(modalId);
+        }
+    }
+});
 
 // --- Auth ---
 document.getElementById('btnLogin').onclick = async () => {
@@ -197,6 +252,7 @@ async function carregarTudo() {
         carregarProdutos(),
         carregarCategorias(),
         carregarCupons(),
+        carregarMotivosEstoque(),
         carregarAtendentes(),
         carregarDashboard(),
         carregarConfiguracoes()
@@ -482,8 +538,8 @@ function renderProdutos() {
                         <strong class="clickable-row-name">${p.name}</strong>
                     </td>
                     <td>${p.categories?.name || '-'}</td>
-                    <td>${formatCurrency(p.price)}</td>
-                    <td style="color:${stockColor}; font-weight: ${stockColor !== 'inherit' ? '700' : 'normal'}">${p.stock}</td>
+                    <td onclick="editarProduto('${p.id}')" style="cursor:pointer;" title="Clique para editar">${formatCurrency(p.price)}</td>
+                    <td onclick="editarProduto('${p.id}')" style="cursor:pointer; color:${stockColor}; font-weight: ${stockColor !== 'inherit' ? '700' : 'normal'}" title="Clique para ajustar estoque">${p.stock}</td>
                     <td>${toggleHTML}</td>
                     <td>
                         <div class="actions-cell">
@@ -557,7 +613,7 @@ function renderCategorias() {
 
     tbody.innerHTML = categorias.map(c => `
                 <tr>
-                    <td><strong>${c.name}</strong></td>
+                    <td onclick="editarCategoria('${c.id}')" style="cursor:pointer;" title="Clique para editar"><strong>${c.name}</strong></td>
                     <td><code>${c.slug}</code></td>
                     <td>${c.order_position}</td>
                     <td>
@@ -622,7 +678,8 @@ async function renderizarGradeGaleria(gridId, isCompleto = false) {
     }
 
     let html = '';
-    let limit = isCompleto ? files.length : 9;
+    const isMobile = window.innerWidth < 600;
+    let limit = isCompleto ? files.length : (isMobile ? 1 : 7);
     let filesToShow = files.slice(0, limit);
 
     filesToShow.forEach(file => {
@@ -635,11 +692,11 @@ async function renderizarGradeGaleria(gridId, isCompleto = false) {
                 `;
     });
 
-    if (!isCompleto && files.length > 9) {
+    if (!isCompleto && files.length > 7) {
         html += `
-                    <div class="gallery-item" style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(229, 178, 93, 0.1);color:var(--primary);font-size:0.8rem;text-align:center;font-weight:800;border:1px dashed var(--primary);" onclick="abrirGaleriaCompleta()">
-                        <span style="font-size:1.2rem;">+${files.length - 9}</span>
-                        Ver Todas
+                    <div class="gallery-item" style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(229, 178, 93, 0.1);color:var(--primary);font-size:0.8rem;text-align:center;font-weight:800;border:1px dashed var(--primary); cursor:pointer;" onclick="abrirGaleriaCompleta()">
+                        <span style="font-size:1.2rem;">+${files.length - 7}</span>
+                        Ver mais imagens
                     </div>
                 `;
     }
@@ -740,15 +797,41 @@ document.getElementById('btnNovoProduto').onclick = () => {
     document.getElementById('prodNome').value = '';
     document.getElementById('prodDesc').value = '';
     document.getElementById('prodPreco').value = '';
-    document.getElementById('prodEstoque').value = '';
-    document.getElementById('prodEstoqueMin').value = '0';
-    document.getElementById('prodCategoria').value = '';
-    document.getElementById('prodAtivo').value = 'true';
-    document.getElementById('prodImagemSelecionada').value = '';
+    document.getElementById('prodEstoque').value = '0';
+    document.getElementById('groupEstoqueAtual').style.display = 'none';
+    document.getElementById('rowTipoMovimentacao').style.display = 'none';
+    document.getElementById('containerMotivoSaida').style.display = 'none';
+    document.getElementById('labelMovimentacaoEstoque').innerText = 'Estoque Inicial';
+    document.getElementById('prodTipoMovimentacao').value = 'entrada';
+    document.getElementById('prodMotivoSaidaId').value = '';
+    document.getElementById('prodObsSaida').value = '';
 
     carregarGaleria('');
     abrirModal('modalProduto');
 };
+
+// Listener para mudança de tipo de movimentação
+document.getElementById('prodTipoMovimentacao').onchange = (e) => {
+    const container = document.getElementById('containerMotivoSaida');
+    const label = document.getElementById('labelMovimentacaoEstoque');
+    
+    if (e.target.value === 'saida') {
+        container.style.display = 'block';
+        label.innerText = 'Quantidade de Saída';
+        popularSelectMotivosEstoque();
+    } else {
+        container.style.display = 'none';
+        label.innerText = 'Quantidade de Entrada';
+    }
+};
+
+function popularSelectMotivosEstoque() {
+    const select = document.getElementById('prodMotivoSaidaId');
+    const ativos = motivosEstoque.filter(m => m.active);
+    
+    select.innerHTML = '<option value="">Selecione um motivo...</option>' + 
+        ativos.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+}
 
 window.editarProduto = (id) => {
     const p = produtos.find(x => x.id === id);
@@ -759,9 +842,20 @@ window.editarProduto = (id) => {
     document.getElementById('prodDesc').value = p.description || '';
     document.getElementById('prodPreco').value = p.price;
     document.getElementById('prodEstoque').value = p.stock;
-    document.getElementById('prodEstoqueMin').value = p.min_stock_alert || 0;
-    document.getElementById('prodCategoria').value = p.category_id || '';
-    document.getElementById('prodAtivo').value = p.active ? 'true' : 'false';
+    document.getElementById('prodEstoqueDisplay').innerText = p.stock;
+    document.getElementById('prodMovimentacaoEstoque').value = '';
+    document.getElementById('prodEstoqueMin').value = p.min_stock_alert;
+    document.getElementById('prodCategoria').value = p.category_id;
+    document.getElementById('prodAtivo').value = String(p.active);
+    document.getElementById('prodImagemSelecionada').value = p.image_url || '';
+
+    document.getElementById('groupEstoqueAtual').style.display = 'block';
+    document.getElementById('rowTipoMovimentacao').style.display = 'block';
+    document.getElementById('containerMotivoSaida').style.display = 'none';
+    document.getElementById('labelMovimentacaoEstoque').innerText = 'Adicionar ao Estoque';
+    document.getElementById('prodTipoMovimentacao').value = 'entrada';
+    document.getElementById('prodMotivoSaidaId').value = '';
+    document.getElementById('prodObsSaida').value = '';
 
     carregarGaleria(p.image_url || '');
     abrirModal('modalProduto');
@@ -770,60 +864,89 @@ window.editarProduto = (id) => {
 document.getElementById('btnSalvarProduto').onclick = async () => {
     const btn = document.getElementById('btnSalvarProduto');
     const id = document.getElementById('produtoId').value;
-    const nome = document.getElementById('prodNome').value.trim();
-    const desc = document.getElementById('prodDesc').value.trim();
-    const price = parseFloat(document.getElementById('prodPreco').value);
-    const stock = parseInt(document.getElementById('prodEstoque').value) || 0;
-    const min_stock = parseInt(document.getElementById('prodEstoqueMin').value) || 0;
-    const category_id = document.getElementById('prodCategoria').value || null;
-    const ativo = document.getElementById('prodAtivo').value === 'true';
-    const imagemSelecionada = document.getElementById('prodImagemSelecionada').value.trim();
+    const currentStock = parseInt(document.getElementById('prodEstoque').value) || 0;
+    const stockInput = parseInt(document.getElementById('prodMovimentacaoEstoque').value) || 0;
+    const tipoMov = document.getElementById('prodTipoMovimentacao').value;
+    const motivoId = document.getElementById('prodMotivoSaidaId').value;
+    const obs = document.getElementById('prodObsSaida').value.trim();
 
-    if (!nome || isNaN(price) || price <= 0) {
-        showToast('Preencha nome e preço corretamente.', 'error');
+    const payload = {
+        name:            document.getElementById('prodNome').value.trim(),
+        description:     document.getElementById('prodDesc').value.trim(),
+        price:           parseFloat(document.getElementById('prodPreco').value),
+        min_stock_alert: parseInt(document.getElementById('prodEstoqueMin').value) || 0,
+        category_id:     document.getElementById('prodCategoria').value || null,
+        active:          document.getElementById('prodAtivo').value === 'true',
+        image_url:       document.getElementById('prodImagemSelecionada').value,
+        updated_at:      new Date().toISOString()
+    };
+
+    if (!payload.name || isNaN(payload.price)) {
+        showToast('Nome e preço são obrigatórios.', 'error');
         return;
     }
 
-    const produtoExistente = produtos.find(p => p.name.toLowerCase() === nome.toLowerCase() && p.id !== id);
-    if (produtoExistente) {
-        showToast('Já existe um produto neste catálogo com esse exato nome!', 'error');
+    if (stockInput < 0) {
+        showToast('A quantidade não pode ser negativa.', 'error');
         return;
+    }
+
+    // Validações específicas de Saída
+    if (id && tipoMov === 'saida') {
+        if (stockInput > currentStock) {
+            showToast('Estoque insuficiente para essa saída.', 'error');
+            return;
+        }
+        if (!motivoId) {
+            showToast('O motivo da saída é obrigatório.', 'error');
+            return;
+        }
     }
 
     btn.disabled = true;
-    btn.innerText = 'Salvando...';
+    btn.textContent = 'Salvando...';
 
-    try {
-        const payload = {
-            name: nome,
-            description: desc,
-            price: price,
-            stock: stock,
-            min_stock_alert: min_stock,
-            category_id: category_id,
-            active: ativo,
-            image_url: imagemSelecionada
-        };
+    let finalStock = currentStock;
+    if (!id) {
+        finalStock = stockInput;
+    } else {
+        finalStock = (tipoMov === 'entrada') ? currentStock + stockInput : currentStock - stockInput;
+    }
+    payload.stock = finalStock;
 
-        let dbError;
-        if (id) {
-            ({ error: dbError } = await sb.from('products').update(payload).eq('id', id));
-        } else {
-            ({ error: dbError } = await sb.from('products').insert(payload));
+    let dbError;
+    let savedProductId = id;
+
+    if (id) {
+        ({ error: dbError } = await sb.from('products').update(payload).eq('id', id));
+    } else {
+        const { data, error } = await sb.from('products').insert(payload).select().single();
+        dbError = error;
+        if (data) savedProductId = data.id;
+    }
+
+    if (dbError) {
+        showToast('Erro ao salvar produto: ' + dbError.message, 'error');
+    } else {
+        // Registrar movimentação
+        if (stockInput > 0 || !id) {
+            await sb.from('stock_movements').insert({
+                product_id: savedProductId,
+                type: (!id) ? 'entrada' : tipoMov,
+                quantity: stockInput,
+                reason: (!id) ? 'Estoque inicial' : null, // Se for ajuste, usamos o ID do motivo
+                reason_id: (id && tipoMov === 'saida') ? motivoId : null,
+                notes: obs || null
+            });
         }
-
-        if (dbError) throw dbError;
 
         showToast(id ? 'Produto atualizado!' : 'Produto criado!', 'success');
         fecharModal('modalProduto');
-        await carregarProdutos();
-        renderStats();
-    } catch (error) {
-        showToast('Erro ao salvar produto: ' + error.message, 'error');
-    } finally {
-        btn.disabled = false;
-        btn.innerText = 'Salvar';
+        carregarProdutos();
+        if (typeof renderStats === 'function') renderStats();
     }
+    btn.disabled = false;
+    btn.textContent = 'Salvar';
 };
 
 window.arquivarProduto = async (id) => {
@@ -1508,9 +1631,84 @@ function initSortableJustificativas() {
     });
 }
 
-let draggedItemIndex = null;
+// =================== GESTÃO DE MOTIVOS DE ESTOQUE ===================
 
-// Removido drag functions manuais em favor do SortableJS
+async function carregarMotivosEstoque() {
+    const { data, error } = await sb.from('stock_reasons').select('*').order('name');
+    if (!error) {
+        motivosEstoque = data;
+        renderizarMotivosEstoque();
+    }
+}
+
+function renderizarMotivosEstoque() {
+    const tbody = document.getElementById('motivosEstoqueBody');
+    if (!tbody) return;
+
+    if (motivosEstoque.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:1rem;">Nenhum motivo cadastrado.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = motivosEstoque.map(m => `
+        <tr>
+            <td style="font-weight:600; cursor:pointer;" onclick="editarMotivoEstoque('${m.id}')" title="Clique para editar">${m.name}</td>
+            <td style="text-align: center;">
+                <label class="switch" style="display: inline-block;">
+                    <input type="checkbox" ${m.active ? 'checked' : ''} onchange="toggleStatusMotivoEstoque('${m.id}', this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </td>
+            <td>
+                <div style="display:flex;gap:8px;justify-content:center;">
+                    <button class="btn-sm btn-edit" onclick="editarMotivoEstoque('${m.id}')">Editar</button>
+                    <button class="btn-sm btn-delete" onclick="excluirMotivoEstoque('${m.id}')">Excluir</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+document.getElementById('btnNovoMotivoEstoque').onclick = async () => {
+    const name = await customPrompt('Novo Motivo de Estoque', 'Digite o nome do motivo:');
+    if (name && name.trim()) {
+        const { error } = await sb.from('stock_reasons').insert({ name: name.trim() });
+        if (error) showToast('Erro ao criar: ' + error.message, 'error');
+        else {
+            showToast('Motivo criado!', 'success');
+            carregarMotivosEstoque();
+        }
+    }
+};
+
+window.editarMotivoEstoque = async (id) => {
+    const motivo = motivosEstoque.find(m => m.id === id);
+    const newName = await customPrompt('Editar Motivo', 'Nome do motivo:', motivo.name);
+    if (newName && newName.trim() && newName !== motivo.name) {
+        const { error } = await sb.from('stock_reasons').update({ name: newName.trim() }).eq('id', id);
+        if (error) showToast('Erro ao atualizar: ' + error.message, 'error');
+        else {
+            showToast('Motivo atualizado!', 'success');
+            carregarMotivosEstoque();
+        }
+    }
+};
+
+window.toggleStatusMotivoEstoque = async (id, newStatus) => {
+    const { error } = await sb.from('stock_reasons').update({ active: newStatus }).eq('id', id);
+    if (error) showToast('Erro ao alterar status.', 'error');
+    else carregarMotivosEstoque();
+};
+
+window.excluirMotivoEstoque = async (id) => {
+    if (!await customConfirm('Excluir Motivo', 'Tem certeza? Isso pode afetar o histórico se houver movimentações vinculadas.')) return;
+    const { error } = await sb.from('stock_reasons').delete().eq('id', id);
+    if (error) showToast('Erro ao excluir: ' + error.message, 'error');
+    else {
+        showToast('Motivo excluído!', 'success');
+        carregarMotivosEstoque();
+    }
+};
 
 async function salvarJustificativasNoBanco() {
     const { error } = await sb.from('store_settings').update({
