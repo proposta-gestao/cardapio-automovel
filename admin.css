@@ -1294,24 +1294,29 @@ body {
 }
 
 @media (max-width: 480px) {
-    /* Hide specific dashboard cards */
-    .stats-row .stat-card:nth-child(2),
-    .stats-row .stat-card:nth-child(3) {
-        display: none !important;
-    }
-
-    /* Center the remaining revenue card */
     .stats-row {
-        display: flex;
-        justify-content: center;
+        grid-template-columns: 1fr 1fr;
+        display: grid;
+        gap: 10px;
         width: 100%;
     }
 
     .stats-row .stat-card {
         width: 100%;
-        max-width: 320px;
+        max-width: unset;
         text-align: center;
+        padding: 1.2rem 0.8rem;
+        display: block !important; /* Garantir que todos os cards apareçam */
     }
+
+    .stats-row .stat-card .stat-label {
+        font-size: 0.75rem;
+    }
+
+    .stats-row .stat-card .stat-value {
+        font-size: 1rem;
+    }
+}
 
     .filter-row {
         grid-template-columns: 1fr;

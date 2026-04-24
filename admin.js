@@ -13,6 +13,7 @@ let pedidos = [];
 let imagensGaleria = [];
 
 // --- Filtros de pedidos ---
+
 let filtrosPedidos = {
     dataInicio: '',
     dataFim: '',
@@ -22,6 +23,10 @@ let filtrosPedidos = {
     valorMax: '',
     status: ''
 };
+
+let currentModoDashboard = 'geral'; // 'geral' ou 'operacional'
+let openingTime = '18:00';
+let closingTime = '02:00';
 
 // --- Utils ---
 function formatNumber(val) {
@@ -337,10 +342,68 @@ async function carregarDashboard() {
     if (error) { showToast('Erro ao carregar pedidos', 'error'); return; }
     pedidos = data || [];
 
+    atualizarMétricasDashboard();
+}
+
+// Alterna entre Visão Geral e Hoje (Operacional)
+window.setModoDashboard = (modo) => {
+    currentModoDashboard = modo;
+    
+    document.getElementById('btnModoGeral').classList.toggle('active', modo === 'geral');
+    document.getElementById('btnModoOperacional').classList.toggle('active', modo === 'operacional');
+    
+    const infoBanner = document.getElementById('infoPeriodoOperacional');
+    if (modo === 'operacional') {
+        infoBanner.style.display = 'block';
+        const period = getOperationalPeriod(new Date(), openingTime, closingTime);
+        document.getElementById('txtPeriodoOperacional').textContent = 
+            `Período Operacional Ativo: ${period.start.toLocaleString('pt-BR')} até ${period.end.toLocaleString('pt-BR')}`;
+    } else {
+        infoBanner.style.display = 'none';
+    }
+
+    atualizarMétricasDashboard();
+};
+
+function getOperationalPeriod(date, opening, closing) {
+    const start = new Date(date);
+    const [hOpen, mOpen] = opening.split(':').map(Number);
+    start.setHours(hOpen, mOpen, 0, 0);
+
+    const end = new Date(start);
+    const [hClose, mClose] = closing.split(':').map(Number);
+    
+    if (hClose < hOpen) {
+        // Atravessa a madrugada
+        end.setDate(end.getDate() + 1);
+    }
+    end.setHours(hClose, mClose, 0, 0);
+
+    // Se a hora atual for ANTES da abertura, talvez estejamos no "final" do dia operacional anterior
+    // Ex: Abertura 18:00, agora são 01:00. O dia operacional começou ontem às 18:00.
+    if (date < start && hClose < hOpen) {
+        start.setDate(start.getDate() - 1);
+        end.setDate(end.getDate() - 1);
+    }
+
+    return { start, end };
+}
+
+function atualizarMétricasDashboard() {
+    let filtradosParaStats = pedidos;
+
+    if (currentModoDashboard === 'operacional') {
+        const period = getOperationalPeriod(new Date(), openingTime, closingTime);
+        filtradosParaStats = pedidos.filter(p => {
+            const criado = new Date(p.created_at);
+            return criado >= period.start && criado <= period.end;
+        });
+    }
+
     let totalFaturado = 0;
     let totalItens = 0;
 
-    pedidos.forEach(p => {
+    filtradosParaStats.forEach(p => {
         totalFaturado += parseFloat(p.total);
         if (p.order_items) {
             p.order_items.forEach(item => {
@@ -349,9 +412,12 @@ async function carregarDashboard() {
         }
     });
 
+    const avgTicket = filtradosParaStats.length > 0 ? (totalFaturado / filtradosParaStats.length) : 0;
+
     document.getElementById('dashTotalValue').innerText = "R$ " + formatNumber(totalFaturado);
-    document.getElementById('dashTotalOrders').innerText = pedidos.length;
+    document.getElementById('dashTotalOrders').innerText = filtradosParaStats.length;
     document.getElementById('dashTotalItems').innerText = totalItens;
+    document.getElementById('dashAvgTicket').innerText = "R$ " + formatNumber(avgTicket);
 
     renderPedidosFiltrados();
 }
@@ -363,13 +429,25 @@ function renderPedidosFiltrados() {
     let filtrados = pedidos.filter(p => {
         const criado = new Date(p.created_at);
 
-        if (filtrosPedidos.dataInicio) {
-            const inicio = new Date(filtrosPedidos.dataInicio + 'T00:00:00');
-            if (criado < inicio) return false;
-        }
-        if (filtrosPedidos.dataFim) {
-            const fim = new Date(filtrosPedidos.dataFim + 'T23:59:59');
-            if (criado > fim) return false;
+        // Lógica de Data
+        if (filtrosPedidos.tipoData === 'hoje-op') {
+            const period = getOperationalPeriod(new Date(), openingTime, closingTime);
+            if (criado < period.start || criado > period.end) return false;
+        } else if (filtrosPedidos.tipoData === 'ontem-op') {
+            const ontem = new Date();
+            ontem.setDate(ontem.getDate() - 1);
+            const period = getOperationalPeriod(ontem, openingTime, closingTime);
+            if (criado < period.start || criado > period.end) return false;
+        } else {
+            // Custom
+            if (filtrosPedidos.dataInicio) {
+                const inicio = new Date(filtrosPedidos.dataInicio + 'T00:00:00');
+                if (criado < inicio) return false;
+            }
+            if (filtrosPedidos.dataFim) {
+                const fim = new Date(filtrosPedidos.dataFim + 'T23:59:59');
+                if (criado > fim) return false;
+            }
         }
         if (filtrosPedidos.cliente) {
             const query = filtrosPedidos.cliente.toLowerCase();
@@ -1189,7 +1267,7 @@ window.excluirCupom = async (id, code) => {
     if (!await customConfirm('Excluir Cupom', `Excluir cupom "${code}"?`)) return;
     const { error } = await sb.from('coupons').delete().eq('id', id);
     if (error) { showToast('Erro ao excluir: ' + error.message, 'error'); return; }
-    showToast('Cupom excluído!', 'success');
+        showToast('Cupom excluído!', 'success');
     await carregarCupons();
 };
 
@@ -1199,8 +1277,29 @@ document.getElementById('loginSenha').onkeydown = (e) => {
 };
 
 // --- Filtros de Pedidos (Live) ---
+let filterTimeout;
+function aplicarFiltrosPedidosLive() {
+    clearTimeout(filterTimeout);
+    filterTimeout = setTimeout(aplicarFiltrosPedidos, 350);
+}
+
+// Listeners para filtros ao vivo
+document.getElementById('filtroTipoData').onchange = (e) => {
+    const isCustom = e.target.value === 'custom';
+    document.getElementById('containerDataCustom').style.display = isCustom ? 'flex' : 'none';
+    aplicarFiltrosPedidos();
+};
+document.getElementById('filtroCliente').oninput = aplicarFiltrosPedidosLive;
+document.getElementById('filtroAtendente').onchange = aplicarFiltrosPedidos;
+document.getElementById('filtroDataInicio').onchange = aplicarFiltrosPedidos;
+document.getElementById('filtroDataFim').onchange = aplicarFiltrosPedidos;
+document.getElementById('filtroValorMin').oninput = aplicarFiltrosPedidosLive;
+document.getElementById('filtroValorMax').oninput = aplicarFiltrosPedidosLive;
+document.getElementById('filtroStatus').onchange = aplicarFiltrosPedidos;
+
 function aplicarFiltrosPedidos() {
     filtrosPedidos = {
+        tipoData: document.getElementById('filtroTipoData').value,
         dataInicio: document.getElementById('filtroDataInicio').value,
         dataFim: document.getElementById('filtroDataFim').value,
         cliente: document.getElementById('filtroCliente').value.trim(),
@@ -1212,24 +1311,10 @@ function aplicarFiltrosPedidos() {
     renderPedidosFiltrados();
 }
 
-// Debounce para inputs de texto e números para não sobrecarregar o render
-let filterTimeout;
-function aplicarFiltrosPedidosLive() {
-    clearTimeout(filterTimeout);
-    filterTimeout = setTimeout(aplicarFiltrosPedidos, 350);
-}
-
-// Listeners para filtros ao vivo
-document.getElementById('filtroCliente').oninput = aplicarFiltrosPedidosLive;
-document.getElementById('filtroAtendente').onchange = aplicarFiltrosPedidos;
-document.getElementById('filtroDataInicio').onchange = aplicarFiltrosPedidos;
-document.getElementById('filtroDataFim').onchange = aplicarFiltrosPedidos;
-document.getElementById('filtroValorMin').oninput = aplicarFiltrosPedidosLive;
-document.getElementById('filtroValorMax').oninput = aplicarFiltrosPedidosLive;
-document.getElementById('filtroStatus').onchange = aplicarFiltrosPedidos;
-
 document.getElementById('btnLimparFiltros').onclick = () => {
-    filtrosPedidos = { dataInicio: '', dataFim: '', cliente: '', atendente: '', valorMin: '', valorMax: '', status: '' };
+    filtrosPedidos = { tipoData: 'custom', dataInicio: '', dataFim: '', cliente: '', atendente: '', valorMin: '', valorMax: '', status: '' };
+    document.getElementById('filtroTipoData').value = 'custom';
+    document.getElementById('containerDataCustom').style.display = 'flex';
     document.getElementById('filtroDataInicio').value = '';
     document.getElementById('filtroDataFim').value = '';
     document.getElementById('filtroCliente').value = '';
@@ -1338,8 +1423,14 @@ async function carregarConfiguracoes() {
         document.getElementById('confReferencia').value      = d.address_reference || '';
 
         // Personalização Visual
-        document.getElementById('confBrandName').value       = d.brand_name || '';
-        document.getElementById('confBrandSubtitle').value   = d.brand_subtitle || '';
+        document.getElementById('confBrandName').value = d.brand_name || '';
+        document.getElementById('confBrandSubtitle').value = d.brand_subtitle || '';
+        
+        // Horários operacionais
+        document.getElementById('confOpeningTime').value = d.opening_time || '18:00';
+        document.getElementById('confClosingTime').value = d.closing_time || '02:00';
+        openingTime = d.opening_time || '18:00';
+        closingTime = d.closing_time || '02:00';
         document.getElementById('confBannerUrl').value       = d.banner_url || '';
         document.getElementById('confLogoUrl').value         = d.logo_url || '';
         atualizarPreviewBanner(d.banner_url || '');
@@ -1645,6 +1736,8 @@ document.getElementById('btnSalvarConfig').onclick = async () => {
         address_city:         document.getElementById('confCidade').value.trim(),
         address_state:        document.getElementById('confEstado').value.trim(),
         address_reference:    document.getElementById('confReferencia').value.trim(),
+        opening_time:         document.getElementById('confOpeningTime').value,
+        closing_time:         document.getElementById('confClosingTime').value,
         updated_at:           new Date().toISOString()
     };
 
