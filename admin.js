@@ -327,6 +327,8 @@ function renderPedidosFiltrados() {
                     </tr>
                 `;
     }).join('');
+
+    initSortableProdutos();
 }
 
 let adminRealtimeChannel = null;
@@ -448,9 +450,8 @@ function renderProdutos() {
     tbody.innerHTML = produtos.map((p, i) => {
         const isEsgotado = p.stock <= 0;
         const canDrag = !p.archived && p.active;
-        const dragAttrs = canDrag ? `draggable="true" ondragstart="dragStartProdutos(event, ${i})" ondragover="dragOverProdutos(event)" ondrop="dropProdutos(event, ${i})" ondragend="dragEndProdutos(event)"` : '';
-        const handleContent = canDrag ? '☰' : '';
-        const rowStyle = canDrag ? 'cursor: grab;' : 'cursor: default;';
+        const handleContent = canDrag ? '<span class="drag-handle" style="cursor:grab;">☰</span>' : '';
+        const rowStyle = canDrag ? '' : 'cursor: default;';
         let stockColor = isEsgotado ? '#FF4757' : (p.stock <= (p.min_stock_alert || 0) ? '#FAAD14' : 'inherit');
 
         let rowClass = '';
@@ -474,7 +475,7 @@ function renderProdutos() {
             : `<button class="btn-sm btn-archive" onclick="arquivarProduto('${p.id}')">Arquivar</button>`;
 
         return `
-                <tr class="${rowClass}" ${dragAttrs} style="${rowStyle}">
+                <tr class="${rowClass}" data-id="${p.id}" style="${rowStyle}">
                     <td style="color: var(--text-muted); text-align: center; font-size: 1.2rem;">${handleContent}</td>
                     <td><img src="${p.image_url || 'Logo.png'}" alt="Img" style="width:40px;height:40px;object-fit:cover;border-radius:6px;"></td>
                     <td onclick="editarProduto('${p.id}')" style="cursor:pointer;" title="Clique para editar">
@@ -506,60 +507,43 @@ window.toggleProdutoAtivo = async (id, isActive) => {
     }
 };
 
-// --- Drag and Drop Produtos ---
-let draggedProdutoIndex = null;
-
-window.dragStartProdutos = (e, index) => {
-    draggedProdutoIndex = index;
-    e.dataTransfer.effectAllowed = 'move';
-    e.target.classList.add('dragging');
-};
-
-window.dragEndProdutos = (e) => {
-    e.target.classList.remove('dragging');
-    document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
-};
-
-window.dragOverProdutos = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-};
-
-window.dropProdutos = async (e, dropIndex) => {
-    e.preventDefault();
-    if (draggedProdutoIndex === null || draggedProdutoIndex === dropIndex) return;
-
-    // Verificar se ambos são ativos (só permitimos reordenar ativos)
-    const p1 = produtos[draggedProdutoIndex];
-    const p2 = produtos[dropIndex];
-    if (!p1.active || p1.archived || !p2.active || p2.archived) {
-        draggedProdutoIndex = null;
-        return;
-    }
-
-    // Reordenar array local
-    const item = produtos.splice(draggedProdutoIndex, 1)[0];
-    produtos.splice(dropIndex, 0, item);
+function initSortableProdutos() {
+    const el = document.getElementById('produtosBody');
+    if (!el || el.sortable) return;
     
-    draggedProdutoIndex = null;
-    renderProdutos();
-    
-    await salvarOrdemProdutosBanco();
-};
+    el.sortable = new Sortable(el, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        dragClass: 'dragging',
+        chosenClass: 'dragging',
+        onStart: () => el.classList.add('is-dragging'),
+        onEnd: async (evt) => {
+            el.classList.remove('is-dragging');
+            if (evt.oldIndex === evt.newIndex) return;
+
+            // Reordenar o array local 'produtos' baseado na nova ordem do DOM
+            const newOrderIds = Array.from(el.querySelectorAll('tr')).map(tr => tr.dataset.id);
+            const reordered = newOrderIds.map(id => produtos.find(p => p.id === id));
+            produtos = reordered;
+
+            await salvarOrdemProdutosBanco();
+        }
+    });
+}
 
 async function salvarOrdemProdutosBanco() {
-    // Para cada produto, atualizamos o sort_order baseado no índice atual do array
+    // Apenas produtos ativos e não arquivados devem ser reordenados (conforme regra de negócio)
+    // Mas aqui salvamos a ordem atual de todos para simplificar a persistência
     const updates = produtos.map((p, i) => 
         sb.from('products').update({ sort_order: i }).eq('id', p.id)
     );
 
     const results = await Promise.all(updates);
-    const hasError = results.some(r => r.error);
-
-    if (hasError) {
+    if (results.some(r => r.error)) {
         showToast('Erro ao salvar nova ordem dos produtos.', 'error');
     } else {
-        showToast('Ordem dos produtos atualizada!', 'success');
+        showToast('Ordem atualizada!', 'success');
     }
 }
 
@@ -1483,46 +1467,50 @@ function renderJustificativas() {
     }
     
     tbody.innerHTML = cancellationReasons.map((r, i) => `
-        <tr draggable="true" ondragstart="dragStart(event, ${i})" ondragover="dragOver(event)" ondrop="drop(event, ${i})" ondragend="dragEnd(event)" style="cursor: grab;">
-            <td style="color: var(--text-muted); text-align: center; font-size: 1.2rem;">☰</td>
+        <tr class="justificativa-row" data-index="${i}">
+            <td style="color: var(--text-muted); text-align: center; font-size: 1.2rem;"><span class="drag-handle-just" style="cursor:grab;">☰</span></td>
             <td>${r}</td>
             <td>
                 <button class="btn-sm btn-delete" onclick="removerJustificativa(${i})">Excluir</button>
             </td>
         </tr>
     `).join('');
+
+    initSortableJustificativas();
+}
+
+function initSortableJustificativas() {
+    const el = document.getElementById('justificativasBody');
+    if (!el || el.sortable) return;
+
+    el.sortable = new Sortable(el, {
+        animation: 150,
+        handle: '.drag-handle-just',
+        ghostClass: 'sortable-ghost',
+        dragClass: 'dragging',
+        chosenClass: 'dragging',
+        onStart: () => el.classList.add('is-dragging'),
+        onEnd: async (evt) => {
+            el.classList.remove('is-dragging');
+            if (evt.oldIndex === evt.newIndex) return;
+
+            // Reordenar baseado no novo estado do DOM
+            const newOrder = Array.from(el.querySelectorAll('.justificativa-row')).map(tr => {
+                const idx = parseInt(tr.dataset.index);
+                return cancellationReasons[idx];
+            });
+            cancellationReasons = newOrder;
+
+            renderJustificativas(); // Re-render para atualizar os data-index
+            await salvarJustificativasNoBanco();
+            showToast('Ordem atualizada!', 'success');
+        }
+    });
 }
 
 let draggedItemIndex = null;
 
-window.dragStart = (e, index) => {
-    draggedItemIndex = index;
-    e.dataTransfer.effectAllowed = 'move';
-    e.target.classList.add('dragging');
-};
-
-window.dragEnd = (e) => {
-    e.target.classList.remove('dragging');
-    document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
-};
-
-window.dragOver = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-};
-
-window.drop = async (e, dropIndex) => {
-    e.preventDefault();
-    if (draggedItemIndex === null || draggedItemIndex === dropIndex) return;
-
-    // Reorder array
-    const item = cancellationReasons.splice(draggedItemIndex, 1)[0];
-    cancellationReasons.splice(dropIndex, 0, item);
-    
-    draggedItemIndex = null;
-    renderJustificativas();
-    await salvarJustificativasNoBanco();
-};
+// Removido drag functions manuais em favor do SortableJS
 
 async function salvarJustificativasNoBanco() {
     const { error } = await sb.from('store_settings').update({
