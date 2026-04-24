@@ -1943,33 +1943,22 @@ input:checked+.slider:before {
         width: 100%;
         min-width: unset;
     }
-    .filter-row {
-        grid-template-columns: 1fr;
-        gap: 15px;
+    /* Exibir apenas Cliente e Atendente no Mobile */
+    .filter-row > div:nth-child(1), /* Período */
+    .filter-row > div:nth-child(4), /* Valor */
+    .filter-row > div:nth-child(5) { /* Status */
+        display: none !important;
     }
-    
-    /* Reordenando para: Cliente, Atendente, Período, Valor, Status */
-    .filter-row > div:nth-child(2) { order: 1; } /* Cliente */
-    .filter-row > div:nth-child(3) { order: 2; } /* Atendente */
-    .filter-row > div:nth-child(1) { order: 3; } /* Período */
-    .filter-row > div:nth-child(4) { order: 4; } /* Valor */
-    .filter-row > div:nth-child(5) { order: 5; } /* Status */
 
-    .filter-row > div {
+    .filter-row > div:nth-child(2),
+    .filter-row > div:nth-child(3) {
+        order: unset;
         grid-column: span 1 !important;
     }
 
-    /* Forçar inputs de data e valor lado a lado */
-    .filter-date-range,
-    .filter-value-range {
-        flex-direction: row !important;
-        align-items: center !important;
-        gap: 8px !important;
-    }
-    .filter-date-range input,
-    .filter-value-range input {
-        flex: 1;
-        min-width: 0;
+    .filter-row {
+        grid-template-columns: 1fr;
+        gap: 15px;
     }
 
     /* Ocultar botões de excluir no mobile conforme solicitado */
