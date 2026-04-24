@@ -523,7 +523,7 @@ function renderProdutos() {
                         <strong class="clickable-row-name">${p.name}</strong>
                     </td>
                     <td>${p.categories?.name || '-'}</td>
-                    <td>${formatCurrency(p.price)}</td>
+                    <td onclick="editarProduto('${p.id}')" style="cursor:pointer;" title="Clique para editar">${formatCurrency(p.price)}</td>
                     <td style="color:${stockColor}; font-weight: ${stockColor !== 'inherit' ? '700' : 'normal'}">${p.stock}</td>
                     <td>${toggleHTML}</td>
                     <td>

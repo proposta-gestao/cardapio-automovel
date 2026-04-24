@@ -1409,6 +1409,34 @@ body {
         display: table-cell !important;
     }
 
+    /* ===== Table Mobile Refinement: Categories List ===== */
+    /* 1: Handle, 3: Slug, 4: Ordem */
+    #subtab-lista-categorias .admin-table th:nth-child(1), #subtab-lista-categorias .admin-table td:nth-child(1),
+    #subtab-lista-categorias .admin-table th:nth-child(3), #subtab-lista-categorias .admin-table td:nth-child(3),
+    #subtab-lista-categorias .admin-table th:nth-child(4), #subtab-lista-categorias .admin-table td:nth-child(4) {
+        display: none !important;
+    }
+
+    #subtab-lista-categorias .admin-table th:nth-child(2), #subtab-lista-categorias .admin-table td:nth-child(2) { /* Nome */
+        width: 70% !important;
+        display: table-cell !important;
+    }
+
+    #subtab-lista-categorias .admin-table th:nth-child(5), #subtab-lista-categorias .admin-table td:nth-child(5) { /* Ações */
+        width: 30% !important;
+        text-align: right !important;
+        display: table-cell !important;
+    }
+
+    /* ===== Table Mobile Refinement: Stock Adjustments ===== */
+    #subtab-lista-estoque .admin-table th:nth-child(2), #subtab-lista-estoque .admin-table td:nth-child(2) { /* Status */
+        width: 80px !important;
+        text-align: center !important;
+    }
+    #subtab-lista-estoque .admin-table th:nth-child(3), #subtab-lista-estoque .admin-table td:nth-child(3) { /* Ações */
+        text-align: right !important;
+    }
+
     .admin-table {
         min-width: auto !important;
         table-layout: fixed;
@@ -1911,13 +1939,35 @@ input:checked+.slider:before {
     }
     .filter-row {
         grid-template-columns: 1fr 1fr;
+        gap: 15px;
     }
-    .filter-row > div:nth-child(1),
+    
+    /* Período ocupa a linha toda */
+    .filter-row > div:nth-child(1) {
+        grid-column: span 2;
+    }
+
+    /* Cliente e Atendente lado a lado */
     .filter-row > div:nth-child(2),
-    .filter-row > div:nth-child(3),
+    .filter-row > div:nth-child(3) {
+        grid-column: span 1;
+    }
+
+    /* Valor e Status ocupam a linha toda */
     .filter-row > div:nth-child(4),
     .filter-row > div:nth-child(5) {
-        grid-column: span 1;
+        grid-column: span 2;
+    }
+
+    /* Forçar inputs de data lado a lado */
+    .filter-date-range {
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+    .filter-date-range input {
+        flex: 1;
+        min-width: 0;
     }
 }
 
