@@ -119,6 +119,21 @@ function abrirModal(id) {
     document.getElementById(id).classList.add('active');
 }
 
+// Fechar modal ao clicar fora (no backdrop)
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('admin-modal-backdrop')) {
+        const modalId = e.target.id;
+        // Se for um modal de confirmação ou prompt, simulamos o clique no cancelar para resolver a Promise
+        if (modalId === 'modalConfirmacao') {
+            document.getElementById('btnConfirmarCancelar').click();
+        } else if (modalId === 'modalPrompt') {
+            document.getElementById('btnPromptCancelar').click();
+        } else {
+            fecharModal(modalId);
+        }
+    }
+});
+
 // --- Auth ---
 document.getElementById('btnLogin').onclick = async () => {
     const btn = document.getElementById('btnLogin');
