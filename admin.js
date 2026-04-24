@@ -1653,8 +1653,8 @@ function renderizarMotivosEstoque() {
     tbody.innerHTML = motivosEstoque.map(m => `
         <tr>
             <td style="font-weight:600; cursor:pointer;" onclick="editarMotivoEstoque('${m.id}')" title="Clique para editar">${m.name}</td>
-            <td>
-                <label class="switch">
+            <td style="text-align: center;">
+                <label class="switch" style="display: inline-block;">
                     <input type="checkbox" ${m.active ? 'checked' : ''} onchange="toggleStatusMotivoEstoque('${m.id}', this.checked)">
                     <span class="slider"></span>
                 </label>
