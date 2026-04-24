@@ -111,6 +111,43 @@ function customPrompt(title, message, defaultValue = '') {
     });
 }
 
+let currentPromoType = 'val';
+
+window.setPromoType = (type) => {
+    currentPromoType = type;
+    document.querySelectorAll('.promo-type-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.type === type);
+    });
+    atualizarPromoPreview();
+};
+
+function atualizarPromoPreview() {
+    const precoBase = parseFloat(document.getElementById('prodPreco').value) || 0;
+    const inputVal = parseFloat(document.getElementById('prodPrecoPromo').value) || 0;
+    const previewEl = document.getElementById('promoPreview');
+    
+    if (inputVal <= 0 || precoBase <= 0) {
+        previewEl.style.display = 'none';
+        return;
+    }
+    
+    let finalPromo = inputVal;
+    if (currentPromoType === 'pct') {
+        finalPromo = precoBase * (1 - inputVal / 100);
+    }
+    
+    previewEl.style.display = 'block';
+    previewEl.textContent = `Preço Final: ${formatCurrency(finalPromo)}`;
+}
+
+// Listeners para preview de promo
+document.addEventListener('DOMContentLoaded', () => {
+    const pBase = document.getElementById('prodPreco');
+    const pPromo = document.getElementById('prodPrecoPromo');
+    if (pBase) pBase.addEventListener('input', atualizarPromoPreview);
+    if (pPromo) pPromo.addEventListener('input', atualizarPromoPreview);
+});
+
 function fecharModal(id) {
     document.getElementById(id).classList.remove('active');
 }
@@ -799,6 +836,8 @@ document.getElementById('btnNovoProduto').onclick = () => {
     document.getElementById('prodDesc').value = '';
     document.getElementById('prodPreco').value = '';
     document.getElementById('prodPrecoPromo').value = '';
+    setPromoType('val');
+    atualizarPromoPreview();
     document.getElementById('prodEstoque').value = '0';
     document.getElementById('groupEstoqueAtual').style.display = 'none';
     document.getElementById('rowTipoMovimentacao').style.display = 'none';
@@ -851,6 +890,8 @@ window.editarProduto = (id) => {
     document.getElementById('prodAtivo').value = String(p.active);
     document.getElementById('prodImagemSelecionada').value = p.image_url || '';
     document.getElementById('prodPrecoPromo').value = p.promo_price || '';
+    setPromoType('val'); // Reset para valor ao editar
+    atualizarPromoPreview();
 
     document.getElementById('groupEstoqueAtual').style.display = 'block';
     document.getElementById('rowTipoMovimentacao').style.display = 'block';
@@ -881,7 +922,15 @@ document.getElementById('btnSalvarProduto').onclick = async () => {
         category_id:     document.getElementById('prodCategoria').value || null,
         active:          document.getElementById('prodAtivo').value === 'true',
         image_url:       document.getElementById('prodImagemSelecionada').value,
-        promo_price:     parseFloat(document.getElementById('prodPrecoPromo').value) || null,
+        promo_price:     (() => {
+            const val = parseFloat(document.getElementById('prodPrecoPromo').value);
+            if (!val || val <= 0) return null;
+            if (currentPromoType === 'pct') {
+                const base = parseFloat(document.getElementById('prodPreco').value) || 0;
+                return base * (1 - val / 100);
+            }
+            return val;
+        })(),
         updated_at:      new Date().toISOString()
     };
 

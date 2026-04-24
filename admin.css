@@ -1992,3 +1992,34 @@ input::-webkit-inner-spin-button {
 input[type=number] {
     -moz-appearance: textfield;
 }
+
+/* Promo Type Selector */
+.promo-type-selector {
+    display: flex;
+    background: rgba(229, 178, 93, 0.1);
+    padding: 2px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.promo-type-btn {
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: var(--transition);
+    color: var(--text-muted);
+}
+
+.promo-type-btn.active {
+    background: var(--warning);
+    color: #000;
+}
+
+.promo-preview {
+    font-size: 0.7rem;
+    color: var(--warning);
+    margin-top: 4px;
+    font-weight: 600;
+}

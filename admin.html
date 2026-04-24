@@ -530,8 +530,15 @@
                     <input type="number" id="prodPreco" step="0.01" min="0" placeholder="30.00">
                 </div>
                 <div class="form-group" style="flex:1">
-                    <label for="prodPrecoPromo" style="color:var(--warning)">🔥 Preço Promocional (R$)</label>
-                    <input type="number" id="prodPrecoPromo" step="0.01" min="0" placeholder="Oferta (opcional)">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+                        <label for="prodPrecoPromo" style="color:var(--warning); margin-bottom:0;">🔥 Promoção</label>
+                        <div class="promo-type-selector">
+                            <span class="promo-type-btn active" data-type="val" onclick="setPromoType('val')">R$</span>
+                            <span class="promo-type-btn" data-type="pct" onclick="setPromoType('pct')">%</span>
+                        </div>
+                    </div>
+                    <input type="number" id="prodPrecoPromo" step="0.01" min="0" placeholder="Valor ou %">
+                    <div id="promoPreview" class="promo-preview" style="display:none;">Novo Preço: R$ 0,00</div>
                 </div>
             </div>
 
@@ -556,7 +563,7 @@
                         Controle de Estoque
                     </div>
                     <div id="groupEstoqueAtual" style="display:none;">
-                        <span class="inventory-current-badge">Saldo Atual: <span id="prodEstoqueDisplay">0</span></span>
+                        <span class="inventory-current-badge">Estoque Atual: <span id="prodEstoqueDisplay">0</span></span>
                         <input type="hidden" id="prodEstoque">
                     </div>
                 </div>
