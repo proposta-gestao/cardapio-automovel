@@ -525,66 +525,65 @@
                 <textarea id="prodDesc" placeholder="Descrição detalhada do produto..."></textarea>
             </div>
             <div class="form-row">
-                <div class="form-group">
+                <div class="form-group" style="flex:1">
                     <label for="prodPreco">Preço (R$)</label>
                     <input type="number" id="prodPreco" step="0.01" min="0" placeholder="30.00">
                 </div>
-                <div class="inventory-card" id="groupEstoqueCard">
-                    <div class="inventory-header">
-                        <div class="inventory-title">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
-                            Controle de Estoque
-                        </div>
-                        <div id="groupEstoqueAtual" style="display:none;">
-                            <span class="inventory-current-badge">Saldo Atual: <span id="prodEstoqueDisplay">0</span></span>
-                            <input type="hidden" id="prodEstoque">
-                        </div>
-                    </div>
-
-                    <div class="inventory-body">
-                        <div class="form-row" id="rowTipoMovimentacao" style="display:none;">
-                            <div class="form-group" style="flex:1">
-                                <label for="prodTipoMovimentacao">Tipo de Operação</label>
-                                <select id="prodTipoMovimentacao">
-                                    <option value="entrada">Entrada (Reposição)</option>
-                                    <option value="saida">Saída (Perda / Avaria / Ajuste)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group" style="flex:1">
-                                <label id="labelMovimentacaoEstoque" for="prodMovimentacaoEstoque">Estoque Inicial</label>
-                                <input type="number" id="prodMovimentacaoEstoque" min="0" placeholder="0">
-                            </div>
-                        </div>
-
-                        <div id="containerMotivoSaida" class="inventory-reason-box" style="display:none;">
-                            <div class="form-group">
-                                <label for="prodMotivoSaidaId" style="color: #ff4757; font-weight: 700;">Motivo da Saída</label>
-                                <select id="prodMotivoSaidaId">
-                                    <option value="">Selecione um motivo...</option>
-                                </select>
-                            </div>
-                            <div class="form-group" style="margin-top: 15px;">
-                                <label for="prodObsSaida">Observação Complementar</label>
-                                <textarea id="prodObsSaida" placeholder="Detalhes sobre a perda ou ajuste..." style="min-height: 60px;"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="prodEstoqueMin">Estoque Mín. (Alerta)</label>
-                    <input type="number" id="prodEstoqueMin" min="0" placeholder="5"
-                        title="Abaixo disso, gera alerta vermelho no painel">
-                </div>
-                <div class="form-group">
+                <div class="form-group" style="flex:1">
                     <label for="prodCategoria">Categoria</label>
                     <select id="prodCategoria">
                         <option value="">Selecione...</option>
                     </select>
+                </div>
+                <div class="form-group" style="flex:1">
+                    <label for="prodEstoqueMin">Estoque Mín. (Alerta)</label>
+                    <input type="number" id="prodEstoqueMin" min="0" placeholder="5"
+                        title="Abaixo disso, gera alerta vermelho no painel">
+                </div>
+            </div>
+
+            <div class="inventory-card" id="groupEstoqueCard">
+                <div class="inventory-header">
+                    <div class="inventory-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                        Controle de Estoque
+                    </div>
+                    <div id="groupEstoqueAtual" style="display:none;">
+                        <span class="inventory-current-badge">Saldo Atual: <span id="prodEstoqueDisplay">0</span></span>
+                        <input type="hidden" id="prodEstoque">
+                    </div>
+                </div>
+
+                <div class="inventory-body">
+                    <div class="form-row" id="rowTipoMovimentacao" style="display:none;">
+                        <div class="form-group" style="flex:1">
+                            <label for="prodTipoMovimentacao">Tipo de Operação</label>
+                            <select id="prodTipoMovimentacao">
+                                <option value="entrada">Entrada (Reposição)</option>
+                                <option value="saida">Saída (Perda / Avaria / Ajuste)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1">
+                            <label id="labelMovimentacaoEstoque" for="prodMovimentacaoEstoque">Estoque Inicial</label>
+                            <input type="number" id="prodMovimentacaoEstoque" min="0" placeholder="0">
+                        </div>
+                    </div>
+
+                    <div id="containerMotivoSaida" class="inventory-reason-box" style="display:none;">
+                        <div class="form-group">
+                            <label for="prodMotivoSaidaId" style="color: #ff4757; font-weight: 700;">Motivo da Saída</label>
+                            <select id="prodMotivoSaidaId">
+                                <option value="">Selecione um motivo...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label for="prodObsSaida">Observação Complementar</label>
+                            <textarea id="prodObsSaida" placeholder="Detalhes sobre a perda ou ajuste..." style="min-height: 60px;"></textarea>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="form-group">
