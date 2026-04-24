@@ -2021,6 +2021,63 @@ input[type=number] {
 }
 
 .promo-preview {
+    background: rgba(229, 178, 93, 0.05);
+    border: 1px dashed var(--border-color);
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+/* --- Metrics & Performance --- */
+.chart-container {
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.chart-container:hover {
+    border-color: var(--primary) !important;
+}
+
+.metrics-selectors {
+    display: flex;
+    gap: 10px;
+}
+
+.admin-select {
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.admin-select:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+.insights-grid {
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .chart-container {
+        height: 300px !important;
+        padding: 0.5rem !important;
+    }
+    
+    .metrics-selectors {
+        width: 100%;
+    }
+    
+    .metrics-selectors select {
+        width: 100%;
+    }
+}
     font-size: 0.7rem;
     color: var(--warning);
     margin-top: 4px;

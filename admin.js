@@ -11,6 +11,7 @@ let categorias = [];
 let cupons = [];
 let pedidos = [];
 let imagensGaleria = [];
+let chartMetricas = null;
 
 // --- Filtros de pedidos ---
 
@@ -291,6 +292,7 @@ function switchTab(tabId, btn) {
     document.getElementById('tab-' + tabId).classList.add('active');
 }
 
+
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.onclick = () => switchTab(btn.dataset.tab, btn);
 });
@@ -306,9 +308,140 @@ document.querySelectorAll('.subtab-btn').forEach(btn => {
         tabContent.querySelectorAll('.subtab-content').forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
         const target = document.getElementById('subtab-' + btn.dataset.subtab);
-        if (target) target.classList.add('active');
+        if (target) {
+            target.classList.add('active');
+            if (btn.dataset.subtab === 'dashboard-metricas') {
+                setTimeout(atualizarGraficoMetricas, 100);
+            }
+        }
     };
 });
+
+function atualizarGraficoMetricas(filtrados = null) {
+    if (!filtrados) filtrados = getPedidosFiltrados();
+    
+    const agrupamento = document.getElementById('selectAgrupamentoMetricas')?.value || 'dia';
+    const canvas = document.getElementById('chartMetricas');
+    if (!canvas) return;
+
+    let dadosAgrupados = {};
+    let labels = [];
+    let valores = [];
+
+    const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+
+    if (agrupamento === 'dia') {
+        filtrados.forEach(p => {
+            const data = new Date(p.created_at).toLocaleDateString('pt-BR');
+            dadosAgrupados[data] = (dadosAgrupados[data] || 0) + parseFloat(p.total);
+        });
+        labels = Object.keys(dadosAgrupados).sort((a, b) => {
+            const dateA = new Date(a.split('/').reverse().join('-'));
+            const dateB = new Date(b.split('/').reverse().join('-'));
+            return dateA - dateB;
+        });
+    } else if (agrupamento === 'semana') {
+        diasSemana.forEach(d => dadosAgrupados[d] = 0);
+        filtrados.forEach(p => {
+            const dia = diasSemana[new Date(p.created_at).getDay()];
+            dadosAgrupados[dia] += parseFloat(p.total);
+        });
+        labels = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'];
+    } else if (agrupamento === 'mes') {
+        filtrados.forEach(p => {
+            const data = new Date(p.created_at);
+            const mes = data.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+            dadosAgrupados[mes] = (dadosAgrupados[mes] || 0) + parseFloat(p.total);
+        });
+        labels = Object.keys(dadosAgrupados).sort((a, b) => {
+            const [mesA, anoA] = a.split(' de ');
+            const [mesB, anoB] = b.split(' de ');
+            return new Date(anoA, 0) - new Date(anoB, 0); // Ordenação simplificada
+        });
+    } else if (agrupamento === 'hora') {
+        for (let i = 0; i < 24; i++) dadosAgrupados[i] = 0;
+        filtrados.forEach(p => {
+            const hora = new Date(p.created_at).getHours();
+            dadosAgrupados[hora] += parseFloat(p.total);
+        });
+        labels = Object.keys(dadosAgrupados).map(h => h + 'h');
+    }
+
+    labels.forEach(l => {
+        const key = agrupamento === 'hora' ? l.replace('h', '') : l;
+        valores.push(dadosAgrupados[key] || 0);
+    });
+
+    calcularInsights(filtrados);
+
+    if (chartMetricas) chartMetricas.destroy();
+
+    const ctx = canvas.getContext('2d');
+    chartMetricas = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Faturamento (R$)',
+                data: valores,
+                borderColor: '#e5b25d',
+                backgroundColor: 'rgba(229, 178, 93, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#e5b25d'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => `Faturamento: R$ ${formatNumber(ctx.parsed.y)}`
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') }
+                }
+            }
+        }
+    });
+}
+
+function calcularInsights(filtrados) {
+    const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+    let faturamentoPorDia = {};
+    diasSemana.forEach(d => faturamentoPorDia[d] = 0);
+
+    filtrados.forEach(p => {
+        const dia = diasSemana[new Date(p.created_at).getDay()];
+        faturamentoPorDia[dia] += parseFloat(p.total);
+    });
+
+    let melhorDia = { nome: '--', valor: -1 };
+    let piorDia = { nome: '--', valor: Infinity };
+
+    Object.entries(faturamentoPorDia).forEach(([dia, valor]) => {
+        if (valor > melhorDia.valor) melhorDia = { nome: dia, valor: valor };
+        if (valor < piorDia.valor && valor >= 0) piorDia = { nome: dia, valor: valor };
+    });
+
+    const elMelhor = document.getElementById('insightMelhorDia');
+    const elMelhorTxt = document.getElementById('txtInsightMelhor');
+    const elPior = document.getElementById('insightPiorDia');
+    const elPiorTxt = document.getElementById('txtInsightPior');
+
+    if (elMelhor) elMelhor.innerText = melhorDia.nome;
+    if (elMelhorTxt) elMelhorTxt.innerText = `Seu melhor dia é ${melhorDia.nome.toLowerCase()} (R$ ${formatNumber(melhorDia.valor)})`;
+    if (elPior) elPior.innerText = piorDia.nome;
+    if (elPiorTxt) elPiorTxt.innerText = `Seu pior desempenho é na ${piorDia.nome.toLowerCase()} (R$ ${formatNumber(piorDia.valor)})`;
+}
 
 // --- Data Loading ---
 async function carregarTudo() {
@@ -413,49 +546,8 @@ function getOperationalPeriod(date, opening, closing) {
     return { start, end };
 }
 
-function atualizarMétricasDashboard() {
-    let filtradosParaStats = [];
-
-    if (currentModoDashboard === 'hoje-op' || currentModoDashboard === 'ontem-op') {
-        const referenceDate = new Date();
-        if (currentModoDashboard === 'ontem-op') referenceDate.setDate(referenceDate.getDate() - 1);
-        const period = getOperationalPeriod(referenceDate, openingTime, closingTime);
-        filtradosParaStats = pedidos.filter(p => {
-            const criado = new Date(p.created_at);
-            return criado >= period.start && criado <= period.end;
-        });
-    } else {
-        // Modo Geral: Todo o histórico
-        filtradosParaStats = [...pedidos];
-    }
-
-    let totalFaturado = 0;
-    let totalItens = 0;
-
-    filtradosParaStats.forEach(p => {
-        totalFaturado += parseFloat(p.total || 0);
-        if (p.order_items) {
-            p.order_items.forEach(item => {
-                totalItens += parseInt(item.quantity || 0);
-            });
-        }
-    });
-
-    const avgTicket = filtradosParaStats.length > 0 ? (totalFaturado / filtradosParaStats.length) : 0;
-
-    document.getElementById('dashTotalValue').innerText = "R$ " + formatNumber(totalFaturado);
-    document.getElementById('dashTotalOrders').innerText = filtradosParaStats.length;
-    document.getElementById('dashTotalItems').innerText = totalItens;
-    document.getElementById('dashAvgTicket').innerText = "R$ " + formatNumber(avgTicket);
-
-    renderPedidosFiltrados();
-}
-
-function renderPedidosFiltrados() {
-    const tbody = document.getElementById('pedidosBody');
-    const contador = document.getElementById('filtroContador');
-
-    let filtrados = pedidos.filter(p => {
+function getPedidosFiltrados() {
+    return pedidos.filter(p => {
         const criado = new Date(p.created_at);
 
         // Se estiver em modo operacional, a tabela também segue o período operacional
@@ -500,6 +592,38 @@ function renderPedidosFiltrados() {
         }
         return true;
     });
+}
+
+function atualizarMétricasDashboard() {
+    const filtradosParaStats = getPedidosFiltrados();
+
+    let totalFaturado = 0;
+    let totalItens = 0;
+
+    filtradosParaStats.forEach(p => {
+        totalFaturado += parseFloat(p.total || 0);
+        if (p.order_items) {
+            p.order_items.forEach(item => {
+                totalItens += parseInt(item.quantity || 0);
+            });
+        }
+    });
+
+    const avgTicket = filtradosParaStats.length > 0 ? (totalFaturado / filtradosParaStats.length) : 0;
+
+    document.getElementById('dashTotalValue').innerText = "R$ " + formatNumber(totalFaturado);
+    document.getElementById('dashTotalOrders').innerText = filtradosParaStats.length;
+    document.getElementById('dashTotalItems').innerText = totalItens;
+    document.getElementById('dashAvgTicket').innerText = "R$ " + formatNumber(avgTicket);
+
+    renderPedidosFiltrados(filtradosParaStats);
+    atualizarGraficoMetricas(filtradosParaStats);
+}
+
+function renderPedidosFiltrados(filtrados) {
+    const tbody = document.getElementById('pedidosBody');
+    const contador = document.getElementById('filtroContador');
+    if (!tbody) return;
 
     const total = filtrados.length;
     if (contador) {
@@ -512,6 +636,7 @@ function renderPedidosFiltrados() {
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;">Nenhum pedido encontrado com os filtros selecionados.</td></tr>';
         return;
     }
+
 
     tbody.innerHTML = filtrados.map(p => {
         const dataPedido = new Date(p.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
