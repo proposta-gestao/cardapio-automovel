@@ -71,6 +71,46 @@ function customConfirm(title, message) {
     });
 }
 
+function customPrompt(title, message, defaultValue = '') {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('modalPrompt');
+        const input = document.getElementById('promptInput');
+        const btnOk = document.getElementById('btnPromptOk');
+        const btnCancel = document.getElementById('btnPromptCancelar');
+
+        document.getElementById('promptTitle').textContent = title;
+        document.getElementById('promptMessage').textContent = message;
+        input.value = defaultValue;
+
+        modal.classList.add('active');
+        setTimeout(() => input.focus(), 100);
+
+        const handleOk = () => {
+            const val = input.value;
+            modal.classList.remove('active');
+            btnOk.removeEventListener('click', handleOk);
+            btnCancel.removeEventListener('click', handleCancel);
+            resolve(val);
+        };
+
+        const handleCancel = () => {
+            modal.classList.remove('active');
+            btnOk.removeEventListener('click', handleOk);
+            btnCancel.removeEventListener('click', handleCancel);
+            resolve(null);
+        };
+
+        btnOk.addEventListener('click', handleOk);
+        btnCancel.addEventListener('click', handleCancel);
+
+        // Enter key support
+        input.onkeydown = (e) => {
+            if (e.key === 'Enter') handleOk();
+            if (e.key === 'Escape') handleCancel();
+        };
+    });
+}
+
 function fecharModal(id) {
     document.getElementById(id).classList.remove('active');
 }
