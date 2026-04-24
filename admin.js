@@ -373,6 +373,13 @@ window.setModoDashboard = (modo) => {
             }
         } else {
             infoBanner.style.display = 'none';
+            // Se for Visão Geral, limpa as datas manuais para mostrar TUDO por padrão
+            const fDataInicio = document.getElementById('filtroDataInicio');
+            const fDataFim = document.getElementById('filtroDataFim');
+            if (fDataInicio) fDataInicio.value = '';
+            if (fDataFim) fDataFim.value = '';
+            filtrosPedidos.dataInicio = '';
+            filtrosPedidos.dataFim = '';
         }
     }
 
@@ -404,7 +411,7 @@ function getOperationalPeriod(date, opening, closing) {
 }
 
 function atualizarMétricasDashboard() {
-    let filtradosParaStats = pedidos;
+    let filtradosParaStats = [];
 
     if (currentModoDashboard === 'hoje-op' || currentModoDashboard === 'ontem-op') {
         const referenceDate = new Date();
@@ -414,16 +421,19 @@ function atualizarMétricasDashboard() {
             const criado = new Date(p.created_at);
             return criado >= period.start && criado <= period.end;
         });
+    } else {
+        // Modo Geral: Todo o histórico
+        filtradosParaStats = [...pedidos];
     }
 
     let totalFaturado = 0;
     let totalItens = 0;
 
     filtradosParaStats.forEach(p => {
-        totalFaturado += parseFloat(p.total);
+        totalFaturado += parseFloat(p.total || 0);
         if (p.order_items) {
             p.order_items.forEach(item => {
-                totalItens += parseInt(item.quantity);
+                totalItens += parseInt(item.quantity || 0);
             });
         }
     });
