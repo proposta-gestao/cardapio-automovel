@@ -524,13 +524,15 @@
                 <label for="prodDesc">Descrição</label>
                 <textarea id="prodDesc" placeholder="Descrição detalhada do produto..."></textarea>
             </div>
-            <div class="form-row">
+            <div class="form-row" style="align-items: flex-start;">
                 <div class="form-group" style="flex:1">
-                    <label for="prodPreco">Preço Original (R$)</label>
+                    <div style="height: 22px; display: flex; align-items: center; margin-bottom: 4px;">
+                        <label for="prodPreco" style="margin-bottom:0;">Preço Original (R$)</label>
+                    </div>
                     <input type="number" id="prodPreco" step="0.01" min="0" placeholder="30.00">
                 </div>
                 <div class="form-group" style="flex:1">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+                    <div style="height: 22px; display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
                         <label for="prodPrecoPromo" style="color:var(--warning); margin-bottom:0;">🔥 Promoção</label>
                         <div class="promo-type-selector">
                             <span class="promo-type-btn active" data-type="val" onclick="setPromoType('val')">R$</span>

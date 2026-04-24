@@ -132,12 +132,18 @@ function atualizarPromoPreview() {
     }
     
     let finalPromo = inputVal;
+    let pctLabel = "";
+
     if (currentPromoType === 'pct') {
         finalPromo = precoBase * (1 - inputVal / 100);
+        pctLabel = `(${inputVal}% OFF)`;
+    } else {
+        const pctCalculado = Math.round((1 - (inputVal / precoBase)) * 100);
+        pctLabel = isFinite(pctCalculado) && pctCalculado > 0 ? `(${pctCalculado}% OFF)` : "";
     }
     
     previewEl.style.display = 'block';
-    previewEl.textContent = `Preço Final: ${formatCurrency(finalPromo)}`;
+    previewEl.textContent = `Preço Final: ${formatCurrency(finalPromo)} ${pctLabel}`;
 }
 
 // Listeners para preview de promo

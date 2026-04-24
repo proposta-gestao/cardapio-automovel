@@ -2003,8 +2003,10 @@ input[type=number] {
 }
 
 .promo-type-btn {
-    padding: 2px 8px;
-    font-size: 0.7rem;
+    padding: 4px 15px;
+    min-width: 40px;
+    text-align: center;
+    font-size: 0.75rem;
     font-weight: 700;
     cursor: pointer;
     border-radius: 6px;
