@@ -254,6 +254,7 @@
                         <button class="subtab-btn" data-subtab="config-visual">Personalização</button>
                         <button class="subtab-btn" data-subtab="config-frete">Frete e Entrega</button>
                         <button class="subtab-btn" data-subtab="config-cancelamento">Cancelamentos</button>
+                        <button class="subtab-btn" data-subtab="config-motivos-estoque">Motivos de Estoque</button>
                     </div>
                 </div>
 
@@ -464,6 +465,36 @@
                     </div>
                 </div>
                 </div> <!-- Fechamento da sub-aba config-cancelamento -->
+                
+                <div class="subtab-content" id="subtab-config-motivos-estoque">
+                <!-- Motivos de Ajuste de Estoque -->
+                <div class="config-card" style="margin-top: 1.5rem;">
+                    <div class="config-card-header">
+                        <h2>📦 Motivos de Ajuste de Estoque</h2>
+                        <button class="btn-primary btn-sm" id="btnNovoMotivoEstoque">+ Novo Motivo</button>
+                    </div>
+                    <div class="config-card-body">
+                        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom: 1rem;">
+                            Cadastre os motivos para entradas e saídas manuais de estoque (Ex: Avaria, Vencimento).
+                        </p>
+                        
+                        <div class="admin-table-wrapper">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome do Motivo</th>
+                                        <th>Status</th>
+                                        <th style="width: 120px;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="motivosEstoqueBody">
+                                    <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:1rem;">Carregando motivos...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                </div> <!-- Fechamento da sub-aba config-motivos-estoque -->
 
             </div>
         </div> <!-- Fechamento da admin-content-wrapper -->
@@ -504,8 +535,33 @@
                     <input type="number" id="prodEstoque" readonly style="background: rgba(255,255,255,0.05); color: #aaa;">
                 </div>
                 <div class="form-group" id="groupMovimentacaoEstoque">
-                    <label id="labelMovimentacaoEstoque" for="prodMovimentacaoEstoque">Estoque Inicial</label>
-                    <input type="number" id="prodMovimentacaoEstoque" min="0" placeholder="0">
+                    <div class="form-row" id="rowTipoMovimentacao" style="display:none;">
+                        <div class="form-group" style="flex:1">
+                            <label for="prodTipoMovimentacao">Tipo de Operação</label>
+                            <select id="prodTipoMovimentacao">
+                                <option value="entrada">Entrada (Reposição)</option>
+                                <option value="saida">Saída (Perda / Avaria / Ajuste)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1">
+                            <label id="labelMovimentacaoEstoque" for="prodMovimentacaoEstoque">Estoque Inicial</label>
+                            <input type="number" id="prodMovimentacaoEstoque" min="0" placeholder="0">
+                        </div>
+                    </div>
+                    <div id="containerMotivoSaida" style="display:none; margin-top: 10px; padding: 12px; background: rgba(255,71,87,0.05); border-radius: 8px; border: 1px solid rgba(255,71,87,0.2);">
+                        <div class="form-group">
+                            <label for="prodMotivoSaidaId" style="color: #ff4757;">Motivo da Saída (Obrigatório)</label>
+                            <select id="prodMotivoSaidaId">
+                                <option value="">Selecione um motivo...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-top: 10px;">
+                            <label for="prodObsSaida">Observação Complementar (Opcional)</label>
+                            <textarea id="prodObsSaida" placeholder="Detalhes sobre a perda ou ajuste..." style="min-height: 60px;"></textarea>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="form-row">

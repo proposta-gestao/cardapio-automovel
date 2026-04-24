@@ -197,6 +197,7 @@ async function carregarTudo() {
         carregarProdutos(),
         carregarCategorias(),
         carregarCupons(),
+        carregarMotivosEstoque(),
         carregarAtendentes(),
         carregarDashboard(),
         carregarConfiguracoes()
@@ -741,18 +742,40 @@ document.getElementById('btnNovoProduto').onclick = () => {
     document.getElementById('prodDesc').value = '';
     document.getElementById('prodPreco').value = '';
     document.getElementById('prodEstoque').value = '0';
-    document.getElementById('prodMovimentacaoEstoque').value = '';
-    document.getElementById('prodEstoqueMin').value = '0';
-    document.getElementById('prodCategoria').value = '';
-    document.getElementById('prodAtivo').value = 'true';
-    document.getElementById('prodImagemSelecionada').value = '';
-
     document.getElementById('groupEstoqueAtual').style.display = 'none';
+    document.getElementById('rowTipoMovimentacao').style.display = 'none';
+    document.getElementById('containerMotivoSaida').style.display = 'none';
     document.getElementById('labelMovimentacaoEstoque').innerText = 'Estoque Inicial';
+    document.getElementById('prodTipoMovimentacao').value = 'entrada';
+    document.getElementById('prodMotivoSaidaId').value = '';
+    document.getElementById('prodObsSaida').value = '';
 
     carregarGaleria('');
     abrirModal('modalProduto');
 };
+
+// Listener para mudança de tipo de movimentação
+document.getElementById('prodTipoMovimentacao').onchange = (e) => {
+    const container = document.getElementById('containerMotivoSaida');
+    const label = document.getElementById('labelMovimentacaoEstoque');
+    
+    if (e.target.value === 'saida') {
+        container.style.display = 'block';
+        label.innerText = 'Quantidade de Saída';
+        popularSelectMotivosEstoque();
+    } else {
+        container.style.display = 'none';
+        label.innerText = 'Quantidade de Entrada';
+    }
+};
+
+function popularSelectMotivosEstoque() {
+    const select = document.getElementById('prodMotivoSaidaId');
+    const ativos = motivosEstoque.filter(m => m.active);
+    
+    select.innerHTML = '<option value="">Selecione um motivo...</option>' + 
+        ativos.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+}
 
 window.editarProduto = (id) => {
     const p = produtos.find(x => x.id === id);
@@ -770,7 +793,12 @@ window.editarProduto = (id) => {
     document.getElementById('prodImagemSelecionada').value = p.image_url || '';
 
     document.getElementById('groupEstoqueAtual').style.display = 'block';
+    document.getElementById('rowTipoMovimentacao').style.display = 'block';
+    document.getElementById('containerMotivoSaida').style.display = 'none';
     document.getElementById('labelMovimentacaoEstoque').innerText = 'Adicionar ao Estoque';
+    document.getElementById('prodTipoMovimentacao').value = 'entrada';
+    document.getElementById('prodMotivoSaidaId').value = '';
+    document.getElementById('prodObsSaida').value = '';
 
     carregarGaleria(p.image_url || '');
     abrirModal('modalProduto');
@@ -781,6 +809,9 @@ document.getElementById('btnSalvarProduto').onclick = async () => {
     const id = document.getElementById('produtoId').value;
     const currentStock = parseInt(document.getElementById('prodEstoque').value) || 0;
     const stockInput = parseInt(document.getElementById('prodMovimentacaoEstoque').value) || 0;
+    const tipoMov = document.getElementById('prodTipoMovimentacao').value;
+    const motivoId = document.getElementById('prodMotivoSaidaId').value;
+    const obs = document.getElementById('prodObsSaida').value.trim();
 
     const payload = {
         name:            document.getElementById('prodNome').value.trim(),
@@ -799,8 +830,20 @@ document.getElementById('btnSalvarProduto').onclick = async () => {
     }
 
     if (stockInput < 0) {
-        showToast('A movimentação de estoque não pode ser negativa.', 'error');
+        showToast('A quantidade não pode ser negativa.', 'error');
         return;
+    }
+
+    // Validações específicas de Saída
+    if (id && tipoMov === 'saida') {
+        if (stockInput > currentStock) {
+            showToast('Estoque insuficiente para essa saída.', 'error');
+            return;
+        }
+        if (!motivoId) {
+            showToast('O motivo da saída é obrigatório.', 'error');
+            return;
+        }
     }
 
     btn.disabled = true;
@@ -810,7 +853,7 @@ document.getElementById('btnSalvarProduto').onclick = async () => {
     if (!id) {
         finalStock = stockInput;
     } else {
-        finalStock = currentStock + stockInput;
+        finalStock = (tipoMov === 'entrada') ? currentStock + stockInput : currentStock - stockInput;
     }
     payload.stock = finalStock;
 
@@ -828,13 +871,15 @@ document.getElementById('btnSalvarProduto').onclick = async () => {
     if (dbError) {
         showToast('Erro ao salvar produto: ' + dbError.message, 'error');
     } else {
-        // Registrar movimentação de estoque
+        // Registrar movimentação
         if (stockInput > 0 || !id) {
             await sb.from('stock_movements').insert({
                 product_id: savedProductId,
-                type: 'entrada',
+                type: (!id) ? 'entrada' : tipoMov,
                 quantity: stockInput,
-                reason: !id ? 'Estoque inicial' : 'Entrada manual'
+                reason: (!id) ? 'Estoque inicial' : null, // Se for ajuste, usamos o ID do motivo
+                reason_id: (id && tipoMov === 'saida') ? motivoId : null,
+                notes: obs || null
             });
         }
 
@@ -1529,9 +1574,83 @@ function initSortableJustificativas() {
     });
 }
 
-let draggedItemIndex = null;
+// =================== GESTÃO DE MOTIVOS DE ESTOQUE ===================
 
-// Removido drag functions manuais em favor do SortableJS
+async function carregarMotivosEstoque() {
+    const { data, error } = await sb.from('stock_reasons').select('*').order('name');
+    if (!error) {
+        motivosEstoque = data;
+        renderizarMotivosEstoque();
+    }
+}
+
+function renderizarMotivosEstoque() {
+    const tbody = document.getElementById('motivosEstoqueBody');
+    if (!tbody) return;
+
+    if (motivosEstoque.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:1rem;">Nenhum motivo cadastrado.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = motivosEstoque.map(m => `
+        <tr>
+            <td style="font-weight:600;">${m.name}</td>
+            <td>
+                <span class="status-badge ${m.active ? 'status-pago' : 'status-cancelado'}" style="cursor:pointer;" onclick="toggleStatusMotivoEstoque('${m.id}', ${m.active})">
+                    ${m.active ? 'Ativo' : 'Inativo'}
+                </span>
+            </td>
+            <td>
+                <div style="display:flex;gap:8px;justify-content:center;">
+                    <button class="btn-sm btn-edit" onclick="editarMotivoEstoque('${m.id}')">Editar</button>
+                    <button class="btn-sm btn-delete" onclick="excluirMotivoEstoque('${m.id}')">Excluir</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+document.getElementById('btnNovoMotivoEstoque').onclick = async () => {
+    const name = await customPrompt('Novo Motivo de Estoque', 'Digite o nome do motivo:');
+    if (name && name.trim()) {
+        const { error } = await sb.from('stock_reasons').insert({ name: name.trim() });
+        if (error) showToast('Erro ao criar: ' + error.message, 'error');
+        else {
+            showToast('Motivo criado!', 'success');
+            carregarMotivosEstoque();
+        }
+    }
+};
+
+window.editarMotivoEstoque = async (id) => {
+    const motivo = motivosEstoque.find(m => m.id === id);
+    const newName = await customPrompt('Editar Motivo', 'Nome do motivo:', motivo.name);
+    if (newName && newName.trim() && newName !== motivo.name) {
+        const { error } = await sb.from('stock_reasons').update({ name: newName.trim() }).eq('id', id);
+        if (error) showToast('Erro ao atualizar: ' + error.message, 'error');
+        else {
+            showToast('Motivo atualizado!', 'success');
+            carregarMotivosEstoque();
+        }
+    }
+};
+
+window.toggleStatusMotivoEstoque = async (id, currentStatus) => {
+    const { error } = await sb.from('stock_reasons').update({ active: !currentStatus }).eq('id', id);
+    if (error) showToast('Erro ao alterar status.', 'error');
+    else carregarMotivosEstoque();
+};
+
+window.excluirMotivoEstoque = async (id) => {
+    if (!await customConfirm('Excluir Motivo', 'Tem certeza? Isso pode afetar o histórico se houver movimentações vinculadas.')) return;
+    const { error } = await sb.from('stock_reasons').delete().eq('id', id);
+    if (error) showToast('Erro ao excluir: ' + error.message, 'error');
+    else {
+        showToast('Motivo excluído!', 'success');
+        carregarMotivosEstoque();
+    }
+};
 
 async function salvarJustificativasNoBanco() {
     const { error } = await sb.from('store_settings').update({
