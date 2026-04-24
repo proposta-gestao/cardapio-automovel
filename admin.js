@@ -417,30 +417,48 @@ function atualizarGraficoMetricas(filtrados = null) {
 function calcularInsights(filtrados) {
     const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
     let faturamentoPorDia = {};
+    let faturamentoPorHora = {};
+    
     diasSemana.forEach(d => faturamentoPorDia[d] = 0);
+    for (let i = 0; i < 24; i++) faturamentoPorHora[i] = 0;
 
     filtrados.forEach(p => {
-        const dia = diasSemana[new Date(p.created_at).getDay()];
-        faturamentoPorDia[dia] += parseFloat(p.total);
+        const data = new Date(p.created_at);
+        const dia = diasSemana[data.getDay()];
+        const hora = data.getHours();
+        const total = parseFloat(p.total || 0);
+        
+        faturamentoPorDia[dia] += total;
+        faturamentoPorHora[hora] += total;
     });
 
     let melhorDia = { nome: '--', valor: -1 };
     let piorDia = { nome: '--', valor: Infinity };
+    let melhorHora = { hora: '--', valor: -1 };
 
     Object.entries(faturamentoPorDia).forEach(([dia, valor]) => {
         if (valor > melhorDia.valor) melhorDia = { nome: dia, valor: valor };
         if (valor < piorDia.valor && valor >= 0) piorDia = { nome: dia, valor: valor };
     });
 
+    Object.entries(faturamentoPorHora).forEach(([hora, valor]) => {
+        if (valor > melhorHora.valor) melhorHora = { hora: hora, valor: valor };
+    });
+
     const elMelhor = document.getElementById('insightMelhorDia');
     const elMelhorTxt = document.getElementById('txtInsightMelhor');
     const elPior = document.getElementById('insightPiorDia');
     const elPiorTxt = document.getElementById('txtInsightPior');
+    const elHora = document.getElementById('insightMelhorHora');
+    const elHoraTxt = document.getElementById('txtInsightHora');
 
     if (elMelhor) elMelhor.innerText = melhorDia.nome;
     if (elMelhorTxt) elMelhorTxt.innerText = `Seu melhor dia é ${melhorDia.nome.toLowerCase()} (R$ ${formatNumber(melhorDia.valor)})`;
     if (elPior) elPior.innerText = piorDia.nome;
     if (elPiorTxt) elPiorTxt.innerText = `Seu pior desempenho é na ${piorDia.nome.toLowerCase()} (R$ ${formatNumber(piorDia.valor)})`;
+    
+    if (elHora) elHora.innerText = melhorHora.hora + 'h';
+    if (elHoraTxt) elHoraTxt.innerText = `Seu horário de pico é às ${melhorHora.hora}h (R$ ${formatNumber(melhorHora.valor)})`;
 }
 
 // --- Data Loading ---

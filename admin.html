@@ -63,98 +63,102 @@
 
             <!-- Dashboard Tab -->
             <div class="tab-content" id="tab-dashboard">
-                <div class="admin-toolbar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div class="admin-toolbar" style="margin-bottom: 1rem;">
                     <h2>Vendas e Performances</h2>
-                    <div class="admin-subtabs" style="margin-bottom: 0;">
-                        <button class="subtab-btn active" id="btnModoHojeOp" onclick="setModoDashboard('hoje-op')">Hoje (Op)</button>
-                        <button class="subtab-btn" id="btnModoOntemOp" onclick="setModoDashboard('ontem-op')">Ontem (Op)</button>
-                        <button class="subtab-btn" id="btnModoGeral" onclick="setModoDashboard('geral')">Visão Geral</button>
-                    </div>
                 </div>
 
-                <!-- Nova barra de sub-abas para Dashboard -->
-                <div class="admin-subtabs" style="margin: 1.5rem 0; justify-content: center;">
-                    <button class="subtab-btn active" data-subtab="dashboard-pedidos">📋 Lista de Pedidos</button>
-                    <button class="subtab-btn" data-subtab="dashboard-metricas">📊 Métricas & Performance</button>
+                <!-- Navegação Principal do Dashboard -->
+                <div class="admin-subtabs" style="margin-bottom: 2rem; justify-content: center;">
+                    <button class="subtab-btn active" data-subtab="dashboard-operacional">🏠 Visão Geral</button>
+                    <button class="subtab-btn" data-subtab="dashboard-metricas">📊 Métricas e Performance</button>
                 </div>
 
-                <!-- Info Período Operacional -->
-                <div id="infoPeriodoOperacional" class="stock-alert-panel" style="display: none; margin-bottom: 1rem; background: rgba(229, 178, 93, 0.1); border-color: var(--primary);">
-                    <p style="margin: 0; color: var(--primary); font-weight: 600; display: flex; align-items: center; gap: 8px;">
-                        🕒 <span id="txtPeriodoOperacional">Período Operacional Ativo</span>
-                    </p>
-                </div>
-
-                <div class="stats-row" id="dashboardStatsRow">
-                    <div class="stat-card">
-                        <div class="stat-label">Faturamento Total</div>
-                        <div class="stat-value" id="dashTotalValue" style="color:var(--success)">R$ 0,00</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Pedidos Realizados</div>
-                        <div class="stat-value" id="dashTotalOrders">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Total de Itens</div>
-                        <div class="stat-value" id="dashTotalItems">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Ticket Médio</div>
-                        <div class="stat-value" id="dashAvgTicket" style="color:var(--primary)">R$ 0,00</div>
-                    </div>
-                </div>
-
-                <!-- Filtros de Busca (Comum a ambas as sub-abas) -->
-                <div class="dashboard-filters">
-                    <div class="filters-header">
-                        <span class="filters-title">🔎 Filtrar Pedidos</span>
-                    </div>
-                    <div class="filters-body">
-                        <div class="filter-row">
-                            <div class="filter-group filter-group--date">
-                                <label for="filtroDataInicio">📅 Período</label>
-                                <div class="filter-date-range">
-                                    <input type="date" id="filtroDataInicio" title="Data inicial">
-                                    <span class="date-separator">a</span>
-                                    <input type="date" id="filtroDataFim" title="Data final">
-                                </div>
-                            </div>
-                            <div class="filter-group">
-                                <label for="filtroCliente">👤 Cliente</label>
-                                <input type="text" id="filtroCliente" placeholder="Nome ou celular...">
-                            </div>
-                            <div class="filter-group">
-                                <label for="filtroAtendente">👨‍💼 Atendente</label>
-                                <select id="filtroAtendente">
-                                    <option value="">Todos os atendentes</option>
-                                </select>
-                            </div>
-                            <div class="filter-group filter-group--range">
-                                <label>💰 Valor (R$)</label>
-                                <div class="filter-value-range">
-                                    <input type="number" id="filtroValorMin" min="0" step="0.01" placeholder="Mín.">
-                                    <span class="date-separator">—</span>
-                                    <input type="number" id="filtroValorMax" min="0" step="0.01" placeholder="Máx.">
-                                </div>
-                            </div>
-                            <div class="filter-group filter-group--status">
-                                <label>🟡 Status</label>
-                                <select id="filtroStatus">
-                                    <option value="">Todos os status</option>
-                                    <option value="pendente">Pendente</option>
-                                    <option value="concluido">Concluído</option>
-                                    <option value="cancelado">Cancelado</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="filters-actions">
-                            <button class="btn-cancel" id="btnLimparFiltros" style="width: 100%; justify-content: center;">✕ Limpar filtros</button>
+                <!-- Subtab: Visão Geral (Operacional) -->
+                <div class="subtab-content active" id="subtab-dashboard-operacional">
+                    
+                    <div class="admin-toolbar" style="margin-bottom: 1.5rem; justify-content: flex-end;">
+                        <div class="admin-subtabs" style="margin-bottom: 0;">
+                            <button class="subtab-btn active" id="btnModoHojeOp" onclick="setModoDashboard('hoje-op')">Hoje (Op)</button>
+                            <button class="subtab-btn" id="btnModoOntemOp" onclick="setModoDashboard('ontem-op')">Ontem (Op)</button>
+                            <button class="subtab-btn" id="btnModoGeral" onclick="setModoDashboard('geral')">Visão Geral</button>
                         </div>
                     </div>
-                </div>
 
-                <!-- Subtab: Lista de Pedidos -->
-                <div class="subtab-content active" id="subtab-dashboard-pedidos">
+                    <!-- Info Período Operacional -->
+                    <div id="infoPeriodoOperacional" class="stock-alert-panel" style="display: none; margin-bottom: 1rem; background: rgba(229, 178, 93, 0.1); border-color: var(--primary);">
+                        <p style="margin: 0; color: var(--primary); font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                            🕒 <span id="txtPeriodoOperacional">Período Operacional Ativo</span>
+                        </p>
+                    </div>
+
+                    <div class="stats-row" id="dashboardStatsRow">
+                        <div class="stat-card">
+                            <div class="stat-label">Faturamento Total</div>
+                            <div class="stat-value" id="dashTotalValue" style="color:var(--success)">R$ 0,00</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Pedidos Realizados</div>
+                            <div class="stat-value" id="dashTotalOrders">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total de Itens</div>
+                            <div class="stat-value" id="dashTotalItems">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Ticket Médio</div>
+                            <div class="stat-value" id="dashAvgTicket" style="color:var(--primary)">R$ 0,00</div>
+                        </div>
+                    </div>
+
+                    <!-- Filtros de Busca -->
+                    <div class="dashboard-filters">
+                        <div class="filters-header">
+                            <span class="filters-title">🔎 Filtrar Pedidos</span>
+                        </div>
+                        <div class="filters-body">
+                            <div class="filter-row">
+                                <div class="filter-group filter-group--date">
+                                    <label for="filtroDataInicio">📅 Período</label>
+                                    <div class="filter-date-range">
+                                        <input type="date" id="filtroDataInicio" title="Data inicial">
+                                        <span class="date-separator">a</span>
+                                        <input type="date" id="filtroDataFim" title="Data final">
+                                    </div>
+                                </div>
+                                <div class="filter-group">
+                                    <label for="filtroCliente">👤 Cliente</label>
+                                    <input type="text" id="filtroCliente" placeholder="Nome ou celular...">
+                                </div>
+                                <div class="filter-group">
+                                    <label for="filtroAtendente">👨‍💼 Atendente</label>
+                                    <select id="filtroAtendente">
+                                        <option value="">Todos os atendentes</option>
+                                    </select>
+                                </div>
+                                <div class="filter-group filter-group--range">
+                                    <label>💰 Valor (R$)</label>
+                                    <div class="filter-value-range">
+                                        <input type="number" id="filtroValorMin" min="0" step="0.01" placeholder="Mín.">
+                                        <span class="date-separator">—</span>
+                                        <input type="number" id="filtroValorMax" min="0" step="0.01" placeholder="Máx.">
+                                    </div>
+                                </div>
+                                <div class="filter-group filter-group--status">
+                                    <label>🟡 Status</label>
+                                    <select id="filtroStatus">
+                                        <option value="">Todos os status</option>
+                                        <option value="pendente">Pendente</option>
+                                        <option value="concluido">Concluído</option>
+                                        <option value="cancelado">Cancelado</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="filters-actions">
+                                <button class="btn-cancel" id="btnLimparFiltros" style="width: 100%; justify-content: center;">✕ Limpar filtros</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="admin-toolbar" style="margin-top: 1.5rem;">
                         <h2>Pedidos <span id="filtroContador" style="font-size:0.85rem;color:var(--text-muted);font-weight:400;"></span></h2>
                     </div>
@@ -180,10 +184,10 @@
                     </div>
                 </div>
 
-                <!-- Subtab: Métricas -->
+                <!-- Subtab: Métricas e Performance (Analítico) -->
                 <div class="subtab-content" id="subtab-dashboard-metricas">
-                    <div class="admin-toolbar" style="margin-top: 1.5rem; justify-content: space-between;">
-                        <h2>Análise de Performance</h2>
+                    <div class="admin-toolbar" style="margin-top: 0.5rem; justify-content: space-between;">
+                        <h2>Análise Estratégica</h2>
                         <div class="metrics-selectors">
                             <select id="selectAgrupamentoMetricas" class="admin-select" onchange="atualizarGraficoMetricas()">
                                 <option value="dia">📅 Por Dia</option>
@@ -194,22 +198,14 @@
                         </div>
                     </div>
 
-                    <!-- Container do Gráfico -->
                     <div class="chart-container" style="position: relative; height:400px; width:100%; background: var(--bg-card); border-radius: var(--radius); padding: 1.5rem; border: 1px solid var(--border-color); margin-bottom: 2rem;">
                         <canvas id="chartMetricas"></canvas>
                     </div>
 
-                    <!-- Painel de Insights -->
-                    <div class="insights-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
-                        <div class="stat-card" style="border-left: 4px solid var(--success);">
-                            <div class="stat-label">📈 Melhor Desempenho</div>
-                            <div class="stat-value" id="insightMelhorDia" style="font-size: 1.2rem;">--</div>
-                            <div class="stat-label" id="txtInsightMelhor" style="font-size: 0.8rem; margin-top: 5px;">Carregando dados...</div>
-                        </div>
-                        <div class="stat-card" style="border-left: 4px solid var(--danger);">
-                            <div class="stat-label">📉 Menor Desempenho</div>
-                            <div class="stat-value" id="insightPiorDia" style="font-size: 1.2rem;">--</div>
-                            <div class="stat-label" id="txtInsightPior" style="font-size: 0.8rem; margin-top: 5px;">Carregando dados...</div>
+                        <div class="stat-card" style="border-left: 4px solid var(--primary);">
+                            <div class="stat-label">🕒 Horário de Pico</div>
+                            <div class="stat-value" id="insightMelhorHora" style="font-size: 1.2rem;">--</div>
+                            <div class="stat-label" id="txtInsightHora" style="font-size: 0.8rem; margin-top: 5px;">Carregando dados...</div>
                         </div>
                     </div>
                 </div>
