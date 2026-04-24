@@ -526,9 +526,16 @@
             </div>
             <div class="form-row">
                 <div class="form-group" style="flex:1">
-                    <label for="prodPreco">Preço (R$)</label>
+                    <label for="prodPreco">Preço Original (R$)</label>
                     <input type="number" id="prodPreco" step="0.01" min="0" placeholder="30.00">
                 </div>
+                <div class="form-group" style="flex:1">
+                    <label for="prodPrecoPromo" style="color:var(--warning)">🔥 Preço Promocional (R$)</label>
+                    <input type="number" id="prodPrecoPromo" step="0.01" min="0" placeholder="Oferta (opcional)">
+                </div>
+            </div>
+
+            <div class="form-row">
                 <div class="form-group" style="flex:1">
                     <label for="prodCategoria">Categoria</label>
                     <select id="prodCategoria">
@@ -539,19 +546,6 @@
                     <label for="prodEstoqueMin">Estoque Mín. (Alerta)</label>
                     <input type="number" id="prodEstoqueMin" min="0" placeholder="5"
                         title="Abaixo disso, gera alerta vermelho no painel">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group" style="flex:1">
-                    <label for="prodPrecoPromo" style="color:var(--warning)">🔥 Preço Promocional (R$)</label>
-                    <input type="number" id="prodPrecoPromo" step="0.01" min="0" placeholder="Deixe vazio para desativar">
-                </div>
-                <div class="form-group" style="flex:1">
-                    <!-- Espaço reservado para manter o alinhamento -->
-                </div>
-                <div class="form-group" style="flex:1">
-                    <!-- Espaço reservado para manter o alinhamento -->
                 </div>
             </div>
 
