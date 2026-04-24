@@ -202,10 +202,73 @@
                         <canvas id="chartMetricas"></canvas>
                     </div>
 
+                    <!-- Frase de Insight Inteligente -->
+                    <div id="insightFraseWrapper" class="stock-alert-panel" style="margin-bottom: 2rem; background: rgba(229, 178, 93, 0.05); border-color: var(--primary);">
+                        <p style="margin: 0; color: var(--text-color); font-weight: 500; font-style: italic; font-size: 1.1rem; text-align: center;">
+                            ✨ <span id="txtInsightInteligente">Analisando seus dados para gerar recomendações...</span>
+                        </p>
+                    </div>
+
+                    <!-- Seção: Tempo -->
+                    <h3 class="metrics-section-title">🕒 Análise de Tempo</h3>
+                    <div class="insights-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
                         <div class="stat-card" style="border-left: 4px solid var(--primary);">
-                            <div class="stat-label">🕒 Horário de Pico</div>
+                            <div class="stat-label">🔥 Horário de Pico</div>
                             <div class="stat-value" id="insightMelhorHora" style="font-size: 1.2rem;">--</div>
-                            <div class="stat-label" id="txtInsightHora" style="font-size: 0.8rem; margin-top: 5px;">Carregando dados...</div>
+                            <div class="stat-label" id="txtInsightHora" style="font-size: 0.8rem; margin-top: 5px;">Carregando...</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid var(--success);">
+                            <div class="stat-label">🏆 Melhor Dia da Semana</div>
+                            <div class="stat-value" id="insightMelhorDia" style="font-size: 1.2rem;">--</div>
+                            <div class="stat-label" id="txtInsightMelhor" style="font-size: 0.8rem; margin-top: 5px;">Carregando...</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid var(--danger);">
+                            <div class="stat-label">📉 Pior Dia da Semana</div>
+                            <div class="stat-value" id="insightPiorDia" style="font-size: 1.2rem;">--</div>
+                            <div class="stat-label" id="txtInsightPior" style="font-size: 0.8rem; margin-top: 5px;">Carregando...</div>
+                        </div>
+                    </div>
+
+                    <!-- Seção: Performance de Vendas -->
+                    <h3 class="metrics-section-title">💰 Performance de Vendas</h3>
+                    <div class="insights-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                        <div class="stat-card" style="border-left: 4px solid var(--warning);">
+                            <div class="stat-label">🎫 Ticket Médio</div>
+                            <div class="stat-value" id="insightTicketMedio" style="font-size: 1.2rem;">R$ 0,00</div>
+                            <div class="stat-label" id="txtTicketMedio" style="font-size: 0.8rem; margin-top: 5px;">Média por pedido</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid var(--primary);">
+                            <div class="stat-label">📊 Média Pedidos/Dia</div>
+                            <div class="stat-value" id="insightMediaPedidos" style="font-size: 1.2rem;">0</div>
+                            <div class="stat-label" id="txtMediaPedidos" style="font-size: 0.8rem; margin-top: 5px;">No período filtrado</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid var(--danger);">
+                            <div class="stat-label">🚫 Taxa de Cancelamento</div>
+                            <div class="stat-value" id="insightTaxaCancelamento" style="font-size: 1.2rem;">0%</div>
+                            <div class="stat-label" id="txtTaxaCancelamento" style="font-size: 0.8rem; margin-top: 5px;">Pedidos cancelados</div>
+                        </div>
+                    </div>
+
+                    <!-- Seção: Top Performance -->
+                    <h3 class="metrics-section-title">⭐ Destaques</h3>
+                    <div class="insights-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                        <div class="stat-card" style="border-left: 4px solid #e5b25d;">
+                            <div class="stat-label">🍎 Produto Estrela</div>
+                            <div class="stat-value" id="insightProdutoTop" style="font-size: 1.2rem;">--</div>
+                            <div class="stat-label" id="txtProdutoTop" style="font-size: 0.8rem; margin-top: 5px;">Mais vendido (Qtd)</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid #e5b25d;">
+                            <div class="stat-label">📂 Categoria Líder</div>
+                            <div class="stat-value" id="insightCategoriaTop" style="font-size: 1.2rem;">--</div>
+                            <div class="stat-label" id="txtCategoriaTop" style="font-size: 0.8rem; margin-top: 5px;">Maior faturamento</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid var(--success);">
+                            <div class="stat-label">📅 Top 3 Dias (Faturamento)</div>
+                            <div class="stat-value" id="insightTopDias" style="font-size: 0.9rem; text-align: left; line-height: 1.4;">
+                                1. --<br>
+                                2. --<br>
+                                3. --
+                            </div>
                         </div>
                     </div>
                 </div>

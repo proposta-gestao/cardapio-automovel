@@ -2078,6 +2078,18 @@ input[type=number] {
         width: 100%;
     }
 }
+.metrics-section-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-color);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(229, 178, 93, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
     font-size: 0.7rem;
     color: var(--warning);
     margin-top: 4px;

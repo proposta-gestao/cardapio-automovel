@@ -318,7 +318,7 @@ document.querySelectorAll('.subtab-btn').forEach(btn => {
 });
 
 function atualizarGraficoMetricas(filtrados = null) {
-    if (!filtrados) filtrados = getPedidosFiltrados();
+    if (!filtrados) filtrados = [...pedidos];
     
     const agrupamento = document.getElementById('selectAgrupamentoMetricas')?.value || 'dia';
     const canvas = document.getElementById('chartMetricas');
@@ -415,50 +415,128 @@ function atualizarGraficoMetricas(filtrados = null) {
 }
 
 function calcularInsights(filtrados) {
+    if (!filtrados) filtrados = getPedidosFiltrados();
+
     const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
-    let faturamentoPorDia = {};
+    let faturamentoPorDiaSemana = {};
     let faturamentoPorHora = {};
+    let faturamentoPorData = {};
+    let faturamentoPorCategoria = {};
+    let qtdPorProduto = {};
     
-    diasSemana.forEach(d => faturamentoPorDia[d] = 0);
+    let totalCancelados = 0;
+    let totalFaturado = 0;
+    
+    diasSemana.forEach(d => faturamentoPorDiaSemana[d] = 0);
     for (let i = 0; i < 24; i++) faturamentoPorHora[i] = 0;
 
     filtrados.forEach(p => {
         const data = new Date(p.created_at);
-        const dia = diasSemana[data.getDay()];
+        const diaSem = diasSemana[data.getDay()];
         const hora = data.getHours();
-        const total = parseFloat(p.total || 0);
-        
-        faturamentoPorDia[dia] += total;
-        faturamentoPorHora[hora] += total;
+        const dataStr = data.toLocaleDateString('pt-BR');
+        const valor = parseFloat(p.total || 0);
+
+        if (p.status === 'cancelado') totalCancelados++;
+        totalFaturado += valor;
+
+        faturamentoPorDiaSemana[diaSem] += valor;
+        faturamentoPorHora[hora] += valor;
+        faturamentoPorData[dataStr] = (faturamentoPorData[dataStr] || 0) + valor;
+
+        if (p.order_items) {
+            p.order_items.forEach(item => {
+                const prodNome = item.name || 'Produto sem nome';
+                qtdPorProduto[prodNome] = (qtdPorProduto[prodNome] || 0) + parseInt(item.quantity);
+                
+                // Categoria
+                const catNome = item.category_name || 'Geral';
+                faturamentoPorCategoria[catNome] = (faturamentoPorCategoria[catNome] || 0) + (parseFloat(item.price) * parseInt(item.quantity));
+            });
+        }
     });
 
-    let melhorDia = { nome: '--', valor: -1 };
-    let piorDia = { nome: '--', valor: Infinity };
+    // Cálculos de Tempo
+    let melhorDiaSem = { nome: '--', valor: -1 };
+    let piorDiaSem = { nome: '--', valor: Infinity };
     let melhorHora = { hora: '--', valor: -1 };
 
-    Object.entries(faturamentoPorDia).forEach(([dia, valor]) => {
-        if (valor > melhorDia.valor) melhorDia = { nome: dia, valor: valor };
-        if (valor < piorDia.valor && valor >= 0) piorDia = { nome: dia, valor: valor };
+    Object.entries(faturamentoPorDiaSemana).forEach(([dia, valor]) => {
+        if (valor > melhorDiaSem.valor) melhorDiaSem = { nome: dia, valor: valor };
+        if (valor < piorDiaSem.valor && valor >= 0) piorDiaSem = { nome: dia, valor: valor };
     });
 
     Object.entries(faturamentoPorHora).forEach(([hora, valor]) => {
         if (valor > melhorHora.valor) melhorHora = { hora: hora, valor: valor };
     });
 
-    const elMelhor = document.getElementById('insightMelhorDia');
-    const elMelhorTxt = document.getElementById('txtInsightMelhor');
-    const elPior = document.getElementById('insightPiorDia');
-    const elPiorTxt = document.getElementById('txtInsightPior');
-    const elHora = document.getElementById('insightMelhorHora');
-    const elHoraTxt = document.getElementById('txtInsightHora');
+    // Top 3 Dias do Mês
+    const top3Dias = Object.entries(faturamentoPorData)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3);
 
-    if (elMelhor) elMelhor.innerText = melhorDia.nome;
-    if (elMelhorTxt) elMelhorTxt.innerText = `Seu melhor dia é ${melhorDia.nome.toLowerCase()} (R$ ${formatNumber(melhorDia.valor)})`;
-    if (elPior) elPior.innerText = piorDia.nome;
-    if (elPiorTxt) elPiorTxt.innerText = `Seu pior desempenho é na ${piorDia.nome.toLowerCase()} (R$ ${formatNumber(piorDia.valor)})`;
-    
-    if (elHora) elHora.innerText = melhorHora.hora + 'h';
-    if (elHoraTxt) elHoraTxt.innerText = `Seu horário de pico é às ${melhorHora.hora}h (R$ ${formatNumber(melhorHora.valor)})`;
+    // Performance de Vendas
+    const totalPedidos = filtrados.length;
+    const ticketMedio = totalPedidos > 0 ? (totalFaturado / totalPedidos) : 0;
+    const uniqueDaysCount = new Set(filtrados.map(p => new Date(p.created_at).toLocaleDateString())).size || 1;
+    const mediaPedidosDia = (totalPedidos / uniqueDaysCount);
+    const taxaCancelamento = totalPedidos > 0 ? ((totalCancelados / totalPedidos) * 100) : 0;
+
+    // Top Produto e Categoria
+    const topProduto = Object.entries(qtdPorProduto).sort((a, b) => b[1] - a[1])[0] || ['--', 0];
+    const topCategoria = Object.entries(faturamentoPorCategoria).sort((a, b) => b[1] - a[1])[0] || ['--', 0];
+
+    // Atualização do DOM
+    // Tempo
+    document.getElementById('insightMelhorHora').innerText = melhorHora.hora + 'h';
+    document.getElementById('txtInsightHora').innerText = `Pico de faturamento às ${melhorHora.hora}h (R$ ${formatNumber(melhorHora.valor)})`;
+    document.getElementById('insightMelhorDia').innerText = melhorDiaSem.nome;
+    document.getElementById('txtInsightMelhor').innerText = `Melhor dia: ${melhorDiaSem.nome.toLowerCase()} (R$ ${formatNumber(melhorDiaSem.valor)})`;
+    document.getElementById('insightPiorDia').innerText = piorDiaSem.nome;
+    document.getElementById('txtInsightPior').innerText = `Menor performance: ${piorDiaSem.nome.toLowerCase()} (R$ ${formatNumber(piorDiaSem.valor)})`;
+
+    // Vendas
+    document.getElementById('insightTicketMedio').innerText = formatCurrency(ticketMedio);
+    document.getElementById('insightMediaPedidos').innerText = formatNumber(mediaPedidosDia);
+    document.getElementById('insightTaxaCancelamento').innerText = formatNumber(taxaCancelamento) + '%';
+
+    // Destaques
+    document.getElementById('insightProdutoTop').innerText = topProduto[0];
+    document.getElementById('txtProdutoTop').innerText = `Vendido ${topProduto[1]} vezes`;
+    document.getElementById('insightCategoriaTop').innerText = topCategoria[0];
+    document.getElementById('txtCategoriaTop').innerText = `Faturou R$ ${formatNumber(topCategoria[1])}`;
+
+    const topDiasList = top3Dias.map((d, i) => `${i + 1}. ${d[0]} - R$ ${formatNumber(d[1])}`).join('<br>') || 'Nenhum dado disponível';
+    document.getElementById('insightTopDias').innerHTML = topDiasList;
+
+    // Geração de Insight Inteligente
+    gerarInsightInteligente(melhorHora, melhorDiaSem, piorDiaSem, ticketMedio);
+}
+
+function gerarInsightInteligente(melhorHora, melhorDiaSem, piorDiaSem, ticketMedio) {
+    const el = document.getElementById('txtInsightInteligente');
+    if (!el) return;
+
+    let insight = "";
+    if (melhorHora.hora >= 19 && melhorHora.hora <= 22) {
+        insight = "🔥 Seu pico de vendas acontece no horário nobre (19h - 22h). Reforce o atendimento!";
+    } else if (melhorHora.hora !== '--') {
+        insight = `📈 Identificamos que às ${melhorHora.hora}h é seu momento de maior venda.`;
+    }
+
+    if (melhorDiaSem.nome === 'Sexta-feira' || melhorDiaSem.nome === 'Sábado' || melhorDiaSem.nome === 'Domingo') {
+        insight += " | Finais de semana representam seu maior faturamento.";
+    }
+
+    if (piorDiaSem.nome === 'Segunda-feira') {
+        insight += " | Você tem baixa performance às segundas-feiras. Que tal uma promoção?";
+    }
+
+    if (ticketMedio > 0) {
+        insight += ` | Seu ticket médio atual está em R$ ${formatNumber(ticketMedio)}.`;
+    }
+
+    el.innerText = insight || "Análise concluída: Seu negócio apresenta padrões saudáveis de venda.";
 }
 
 // --- Data Loading ---
@@ -635,7 +713,7 @@ function atualizarMétricasDashboard() {
     document.getElementById('dashAvgTicket').innerText = "R$ " + formatNumber(avgTicket);
 
     renderPedidosFiltrados(filtradosParaStats);
-    atualizarGraficoMetricas(filtradosParaStats);
+    atualizarGraficoMetricas();
 }
 
 function renderPedidosFiltrados(filtrados) {
