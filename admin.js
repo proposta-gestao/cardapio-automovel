@@ -200,6 +200,7 @@ async function carregarTudo() {
         carregarConfiguracoes()
     ]);
     renderStats();
+    setupAdminRealtime();
 }
 
 async function carregarAtendentes() {
@@ -298,6 +299,7 @@ function renderPedidosFiltrados() {
         const dataPedido = new Date(p.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
         const qtdItens = p.order_items ? p.order_items.reduce((acc, curr) => acc + curr.quantity, 0) : 0;
         const isPendente = p.status === 'pendente';
+        const isPago = p.payment_status === 'pago';
         const badgeClass = isPendente ? 'badge-inactive' : 'badge-active';
         const statusLabel = p.status === 'concluido' ? 'Concluído' : p.status?.charAt(0).toUpperCase() + p.status?.slice(1);
         return `
@@ -308,15 +310,47 @@ function renderPedidosFiltrados() {
                         <td><span class="badge ${badgeClass}" style="text-transform:capitalize;">${statusLabel}</span></td>
                         <td>${qtdItens} un.</td>
                         <td><strong>${formatCurrency(p.total)}</strong></td>
-                        <td>
+                        <td style="display:flex; gap: 5px;">
                             ${isPendente
                 ? `<button class="btn-sm btn-finalizar" onclick="finalizarPedido('${p.id}')">✅ Finalizar</button>`
                 : '<span style="font-size:0.8rem;color:var(--text-muted);">—</span>'
+            }
+                            ${isPendente && !isPago
+                ? `<button class="btn-sm" style="background:transparent; color:#ff4757; border: 1px solid #ff4757;" onclick="cancelarPedido('${p.id}')">❌ Cancelar</button>`
+                : ''
             }
                         </td>
                     </tr>
                 `;
     }).join('');
+}
+
+let adminRealtimeChannel = null;
+
+function setupAdminRealtime() {
+    if (adminRealtimeChannel) return;
+
+    adminRealtimeChannel = sb.channel('admin-orders-realtime')
+        .on('postgres_changes', { 
+            event: '*', 
+            schema: 'public', 
+            table: 'orders' 
+        }, payload => {
+            if (payload.eventType === 'INSERT') {
+                pedidos.unshift(payload.new);
+                renderPedidosFiltrados();
+            } else if (payload.eventType === 'UPDATE') {
+                const idx = pedidos.findIndex(p => p.id === payload.new.id);
+                if (idx !== -1) {
+                    pedidos[idx] = { ...pedidos[idx], ...payload.new };
+                    renderPedidosFiltrados();
+                }
+            } else if (payload.eventType === 'DELETE') {
+                pedidos = pedidos.filter(p => p.id !== payload.old.id);
+                renderPedidosFiltrados();
+            }
+        })
+        .subscribe();
 }
 
 async function carregarProdutos() {
@@ -947,6 +981,21 @@ window.finalizarPedido = async (id) => {
     if (idx !== -1) pedidos[idx].status = 'concluido';
     renderPedidosFiltrados();
     showToast('Pedido finalizado com sucesso!', 'success');
+};
+
+// --- Cancelar Pedido ---
+window.cancelarPedido = async (id) => {
+    if (!await customConfirm('Cancelar Pedido', 'Tem certeza que deseja cancelar este pedido? O status será alterado para Cancelado.')) return;
+    const { error } = await sb.from('orders').update({ status: 'cancelado' }).eq('id', id);
+    if (error) {
+        showToast('Erro ao cancelar pedido: ' + error.message, 'error');
+        return;
+    }
+    // Atualiza o pedido na memória
+    const idx = pedidos.findIndex(p => p.id === id);
+    if (idx !== -1) pedidos[idx].status = 'cancelado';
+    renderPedidosFiltrados();
+    showToast('Pedido cancelado com sucesso!', 'success');
 };
 
 // =================== CONFIGURAÇÕES ===================
