@@ -24,7 +24,7 @@ let filtrosPedidos = {
     status: ''
 };
 
-let currentModoDashboard = 'geral'; // 'geral' ou 'operacional'
+let currentModoDashboard = 'hoje-op'; // Inicia com o operacional de hoje
 let openingTime = '18:00';
 let closingTime = '02:00';
 
@@ -342,28 +342,38 @@ async function carregarDashboard() {
     if (error) { showToast('Erro ao carregar pedidos', 'error'); return; }
     pedidos = data || [];
 
-    atualizarMétricasDashboard();
+    // Inicializa o modo correto (Hoje Op por padrão)
+    setModoDashboard(currentModoDashboard);
 }
 
 // Alterna entre Visão Geral, Ontem (Op) e Hoje (Op)
 window.setModoDashboard = (modo) => {
     currentModoDashboard = modo;
     
-    document.getElementById('btnModoGeral').classList.toggle('active', modo === 'geral');
-    document.getElementById('btnModoOntemOp').classList.toggle('active', modo === 'ontem-op');
-    document.getElementById('btnModoHojeOp').classList.toggle('active', modo === 'hoje-op');
+    const btnGeral = document.getElementById('btnModoGeral');
+    const btnOntem = document.getElementById('btnModoOntemOp');
+    const btnHoje = document.getElementById('btnModoHojeOp');
+
+    if (btnGeral) btnGeral.classList.toggle('active', modo === 'geral');
+    if (btnOntem) btnOntem.classList.toggle('active', modo === 'ontem-op');
+    if (btnHoje) btnHoje.classList.toggle('active', modo === 'hoje-op');
     
     const infoBanner = document.getElementById('infoPeriodoOperacional');
-    if (modo === 'hoje-op' || modo === 'ontem-op') {
-        infoBanner.style.display = 'block';
-        const referenceDate = new Date();
-        if (modo === 'ontem-op') referenceDate.setDate(referenceDate.getDate() - 1);
-        
-        const period = getOperationalPeriod(referenceDate, openingTime, closingTime);
-        document.getElementById('txtPeriodoOperacional').textContent = 
-            `Período Operacional (${modo === 'hoje-op' ? 'Hoje' : 'Ontem'}): ${period.start.toLocaleString('pt-BR')} até ${period.end.toLocaleString('pt-BR')}`;
-    } else {
-        infoBanner.style.display = 'none';
+    if (infoBanner) {
+        if (modo === 'hoje-op' || modo === 'ontem-op') {
+            infoBanner.style.display = 'block';
+            const referenceDate = new Date();
+            if (modo === 'ontem-op') referenceDate.setDate(referenceDate.getDate() - 1);
+            
+            const period = getOperationalPeriod(referenceDate, openingTime, closingTime);
+            const txtPeriodo = document.getElementById('txtPeriodoOperacional');
+            if (txtPeriodo) {
+                txtPeriodo.textContent = 
+                    `Período Operacional (${modo === 'hoje-op' ? 'Hoje' : 'Ontem'}): ${period.start.toLocaleString('pt-BR')} até ${period.end.toLocaleString('pt-BR')}`;
+            }
+        } else {
+            infoBanner.style.display = 'none';
+        }
     }
 
     atualizarMétricasDashboard();
