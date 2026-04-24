@@ -1446,7 +1446,7 @@ window.dragOver = (e) => {
     e.dataTransfer.dropEffect = 'move';
 };
 
-window.drop = (e, dropIndex) => {
+window.drop = async (e, dropIndex) => {
     e.preventDefault();
     if (draggedItemIndex === null || draggedItemIndex === dropIndex) return;
 
@@ -1456,31 +1456,10 @@ window.drop = (e, dropIndex) => {
     
     draggedItemIndex = null;
     renderJustificativas();
+    await salvarJustificativasNoBanco();
 };
 
-document.getElementById('btnAdicionarJustificativa').onclick = () => {
-    const input = document.getElementById('inputNovaJustificativa');
-    const val = input.value.trim();
-    if (!val) return;
-    if (cancellationReasons.includes(val)) {
-        showToast('Esta justificativa já existe.', 'error');
-        return;
-    }
-    cancellationReasons.push(val);
-    input.value = '';
-    renderJustificativas();
-};
-
-window.removerJustificativa = (index) => {
-    cancellationReasons.splice(index, 1);
-    renderJustificativas();
-};
-
-document.getElementById('btnSalvarJustificativas').onclick = async () => {
-    const btn = document.getElementById('btnSalvarJustificativas');
-    btn.disabled = true;
-    btn.innerText = 'Salvando...';
-
+async function salvarJustificativasNoBanco() {
     const { error } = await sb.from('store_settings').update({
         cancellation_reasons: cancellationReasons,
         updated_at: new Date().toISOString()
@@ -1488,10 +1467,31 @@ document.getElementById('btnSalvarJustificativas').onclick = async () => {
 
     if (error) {
         showToast('Erro ao salvar justificativas: ' + error.message, 'error');
-    } else {
-        showToast('Justificativas salvas com sucesso!', 'success');
     }
+}
 
-    btn.disabled = false;
-    btn.innerText = 'Salvar Justificativas';
+document.getElementById('btnAdicionarJustificativa').onclick = async () => {
+    const input = document.getElementById('inputNovaJustificativa');
+    const val = input.value.trim();
+    if (!val) return;
+    if (cancellationReasons.includes(val)) {
+        showToast('Esta justificativa já existe.', 'error');
+        return;
+    }
+    
+    document.getElementById('btnAdicionarJustificativa').disabled = true;
+    cancellationReasons.push(val);
+    input.value = '';
+    renderJustificativas();
+    
+    await salvarJustificativasNoBanco();
+    showToast('Justificativa adicionada!', 'success');
+    document.getElementById('btnAdicionarJustificativa').disabled = false;
+};
+
+window.removerJustificativa = async (index) => {
+    cancellationReasons.splice(index, 1);
+    renderJustificativas();
+    await salvarJustificativasNoBanco();
+    showToast('Justificativa removida!', 'success');
 };
