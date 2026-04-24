@@ -798,6 +798,11 @@ document.getElementById('btnSalvarProduto').onclick = async () => {
         return;
     }
 
+    if (stockInput < 0) {
+        showToast('A movimentação de estoque não pode ser negativa.', 'error');
+        return;
+    }
+
     btn.disabled = true;
     btn.textContent = 'Salvando...';
 
