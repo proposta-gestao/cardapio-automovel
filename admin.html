@@ -66,7 +66,8 @@
                     <h2>Visão Geral de Vendas</h2>
                     <div class="admin-subtabs" style="margin-bottom: 0;">
                         <button class="subtab-btn active" id="btnModoGeral" onclick="setModoDashboard('geral')">Visão Geral</button>
-                        <button class="subtab-btn" id="btnModoOperacional" onclick="setModoDashboard('operacional')">Hoje (Operacional)</button>
+                        <button class="subtab-btn" id="btnModoOntemOp" onclick="setModoDashboard('ontem-op')">Ontem (Op)</button>
+                        <button class="subtab-btn" id="btnModoHojeOp" onclick="setModoDashboard('hoje-op')">Hoje (Op)</button>
                     </div>
                 </div>
 
@@ -105,12 +106,7 @@
                         <div class="filter-row">
                             <div class="filter-group filter-group--date">
                                 <label for="filtroDataInicio">📅 Período</label>
-                                <select id="filtroTipoData" class="admin-select-sm" style="margin-bottom: 8px; padding: 4px 8px; font-size: 0.85rem;">
-                                    <option value="custom">📅 Personalizado</option>
-                                    <option value="hoje-op">🎯 Hoje (Operacional)</option>
-                                    <option value="ontem-op">◀️ Ontem (Operacional)</option>
-                                </select>
-                                <div class="filter-date-range" id="containerDataCustom">
+                                <div class="filter-date-range">
                                     <input type="date" id="filtroDataInicio" title="Data inicial">
                                     <span class="date-separator">a</span>
                                     <input type="date" id="filtroDataFim" title="Data final">

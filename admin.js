@@ -345,19 +345,23 @@ async function carregarDashboard() {
     atualizarMétricasDashboard();
 }
 
-// Alterna entre Visão Geral e Hoje (Operacional)
+// Alterna entre Visão Geral, Ontem (Op) e Hoje (Op)
 window.setModoDashboard = (modo) => {
     currentModoDashboard = modo;
     
     document.getElementById('btnModoGeral').classList.toggle('active', modo === 'geral');
-    document.getElementById('btnModoOperacional').classList.toggle('active', modo === 'operacional');
+    document.getElementById('btnModoOntemOp').classList.toggle('active', modo === 'ontem-op');
+    document.getElementById('btnModoHojeOp').classList.toggle('active', modo === 'hoje-op');
     
     const infoBanner = document.getElementById('infoPeriodoOperacional');
-    if (modo === 'operacional') {
+    if (modo === 'hoje-op' || modo === 'ontem-op') {
         infoBanner.style.display = 'block';
-        const period = getOperationalPeriod(new Date(), openingTime, closingTime);
+        const referenceDate = new Date();
+        if (modo === 'ontem-op') referenceDate.setDate(referenceDate.getDate() - 1);
+        
+        const period = getOperationalPeriod(referenceDate, openingTime, closingTime);
         document.getElementById('txtPeriodoOperacional').textContent = 
-            `Período Operacional Ativo: ${period.start.toLocaleString('pt-BR')} até ${period.end.toLocaleString('pt-BR')}`;
+            `Período Operacional (${modo === 'hoje-op' ? 'Hoje' : 'Ontem'}): ${period.start.toLocaleString('pt-BR')} até ${period.end.toLocaleString('pt-BR')}`;
     } else {
         infoBanner.style.display = 'none';
     }
@@ -392,8 +396,10 @@ function getOperationalPeriod(date, opening, closing) {
 function atualizarMétricasDashboard() {
     let filtradosParaStats = pedidos;
 
-    if (currentModoDashboard === 'operacional') {
-        const period = getOperationalPeriod(new Date(), openingTime, closingTime);
+    if (currentModoDashboard === 'hoje-op' || currentModoDashboard === 'ontem-op') {
+        const referenceDate = new Date();
+        if (currentModoDashboard === 'ontem-op') referenceDate.setDate(referenceDate.getDate() - 1);
+        const period = getOperationalPeriod(referenceDate, openingTime, closingTime);
         filtradosParaStats = pedidos.filter(p => {
             const criado = new Date(p.created_at);
             return criado >= period.start && criado <= period.end;
@@ -429,17 +435,14 @@ function renderPedidosFiltrados() {
     let filtrados = pedidos.filter(p => {
         const criado = new Date(p.created_at);
 
-        // Lógica de Data
-        if (filtrosPedidos.tipoData === 'hoje-op') {
-            const period = getOperationalPeriod(new Date(), openingTime, closingTime);
-            if (criado < period.start || criado > period.end) return false;
-        } else if (filtrosPedidos.tipoData === 'ontem-op') {
-            const ontem = new Date();
-            ontem.setDate(ontem.getDate() - 1);
-            const period = getOperationalPeriod(ontem, openingTime, closingTime);
+        // Se estiver em modo operacional, a tabela também segue o período operacional
+        if (currentModoDashboard === 'hoje-op' || currentModoDashboard === 'ontem-op') {
+            const referenceDate = new Date();
+            if (currentModoDashboard === 'ontem-op') referenceDate.setDate(referenceDate.getDate() - 1);
+            const period = getOperationalPeriod(referenceDate, openingTime, closingTime);
             if (criado < period.start || criado > period.end) return false;
         } else {
-            // Custom
+            // Modo Geral: Usa os filtros de data manuais
             if (filtrosPedidos.dataInicio) {
                 const inicio = new Date(filtrosPedidos.dataInicio + 'T00:00:00');
                 if (criado < inicio) return false;
@@ -1284,11 +1287,6 @@ function aplicarFiltrosPedidosLive() {
 }
 
 // Listeners para filtros ao vivo
-document.getElementById('filtroTipoData').onchange = (e) => {
-    const isCustom = e.target.value === 'custom';
-    document.getElementById('containerDataCustom').style.display = isCustom ? 'flex' : 'none';
-    aplicarFiltrosPedidos();
-};
 document.getElementById('filtroCliente').oninput = aplicarFiltrosPedidosLive;
 document.getElementById('filtroAtendente').onchange = aplicarFiltrosPedidos;
 document.getElementById('filtroDataInicio').onchange = aplicarFiltrosPedidos;
@@ -1299,7 +1297,6 @@ document.getElementById('filtroStatus').onchange = aplicarFiltrosPedidos;
 
 function aplicarFiltrosPedidos() {
     filtrosPedidos = {
-        tipoData: document.getElementById('filtroTipoData').value,
         dataInicio: document.getElementById('filtroDataInicio').value,
         dataFim: document.getElementById('filtroDataFim').value,
         cliente: document.getElementById('filtroCliente').value.trim(),
@@ -1312,9 +1309,7 @@ function aplicarFiltrosPedidos() {
 }
 
 document.getElementById('btnLimparFiltros').onclick = () => {
-    filtrosPedidos = { tipoData: 'custom', dataInicio: '', dataFim: '', cliente: '', atendente: '', valorMin: '', valorMax: '', status: '' };
-    document.getElementById('filtroTipoData').value = 'custom';
-    document.getElementById('containerDataCustom').style.display = 'flex';
+    filtrosPedidos = { dataInicio: '', dataFim: '', cliente: '', atendente: '', valorMin: '', valorMax: '', status: '' };
     document.getElementById('filtroDataInicio').value = '';
     document.getElementById('filtroDataFim').value = '';
     document.getElementById('filtroCliente').value = '';
