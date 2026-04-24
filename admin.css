@@ -1944,25 +1944,19 @@ input:checked+.slider:before {
         min-width: unset;
     }
     .filter-row {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
         gap: 15px;
     }
     
-    /* Período ocupa a linha toda */
-    .filter-row > div:nth-child(1) {
-        grid-column: span 2;
-    }
+    /* Reordenando para: Cliente, Atendente, Período, Valor, Status */
+    .filter-row > div:nth-child(2) { order: 1; } /* Cliente */
+    .filter-row > div:nth-child(3) { order: 2; } /* Atendente */
+    .filter-row > div:nth-child(1) { order: 3; } /* Período */
+    .filter-row > div:nth-child(4) { order: 4; } /* Valor */
+    .filter-row > div:nth-child(5) { order: 5; } /* Status */
 
-    /* Cliente e Atendente lado a lado */
-    .filter-row > div:nth-child(2),
-    .filter-row > div:nth-child(3) {
-        grid-column: span 1;
-    }
-
-    /* Valor e Status ocupam a linha toda */
-    .filter-row > div:nth-child(4),
-    .filter-row > div:nth-child(5) {
-        grid-column: span 2;
+    .filter-row > div {
+        grid-column: span 1 !important;
     }
 
     /* Forçar inputs de data lado a lado */
