@@ -1410,30 +1410,36 @@ body {
     }
 
     /* ===== Table Mobile Refinement: Categories List ===== */
-    /* 1: Handle, 3: Slug, 4: Ordem */
-    #subtab-lista-categorias .admin-table th:nth-child(1), #subtab-lista-categorias .admin-table td:nth-child(1),
-    #subtab-lista-categorias .admin-table th:nth-child(3), #subtab-lista-categorias .admin-table td:nth-child(3),
-    #subtab-lista-categorias .admin-table th:nth-child(4), #subtab-lista-categorias .admin-table td:nth-child(4) {
+    /* 1: Nome, 2: Slug, 3: Ordem, 4: Ações */
+    #subtab-lista-categorias .admin-table th:nth-child(2), #subtab-lista-categorias .admin-table td:nth-child(2),
+    #subtab-lista-categorias .admin-table th:nth-child(3), #subtab-lista-categorias .admin-table td:nth-child(3) {
         display: none !important;
     }
 
-    #subtab-lista-categorias .admin-table th:nth-child(2), #subtab-lista-categorias .admin-table td:nth-child(2) { /* Nome */
+    #subtab-lista-categorias .admin-table th:nth-child(1), #subtab-lista-categorias .admin-table td:nth-child(1) { /* Nome */
         width: 70% !important;
         display: table-cell !important;
     }
 
-    #subtab-lista-categorias .admin-table th:nth-child(5), #subtab-lista-categorias .admin-table td:nth-child(5) { /* Ações */
+    #subtab-lista-categorias .admin-table th:nth-child(4), #subtab-lista-categorias .admin-table td:nth-child(4) { /* Ações */
         width: 30% !important;
         text-align: right !important;
         display: table-cell !important;
     }
 
     /* ===== Table Mobile Refinement: Stock Adjustments ===== */
+    /* 1: Nome, 2: Status, 3: Ações */
+    #subtab-lista-estoque .admin-table th:nth-child(1), #subtab-lista-estoque .admin-table td:nth-child(1) { /* Nome */
+        display: table-cell !important;
+        width: auto !important;
+    }
     #subtab-lista-estoque .admin-table th:nth-child(2), #subtab-lista-estoque .admin-table td:nth-child(2) { /* Status */
+        display: table-cell !important;
         width: 80px !important;
         text-align: center !important;
     }
     #subtab-lista-estoque .admin-table th:nth-child(3), #subtab-lista-estoque .admin-table td:nth-child(3) { /* Ações */
+        display: table-cell !important;
         text-align: right !important;
     }
 
