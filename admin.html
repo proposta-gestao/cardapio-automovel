@@ -499,9 +499,13 @@
                     <label for="prodPreco">Preço (R$)</label>
                     <input type="number" id="prodPreco" step="0.01" min="0" placeholder="30.00">
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="groupEstoqueAtual" style="display:none;">
                     <label for="prodEstoque">Estoque Atual</label>
-                    <input type="number" id="prodEstoque" min="0" placeholder="50">
+                    <input type="number" id="prodEstoque" readonly style="background: rgba(255,255,255,0.05); color: #aaa;">
+                </div>
+                <div class="form-group" id="groupMovimentacaoEstoque">
+                    <label id="labelMovimentacaoEstoque" for="prodMovimentacaoEstoque">Estoque Inicial</label>
+                    <input type="number" id="prodMovimentacaoEstoque" min="0" placeholder="0">
                 </div>
             </div>
             <div class="form-row">

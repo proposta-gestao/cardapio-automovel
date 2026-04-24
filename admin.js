@@ -622,7 +622,7 @@ async function renderizarGradeGaleria(gridId, isCompleto = false) {
     }
 
     let html = '';
-    let limit = isCompleto ? files.length : 9;
+    let limit = isCompleto ? files.length : 7;
     let filesToShow = files.slice(0, limit);
 
     filesToShow.forEach(file => {
@@ -635,11 +635,11 @@ async function renderizarGradeGaleria(gridId, isCompleto = false) {
                 `;
     });
 
-    if (!isCompleto && files.length > 9) {
+    if (!isCompleto && files.length > 7) {
         html += `
-                    <div class="gallery-item" style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(229, 178, 93, 0.1);color:var(--primary);font-size:0.8rem;text-align:center;font-weight:800;border:1px dashed var(--primary);" onclick="abrirGaleriaCompleta()">
-                        <span style="font-size:1.2rem;">+${files.length - 9}</span>
-                        Ver Todas
+                    <div class="gallery-item" style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(229, 178, 93, 0.1);color:var(--primary);font-size:0.8rem;text-align:center;font-weight:800;border:1px dashed var(--primary); cursor:pointer;" onclick="abrirGaleriaCompleta()">
+                        <span style="font-size:1.2rem;">+${files.length - 7}</span>
+                        Ver mais imagens
                     </div>
                 `;
     }
@@ -740,11 +740,15 @@ document.getElementById('btnNovoProduto').onclick = () => {
     document.getElementById('prodNome').value = '';
     document.getElementById('prodDesc').value = '';
     document.getElementById('prodPreco').value = '';
-    document.getElementById('prodEstoque').value = '';
+    document.getElementById('prodEstoque').value = '0';
+    document.getElementById('prodMovimentacaoEstoque').value = '';
     document.getElementById('prodEstoqueMin').value = '0';
     document.getElementById('prodCategoria').value = '';
     document.getElementById('prodAtivo').value = 'true';
     document.getElementById('prodImagemSelecionada').value = '';
+
+    document.getElementById('groupEstoqueAtual').style.display = 'none';
+    document.getElementById('labelMovimentacaoEstoque').innerText = 'Estoque Inicial';
 
     carregarGaleria('');
     abrirModal('modalProduto');
@@ -759,9 +763,14 @@ window.editarProduto = (id) => {
     document.getElementById('prodDesc').value = p.description || '';
     document.getElementById('prodPreco').value = p.price;
     document.getElementById('prodEstoque').value = p.stock;
-    document.getElementById('prodEstoqueMin').value = p.min_stock_alert || 0;
-    document.getElementById('prodCategoria').value = p.category_id || '';
-    document.getElementById('prodAtivo').value = p.active ? 'true' : 'false';
+    document.getElementById('prodMovimentacaoEstoque').value = '';
+    document.getElementById('prodEstoqueMin').value = p.min_stock_alert;
+    document.getElementById('prodCategoria').value = p.category_id;
+    document.getElementById('prodAtivo').value = String(p.active);
+    document.getElementById('prodImagemSelecionada').value = p.image_url || '';
+
+    document.getElementById('groupEstoqueAtual').style.display = 'block';
+    document.getElementById('labelMovimentacaoEstoque').innerText = 'Adicionar ao Estoque';
 
     carregarGaleria(p.image_url || '');
     abrirModal('modalProduto');
@@ -770,60 +779,67 @@ window.editarProduto = (id) => {
 document.getElementById('btnSalvarProduto').onclick = async () => {
     const btn = document.getElementById('btnSalvarProduto');
     const id = document.getElementById('produtoId').value;
-    const nome = document.getElementById('prodNome').value.trim();
-    const desc = document.getElementById('prodDesc').value.trim();
-    const price = parseFloat(document.getElementById('prodPreco').value);
-    const stock = parseInt(document.getElementById('prodEstoque').value) || 0;
-    const min_stock = parseInt(document.getElementById('prodEstoqueMin').value) || 0;
-    const category_id = document.getElementById('prodCategoria').value || null;
-    const ativo = document.getElementById('prodAtivo').value === 'true';
-    const imagemSelecionada = document.getElementById('prodImagemSelecionada').value.trim();
+    const currentStock = parseInt(document.getElementById('prodEstoque').value) || 0;
+    const stockInput = parseInt(document.getElementById('prodMovimentacaoEstoque').value) || 0;
 
-    if (!nome || isNaN(price) || price <= 0) {
-        showToast('Preencha nome e preço corretamente.', 'error');
-        return;
-    }
+    const payload = {
+        name:            document.getElementById('prodNome').value.trim(),
+        description:     document.getElementById('prodDesc').value.trim(),
+        price:           parseFloat(document.getElementById('prodPreco').value),
+        min_stock_alert: parseInt(document.getElementById('prodEstoqueMin').value) || 0,
+        category_id:     document.getElementById('prodCategoria').value || null,
+        active:          document.getElementById('prodAtivo').value === 'true',
+        image_url:       document.getElementById('prodImagemSelecionada').value,
+        updated_at:      new Date().toISOString()
+    };
 
-    const produtoExistente = produtos.find(p => p.name.toLowerCase() === nome.toLowerCase() && p.id !== id);
-    if (produtoExistente) {
-        showToast('Já existe um produto neste catálogo com esse exato nome!', 'error');
+    if (!payload.name || isNaN(payload.price)) {
+        showToast('Nome e preço são obrigatórios.', 'error');
         return;
     }
 
     btn.disabled = true;
-    btn.innerText = 'Salvando...';
+    btn.textContent = 'Salvando...';
 
-    try {
-        const payload = {
-            name: nome,
-            description: desc,
-            price: price,
-            stock: stock,
-            min_stock_alert: min_stock,
-            category_id: category_id,
-            active: ativo,
-            image_url: imagemSelecionada
-        };
+    let finalStock = currentStock;
+    if (!id) {
+        finalStock = stockInput;
+    } else {
+        finalStock = currentStock + stockInput;
+    }
+    payload.stock = finalStock;
 
-        let dbError;
-        if (id) {
-            ({ error: dbError } = await sb.from('products').update(payload).eq('id', id));
-        } else {
-            ({ error: dbError } = await sb.from('products').insert(payload));
+    let dbError;
+    let savedProductId = id;
+
+    if (id) {
+        ({ error: dbError } = await sb.from('products').update(payload).eq('id', id));
+    } else {
+        const { data, error } = await sb.from('products').insert(payload).select().single();
+        dbError = error;
+        if (data) savedProductId = data.id;
+    }
+
+    if (dbError) {
+        showToast('Erro ao salvar produto: ' + dbError.message, 'error');
+    } else {
+        // Registrar movimentação de estoque
+        if (stockInput > 0 || !id) {
+            await sb.from('stock_movements').insert({
+                product_id: savedProductId,
+                type: 'entrada',
+                quantity: stockInput,
+                reason: !id ? 'Estoque inicial' : 'Entrada manual'
+            });
         }
-
-        if (dbError) throw dbError;
 
         showToast(id ? 'Produto atualizado!' : 'Produto criado!', 'success');
         fecharModal('modalProduto');
-        await carregarProdutos();
-        renderStats();
-    } catch (error) {
-        showToast('Erro ao salvar produto: ' + error.message, 'error');
-    } finally {
-        btn.disabled = false;
-        btn.innerText = 'Salvar';
+        carregarProdutos();
+        if (typeof renderStats === 'function') renderStats();
     }
+    btn.disabled = false;
+    btn.textContent = 'Salvar';
 };
 
 window.arquivarProduto = async (id) => {
