@@ -118,6 +118,7 @@ async function carregarProdutos() {
         nome: p.name,
         desc: p.description || '',
         preco: parseFloat(p.price),
+        promo_price: parseFloat(p.promo_price) || 0,
         img: p.image_url || 'logo_automovel.png',
         stock: p.stock,
         cat: p.categories?.name || '',
@@ -227,11 +228,18 @@ function renderMenu() {
             <div class="product-img-wrap">
                 <img src="${p.img}" alt="${p.nome}" loading="lazy">
                 ${esgotado ? '<span class="badge-esgotado">Esgotado</span>' : ''}
+                ${!esgotado && p.promo_price > 0 ? `<span class="badge-promo">${Math.round((1 - (p.promo_price / p.preco)) * 100)}% OFF</span>` : ''}
             </div>
             <div class="product-info">
                 <h3 class="product-name">${p.nome}</h3>
                 <div class="product-footer">
-                    <span class="product-price">${formatCurrency(p.preco)}</span>
+                    <div class="product-price-wrap">
+                        ${p.promo_price > 0 
+                            ? `<span class="price-old">${formatCurrency(p.preco)}</span>
+                               <span class="product-price promo">${formatCurrency(p.promo_price)}</span>`
+                            : `<span class="product-price">${formatCurrency(p.preco)}</span>`
+                        }
+                    </div>
                     <button class="btn-add" ${esgotado ? 'disabled' : ''}>
                         ${esgotado ? 'Esgotado' : 'Adicionar'}
                     </button>
@@ -520,7 +528,16 @@ window.abrirModal = (id) => {
     dom.pImg.src = produto.img;
     dom.pNome.innerText = produto.nome;
     dom.pDesc.innerText = produto.desc;
-    dom.pPreco.innerText = formatNumber(produto.preco);
+    
+    // Lógica de preço no modal
+    if (produto.promo_price > 0) {
+        dom.pPreco.innerHTML = `<span class="price-old-modal">${formatCurrency(produto.preco)}</span> ${formatCurrency(produto.promo_price)}`;
+        state.produtoSelecionado = { ...produto, preco: produto.promo_price };
+    } else {
+        dom.pPreco.innerText = formatCurrency(produto.preco);
+        state.produtoSelecionado = produto;
+    }
+    
     dom.qntText.innerText = state.quantidadeAtual;
     atualizarSubtotalModal();
     

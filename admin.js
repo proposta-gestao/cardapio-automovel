@@ -536,6 +536,7 @@ function renderProdutos() {
                     <td><img src="${p.image_url || 'Logo.png'}" alt="Img" style="width:40px;height:40px;object-fit:cover;border-radius:6px;"></td>
                     <td onclick="editarProduto('${p.id}')" style="cursor:pointer;" title="Clique para editar">
                         <strong class="clickable-row-name">${p.name}</strong>
+                        ${p.promo_price > 0 ? '<span class="badge" style="background:var(--warning); color:#000; margin-left:5px; font-size:0.6rem;">PROMO</span>' : ''}
                     </td>
                     <td>${p.categories?.name || '-'}</td>
                     <td onclick="editarProduto('${p.id}')" style="cursor:pointer;" title="Clique para editar">${formatCurrency(p.price)}</td>
@@ -797,6 +798,7 @@ document.getElementById('btnNovoProduto').onclick = () => {
     document.getElementById('prodNome').value = '';
     document.getElementById('prodDesc').value = '';
     document.getElementById('prodPreco').value = '';
+    document.getElementById('prodPrecoPromo').value = '';
     document.getElementById('prodEstoque').value = '0';
     document.getElementById('groupEstoqueAtual').style.display = 'none';
     document.getElementById('rowTipoMovimentacao').style.display = 'none';
@@ -848,6 +850,7 @@ window.editarProduto = (id) => {
     document.getElementById('prodCategoria').value = p.category_id;
     document.getElementById('prodAtivo').value = String(p.active);
     document.getElementById('prodImagemSelecionada').value = p.image_url || '';
+    document.getElementById('prodPrecoPromo').value = p.promo_price || '';
 
     document.getElementById('groupEstoqueAtual').style.display = 'block';
     document.getElementById('rowTipoMovimentacao').style.display = 'block';
@@ -878,6 +881,7 @@ document.getElementById('btnSalvarProduto').onclick = async () => {
         category_id:     document.getElementById('prodCategoria').value || null,
         active:          document.getElementById('prodAtivo').value === 'true',
         image_url:       document.getElementById('prodImagemSelecionada').value,
+        promo_price:     parseFloat(document.getElementById('prodPrecoPromo').value) || null,
         updated_at:      new Date().toISOString()
     };
 

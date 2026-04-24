@@ -513,6 +513,47 @@
             border-radius: 50px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            z-index: 2;
+        }
+
+        .badge-promo {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #FF4757;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4);
+            z-index: 2;
+        }
+
+        .product-price-wrap {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.1;
+        }
+
+        .price-old {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-decoration: line-through;
+            font-weight: 500;
+        }
+
+        .product-price.promo {
+            color: #FF4757; /* Destaque para o preço promocional */
+            font-weight: 800;
+        }
+
+        .price-old-modal {
+            font-size: 1rem;
+            color: var(--text-muted);
+            text-decoration: line-through;
+            margin-right: 8px;
+            font-weight: 400;
         }
 
         /* Sidebar Cart */
