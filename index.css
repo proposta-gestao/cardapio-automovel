@@ -1811,3 +1811,25 @@
             font-size: 1.8rem;
             color: #999;
         }
+
+        /* Ajuste Mobile para o Modal PIX (Centralizado e nÃ£o no rodapÃ©) */
+        @media (max-width: 600px) {
+            #modalPix {
+                top: 50%;
+                bottom: auto;
+                transform: translate(-50%, -50%) scale(1);
+                border-radius: 24px;
+                width: 90%;
+                max-width: 340px;
+                animation: zoomIn 0.3s ease-out;
+            }
+
+            #modalPix.active {
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        @keyframes zoomIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
