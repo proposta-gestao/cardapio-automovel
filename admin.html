@@ -63,12 +63,12 @@
 
             <!-- Dashboard Tab -->
             <div class="tab-content" id="tab-dashboard">
-                <div class="admin-toolbar" style="margin-bottom: 1rem;">
+                <div class="admin-toolbar" style="margin-bottom: 1rem; justify-content: center;">
                     <h2>Vendas e Performances</h2>
                 </div>
 
                 <!-- Navegação Principal do Dashboard -->
-                <div class="admin-subtabs" style="margin-bottom: 2rem; justify-content: center;">
+                <div class="admin-subtabs" style="margin-bottom: 2rem;">
                     <button class="subtab-btn active" data-subtab="dashboard-operacional">🏠 Visão Geral</button>
                     <button class="subtab-btn" data-subtab="dashboard-metricas">📊 Métricas e Performance</button>
                 </div>
@@ -76,7 +76,7 @@
                 <!-- Subtab: Visão Geral (Operacional) -->
                 <div class="subtab-content active" id="subtab-dashboard-operacional">
                     
-                    <div class="admin-toolbar" style="margin-bottom: 1.5rem; justify-content: flex-end;">
+                    <div class="admin-toolbar" style="margin-bottom: 1.5rem; justify-content: center;">
                         <div class="admin-subtabs" style="margin-bottom: 0;">
                             <button class="subtab-btn active" id="btnModoHojeOp" onclick="setModoDashboard('hoje-op')">Hoje (Op)</button>
                             <button class="subtab-btn" id="btnModoOntemOp" onclick="setModoDashboard('ontem-op')">Ontem (Op)</button>
@@ -186,7 +186,7 @@
 
                 <!-- Subtab: Métricas e Performance (Analítico) -->
                 <div class="subtab-content" id="subtab-dashboard-metricas">
-                    <div class="admin-toolbar" style="margin-top: 0.5rem; justify-content: space-between;">
+                    <div class="admin-toolbar" style="margin-top: 0.5rem; justify-content: center; flex-direction: column; gap: 15px;">
                         <h2>Análise Estratégica</h2>
                         <div class="metrics-selectors">
                             <select id="selectAgrupamentoMetricas" class="admin-select" onchange="atualizarGraficoMetricas()">
