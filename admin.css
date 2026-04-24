@@ -1382,25 +1382,28 @@ body {
     }
 
     /* ===== Table Mobile Refinement: Products List ===== */
-    #subtab-lista-produtos .admin-table th:nth-child(1), #subtab-lista-produtos .admin-table td:nth-child(1), /* Imagem */
-    #subtab-lista-produtos .admin-table th:nth-child(3), #subtab-lista-produtos .admin-table td:nth-child(3), /* Categoria */
-    #subtab-lista-produtos .admin-table th:nth-child(5), #subtab-lista-produtos .admin-table td:nth-child(5), /* Estoque */
-    #subtab-lista-produtos .admin-table th:nth-child(6), #subtab-lista-produtos .admin-table td:nth-child(6) { /* Status */
+    /* Esconder colunas desnecessárias no mobile para dar espaço ao botão editar */
+    /* 1: Handle, 2: Imagem, 4: Categoria, 6: Estoque, 7: Status */
+    #subtab-lista-produtos .admin-table th:nth-child(1), #subtab-lista-produtos .admin-table td:nth-child(1),
+    #subtab-lista-produtos .admin-table th:nth-child(2), #subtab-lista-produtos .admin-table td:nth-child(2),
+    #subtab-lista-produtos .admin-table th:nth-child(4), #subtab-lista-produtos .admin-table td:nth-child(4),
+    #subtab-lista-produtos .admin-table th:nth-child(6), #subtab-lista-produtos .admin-table td:nth-child(6),
+    #subtab-lista-produtos .admin-table th:nth-child(7), #subtab-lista-produtos .admin-table td:nth-child(7) {
         display: none !important;
     }
 
-    #subtab-lista-produtos .admin-table th:nth-child(2), #subtab-lista-produtos .admin-table td:nth-child(2) { /* Nome */
+    #subtab-lista-produtos .admin-table th:nth-child(3), #subtab-lista-produtos .admin-table td:nth-child(3) { /* Nome */
         width: 50% !important;
         display: table-cell !important;
     }
 
-    #subtab-lista-produtos .admin-table th:nth-child(4), #subtab-lista-produtos .admin-table td:nth-child(4) { /* Preço */
+    #subtab-lista-produtos .admin-table th:nth-child(5), #subtab-lista-produtos .admin-table td:nth-child(5) { /* Preço */
         width: 25% !important;
         text-align: center !important;
         display: table-cell !important;
     }
 
-    #subtab-lista-produtos .admin-table th:nth-child(7), #subtab-lista-produtos .admin-table td:nth-child(7) { /* Ações */
+    #subtab-lista-produtos .admin-table th:nth-child(8), #subtab-lista-produtos .admin-table td:nth-child(8) { /* Ações */
         width: 25% !important;
         text-align: right !important;
         display: table-cell !important;
