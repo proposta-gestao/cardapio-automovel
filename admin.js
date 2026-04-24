@@ -524,7 +524,7 @@ function renderProdutos() {
                     </td>
                     <td>${p.categories?.name || '-'}</td>
                     <td onclick="editarProduto('${p.id}')" style="cursor:pointer;" title="Clique para editar">${formatCurrency(p.price)}</td>
-                    <td style="color:${stockColor}; font-weight: ${stockColor !== 'inherit' ? '700' : 'normal'}">${p.stock}</td>
+                    <td onclick="editarProduto('${p.id}')" style="cursor:pointer; color:${stockColor}; font-weight: ${stockColor !== 'inherit' ? '700' : 'normal'}" title="Clique para ajustar estoque">${p.stock}</td>
                     <td>${toggleHTML}</td>
                     <td>
                         <div class="actions-cell">
