@@ -826,6 +826,7 @@ window.editarProduto = (id) => {
     document.getElementById('prodDesc').value = p.description || '';
     document.getElementById('prodPreco').value = p.price;
     document.getElementById('prodEstoque').value = p.stock;
+    document.getElementById('prodEstoqueDisplay').innerText = p.stock;
     document.getElementById('prodMovimentacaoEstoque').value = '';
     document.getElementById('prodEstoqueMin').value = p.min_stock_alert;
     document.getElementById('prodCategoria').value = p.category_id;

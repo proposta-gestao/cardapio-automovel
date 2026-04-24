@@ -1815,6 +1815,77 @@ input:checked+.slider:before {
     margin-top: 1.5rem;
 }
 
+}
+
+/* ===== Seção de Estoque Premium ===== */
+.inventory-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    margin: 20px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.inventory-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--primary);
+}
+
+.inventory-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.inventory-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.inventory-current-badge {
+    background: rgba(229, 178, 93, 0.1);
+    color: var(--primary);
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    border: 1px solid rgba(229, 178, 93, 0.2);
+}
+
+.inventory-body {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.inventory-reason-box {
+    background: rgba(255, 71, 87, 0.05);
+    border: 1px dashed rgba(255, 71, 87, 0.3);
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 10px;
+    animation: fadeInSlide 0.3s ease;
+}
+
+@keyframes fadeInSlide {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 @media (max-width: 600px) {
     .visual-upload-row {
         flex-direction: column;
