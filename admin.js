@@ -361,6 +361,7 @@ async function carregarProdutos() {
     const { data, error } = await sb
         .from('products')
         .select('*, categories(name)')
+        .order('sort_order', { ascending: true })
         .order('created_at', { ascending: false });
     if (error) {
         showToast('Erro ao carregar produtos', 'error');
@@ -437,18 +438,13 @@ function atualizarAlertaEstoque() {
 // --- Render Products ---
 function renderProdutos() {
     const tbody = document.getElementById('produtosBody');
+    if (!tbody) return;
     if (produtos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;">Nenhum produto encontrado.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:2rem;">Nenhum produto encontrado.</td></tr>';
         return;
     }
 
-    // Separar e ordenar: Ativos primeiro, Inativos depois, Arquivados
-    const ativos = produtos.filter(p => p.active && !p.archived);
-    const inativos = produtos.filter(p => !p.active && !p.archived);
-    const arquivados = produtos.filter(p => p.archived);
-    const sortedProdutos = [...ativos, ...inativos, ...arquivados];
-
-    tbody.innerHTML = sortedProdutos.map(p => {
+    tbody.innerHTML = produtos.map((p, i) => {
         const isEsgotado = p.stock <= 0;
         let stockColor = isEsgotado ? '#FF4757' : (p.stock <= (p.min_stock_alert || 0) ? '#FAAD14' : 'inherit');
 
@@ -473,7 +469,8 @@ function renderProdutos() {
             : `<button class="btn-sm btn-archive" onclick="arquivarProduto('${p.id}')">Arquivar</button>`;
 
         return `
-                <tr class="${rowClass}">
+                <tr class="${rowClass}" draggable="true" ondragstart="dragStartProdutos(event, ${i})" ondragover="dragOverProdutos(event)" ondrop="dropProdutos(event, ${i})" style="cursor: grab;">
+                    <td style="color: var(--text-muted); text-align: center; font-size: 1.2rem;">☰</td>
                     <td><img src="${p.image_url || 'Logo.png'}" alt="Img" style="width:40px;height:40px;object-fit:cover;border-radius:6px;"></td>
                     <td onclick="editarProduto('${p.id}')" style="cursor:pointer;" title="Clique para editar">
                         <strong class="clickable-row-name">${p.name}</strong>
@@ -503,6 +500,49 @@ window.toggleProdutoAtivo = async (id, isActive) => {
         carregarProdutos(); // Relocates product to correct group instantly
     }
 };
+
+// --- Drag and Drop Produtos ---
+let draggedProdutoIndex = null;
+
+window.dragStartProdutos = (e, index) => {
+    draggedProdutoIndex = index;
+    e.dataTransfer.effectAllowed = 'move';
+};
+
+window.dragOverProdutos = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+};
+
+window.dropProdutos = async (e, dropIndex) => {
+    e.preventDefault();
+    if (draggedProdutoIndex === null || draggedProdutoIndex === dropIndex) return;
+
+    // Reordenar array local
+    const item = produtos.splice(draggedProdutoIndex, 1)[0];
+    produtos.splice(dropIndex, 0, item);
+    
+    draggedProdutoIndex = null;
+    renderProdutos();
+    
+    await salvarOrdemProdutosBanco();
+};
+
+async function salvarOrdemProdutosBanco() {
+    // Para cada produto, atualizamos o sort_order baseado no índice atual do array
+    const updates = produtos.map((p, i) => 
+        sb.from('products').update({ sort_order: i }).eq('id', p.id)
+    );
+
+    const results = await Promise.all(updates);
+    const hasError = results.some(r => r.error);
+
+    if (hasError) {
+        showToast('Erro ao salvar nova ordem dos produtos.', 'error');
+    } else {
+        showToast('Ordem dos produtos atualizada!', 'success');
+    }
+}
 
 // --- Render Categories ---
 function renderCategorias() {

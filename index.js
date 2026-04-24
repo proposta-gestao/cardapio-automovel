@@ -111,7 +111,7 @@ async function carregarProdutos() {
         .select('*, categories(name, slug)')
         .eq('active', true)
         .or('archived.is.null,archived.eq.false')
-        .order('created_at');
+        .order('sort_order', { ascending: true });
     if (error) throw error;
     PRODUTOS = (data || []).map(p => ({
         id: p.id,
