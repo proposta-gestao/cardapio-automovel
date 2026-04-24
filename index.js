@@ -1023,22 +1023,6 @@ async function iniciarFluxoPix(orderId, total, whatsappMsg) {
             })
             .subscribe();
 
-        document.getElementById('btnSimularPix').onclick = async () => {
-            const btnSim = document.getElementById('btnSimularPix');
-            btnSim.innerText = 'Simulando...';
-            btnSim.disabled = true;
-            
-            const { error } = await sb.from('orders')
-                .update({ payment_status: 'pago' })
-                .eq('id', orderId);
-                
-            if (error) {
-                mostrarToast('Erro ao simular pagamento.', 'error');
-                btnSim.innerText = 'Simular Pagamento (Teste)';
-                btnSim.disabled = false;
-            }
-        };
-
         document.getElementById('closeModalPix').onclick = () => {
             modal.classList.remove('active');
             sb.removeChannel(channel);
