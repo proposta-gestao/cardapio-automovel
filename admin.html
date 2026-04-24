@@ -120,6 +120,7 @@
                                     <option value="">Todos os status</option>
                                     <option value="pendente">Pendente</option>
                                     <option value="concluido">Concluído</option>
+                                    <option value="cancelado">Cancelado</option>
                                 </select>
                             </div>
                         </div>
@@ -246,14 +247,16 @@
 
             <!-- Configurações Tab -->
             <div class="tab-content" id="tab-configuracoes">
-                <div class="produtos-toolbar">
-                    <div class="admin-subtabs">
-                        <button class="subtab-btn active" data-subtab="config-gerais">Configurações Gerais</button>
-                        <button class="subtab-btn" data-subtab="config-loja">Configurações Loja</button>
+                <div class="produtos-toolbar" style="margin-bottom: 1.5rem; overflow-x: auto; overflow-y: hidden; white-space: nowrap; padding-bottom: 4px;">
+                    <div class="admin-subtabs" style="margin-bottom: 0; min-width: max-content;">
+                        <button class="subtab-btn active" data-subtab="config-endereco">Endereço da Loja</button>
+                        <button class="subtab-btn" data-subtab="config-visual">Personalização</button>
+                        <button class="subtab-btn" data-subtab="config-frete">Frete e Entrega</button>
+                        <button class="subtab-btn" data-subtab="config-cancelamento">Cancelamentos</button>
                     </div>
                 </div>
 
-                <div class="subtab-content" id="subtab-config-loja">
+                <div class="subtab-content active" id="subtab-config-endereco">
                 <!-- Store Address -->
                 <div class="config-card">
                     <div class="config-card-header">
@@ -311,7 +314,9 @@
                         </div>
                     </div>
                 </div>
+                </div> <!-- Fechamento da sub-aba config-endereco -->
 
+                <div class="subtab-content" id="subtab-config-visual">
                 <!-- Personalização Visual -->
                 <div class="config-card">
                     <div class="config-card-header">
@@ -387,9 +392,9 @@
                         </div>
                     </div>
                 </div>
-                </div> <!-- Fechamento da sub-aba config-loja -->
+                </div> <!-- Fechamento da sub-aba config-visual -->
 
-                <div class="subtab-content active" id="subtab-config-gerais">
+                <div class="subtab-content" id="subtab-config-frete">
                 <!-- Frete e Entrega -->
                 <div class="config-card">
                     <div class="config-card-header">
@@ -423,7 +428,9 @@
                         </div>
                     </div>
                 </div>
+                </div> <!-- Fechamento da sub-aba config-frete -->
 
+                <div class="subtab-content" id="subtab-config-cancelamento">
                 <!-- Justificativas de Cancelamento -->
                 <div class="config-card" style="margin-top: 1.5rem;">
                     <div class="config-card-header">
@@ -455,7 +462,7 @@
                         </div>
                     </div>
                 </div>
-                </div> <!-- Fechamento da sub-aba config-gerais -->
+                </div> <!-- Fechamento da sub-aba config-cancelamento -->
 
             </div>
         </div> <!-- Fechamento da admin-content-wrapper -->
