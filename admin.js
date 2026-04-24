@@ -663,7 +663,8 @@ async function renderizarGradeGaleria(gridId, isCompleto = false) {
     }
 
     let html = '';
-    let limit = isCompleto ? files.length : 7;
+    const isMobile = window.innerWidth < 600;
+    let limit = isCompleto ? files.length : (isMobile ? 1 : 7);
     let filesToShow = files.slice(0, limit);
 
     filesToShow.forEach(file => {

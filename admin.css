@@ -1887,6 +1887,18 @@ input:checked+.slider:before {
 }
 
 @media (max-width: 600px) {
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    .inventory-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .inventory-card {
+        padding: 15px;
+    }
     .visual-upload-row {
         flex-direction: column;
     }
