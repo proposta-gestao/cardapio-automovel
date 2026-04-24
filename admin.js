@@ -297,13 +297,16 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 // Sub-tabs handling
 document.querySelectorAll('.subtab-btn').forEach(btn => {
+    if (!btn.dataset.subtab) return; // Ignora se não for uma subaba de navegação (ex: botões do dashboard)
+
     btn.onclick = (e) => {
         const tabContent = e.target.closest('.tab-content');
         if (!tabContent) return;
         tabContent.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
         tabContent.querySelectorAll('.subtab-content').forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
-        document.getElementById('subtab-' + btn.dataset.subtab).classList.add('active');
+        const target = document.getElementById('subtab-' + btn.dataset.subtab);
+        if (target) target.classList.add('active');
     };
 });
 
