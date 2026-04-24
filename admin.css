@@ -1959,13 +1959,15 @@ input:checked+.slider:before {
         grid-column: span 1 !important;
     }
 
-    /* Forçar inputs de data lado a lado */
-    .filter-date-range {
+    /* Forçar inputs de data e valor lado a lado */
+    .filter-date-range,
+    .filter-value-range {
         flex-direction: row !important;
         align-items: center !important;
         gap: 8px !important;
     }
-    .filter-date-range input {
+    .filter-date-range input,
+    .filter-value-range input {
         flex: 1;
         min-width: 0;
     }
