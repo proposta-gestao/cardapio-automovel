@@ -175,6 +175,7 @@
                     <div class="admin-subtabs">
                         <button class="subtab-btn active" data-subtab="lista-produtos">Gerenciar Produtos</button>
                         <button class="subtab-btn" data-subtab="lista-categorias">Gerenciar Categorias</button>
+                        <button class="subtab-btn" data-subtab="lista-estoque">Ajustes de Estoque</button>
                     </div>
                 </div>
 
@@ -223,6 +224,36 @@
                         </table>
                     </div>
                 </div>
+                
+                <!-- Subtab: Ajustes de Estoque -->
+                <div class="subtab-content" id="subtab-lista-estoque">
+                    <div class="config-card" style="margin-top: 1rem;">
+                        <div class="config-card-header">
+                            <h2>📦 Ajustes de Estoque</h2>
+                            <button class="btn-primary btn-sm" id="btnNovoMotivoEstoque">+ Novo Motivo</button>
+                        </div>
+                        <div class="config-card-body">
+                            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom: 1rem;">
+                                Cadastre os motivos para entradas e saídas manuais de estoque (Ex: Avaria, Vencimento).
+                            </p>
+                            
+                            <div class="admin-table-wrapper">
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome do Motivo</th>
+                                            <th>Status</th>
+                                            <th style="width: 120px;">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="motivosEstoqueBody">
+                                        <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:1rem;">Carregando motivos...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Coupons Tab -->
@@ -251,10 +282,8 @@
                 <div class="produtos-toolbar" style="margin-bottom: 1.5rem; overflow-x: auto; overflow-y: hidden; white-space: nowrap; padding-bottom: 4px;">
                     <div class="admin-subtabs" style="margin-bottom: 0; min-width: max-content;">
                         <button class="subtab-btn active" data-subtab="config-endereco">Endereço da Loja</button>
-                        <button class="subtab-btn" data-subtab="config-visual">Personalização</button>
                         <button class="subtab-btn" data-subtab="config-frete">Frete e Entrega</button>
                         <button class="subtab-btn" data-subtab="config-cancelamento">Cancelamentos</button>
-                        <button class="subtab-btn" data-subtab="config-motivos-estoque">Motivos de Estoque</button>
                     </div>
                 </div>
 
@@ -465,36 +494,6 @@
                     </div>
                 </div>
                 </div> <!-- Fechamento da sub-aba config-cancelamento -->
-                
-                <div class="subtab-content" id="subtab-config-motivos-estoque">
-                <!-- Motivos de Ajuste de Estoque -->
-                <div class="config-card" style="margin-top: 1.5rem;">
-                    <div class="config-card-header">
-                        <h2>📦 Motivos de Ajuste de Estoque</h2>
-                        <button class="btn-primary btn-sm" id="btnNovoMotivoEstoque">+ Novo Motivo</button>
-                    </div>
-                    <div class="config-card-body">
-                        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom: 1rem;">
-                            Cadastre os motivos para entradas e saídas manuais de estoque (Ex: Avaria, Vencimento).
-                        </p>
-                        
-                        <div class="admin-table-wrapper">
-                            <table class="admin-table">
-                                <thead>
-                                    <tr>
-                                        <th>Nome do Motivo</th>
-                                        <th>Status</th>
-                                        <th style="width: 120px;">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="motivosEstoqueBody">
-                                    <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:1rem;">Carregando motivos...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                </div> <!-- Fechamento da sub-aba config-motivos-estoque -->
 
             </div>
         </div> <!-- Fechamento da admin-content-wrapper -->
