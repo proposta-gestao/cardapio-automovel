@@ -38,6 +38,13 @@ function formatCurrency(val) {
     return (parseFloat(val) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+function truncateNeighborhoods(text) {
+    if (!text) return '—';
+    const parts = text.split(',').map(p => p.trim()).filter(p => p);
+    if (parts.length <= 3) return text;
+    return parts.slice(0, 3).join(', ') + '...';
+}
+
 // --- DOM ---
 const $toast = document.getElementById('toast');
 
@@ -1851,7 +1858,7 @@ function renderZonasFrete() {
     tbody.innerHTML = zonasEntrega.map(z => `
         <tr>
             <td><strong>${z.name}</strong></td>
-            <td><span style="font-size:0.85rem; color:var(--text-muted);">${z.neighborhoods || '—'}</span></td>
+            <td><span style="font-size:0.85rem; color:var(--text-muted);">${truncateNeighborhoods(z.neighborhoods)}</span></td>
             <td>
                 <div class="fee-editable" onclick="window.tornarFeeEditavel(this, '${z.id}')" title="Clique para editar taxa">
                     <strong>${formatCurrency(z.fee)}</strong>

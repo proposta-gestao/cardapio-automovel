@@ -691,8 +691,23 @@ body {
     gap: 5px;
 }
 
+/* Otimização de Colunas - Frete e Entrega / Cancelamento */
+#subtab-config-frete .admin-table th,
+#subtab-config-frete .admin-table td,
+#subtab-config-cancelamento .admin-table th,
+#subtab-config-cancelamento .admin-table td {
+    text-align: center !important;
+    vertical-align: middle !important;
+}
 
+#zonasBody td:nth-child(2) { /* Bairros */
+    max-width: 300px;
+}
 
+#justificativasBody td:nth-child(2) { /* Motivo */
+    text-align: left !important;
+    padding-left: 20px !important;
+}
 
 .admin-table th:first-child,
 .admin-table td:first-child {
