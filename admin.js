@@ -716,10 +716,12 @@ function atualizarMétricasDashboard() {
     atualizarGraficoMetricas();
 }
 
-function renderPedidosFiltrados(filtrados) {
+function renderPedidosFiltrados(filtrados = null) {
     const tbody = document.getElementById('pedidosBody');
     const contador = document.getElementById('filtroContador');
     if (!tbody) return;
+
+    if (!filtrados) filtrados = getPedidosFiltrados();
 
     const total = filtrados.length;
     if (contador) {
@@ -735,7 +737,9 @@ function renderPedidosFiltrados(filtrados) {
 
 
     tbody.innerHTML = filtrados.map(p => {
-        const dataPedido = new Date(p.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+        const d = new Date(p.created_at);
+        const dataStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        const horaStr = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         const qtdItens = p.order_items ? p.order_items.reduce((acc, curr) => acc + curr.quantity, 0) : 0;
         const isPendente = p.status === 'pendente';
         const isPago = p.payment_status === 'pago';
@@ -745,27 +749,30 @@ function renderPedidosFiltrados(filtrados) {
         const statusLabel = p.status === 'concluido' ? 'Concluído' : p.status?.charAt(0).toUpperCase() + p.status?.slice(1);
         return `
                     <tr id="pedido-row-${p.id}">
-                        <td>${dataPedido}</td>
+                        <td>
+                            <div style="font-weight: 700; font-size: 0.85rem;">${dataStr}</div>
+                            <div style="color: var(--text-muted); font-size: 0.75rem;">${horaStr}</div>
+                        </td>
                         <td><strong>${p.customer_name || 'Desconhecido'}</strong></td>
                         <td><span class="badge" style="background:rgba(255,255,255,0.05);color:#aaa;font-size:0.75rem;">${p.atendente_nome || '—'}</span></td>
                         <td><span class="badge ${badgeClass}" style="text-transform:capitalize;">${statusLabel}</span></td>
                         <td>${qtdItens} un.</td>
                         <td><strong>${formatCurrency(p.total)}</strong></td>
-                        <td style="display:flex; gap: 5px;">
-                            ${isPendente
-                ? `<button class="btn-sm btn-finalizar" onclick="finalizarPedido('${p.id}')">✅ Finalizar</button>`
-                : '<span style="font-size:0.8rem;color:var(--text-muted);">—</span>'
-            }
-                            ${isPendente && !isPago
-                ? `<button class="btn-sm" style="background:transparent; color:#ff4757; border: 1px solid #ff4757;" onclick="cancelarPedido('${p.id}')">❌ Cancelar</button>`
-                : ''
-            }
+                        <td>
+                            <div style="display:flex; gap: 5px; justify-content: flex-end;">
+                                ${isPendente
+                                    ? `<button class="btn-sm btn-finalizar" onclick="finalizarPedido('${p.id}')">✅ Finalizar</button>`
+                                    : '<span style="font-size:0.8rem;color:var(--text-muted);">—</span>'
+                                }
+                                ${isPendente && !isPago
+                                    ? `<button class="btn-sm" style="background:transparent; color:#ff4757; border: 1px solid #ff4757;" onclick="cancelarPedido('${p.id}')">❌ Cancelar</button>`
+                                    : ''
+                                }
+                            </div>
                         </td>
                     </tr>
                 `;
     }).join('');
-
-    initSortableProdutos();
 }
 
 let adminRealtimeChannel = null;
@@ -781,16 +788,16 @@ function setupAdminRealtime() {
         }, payload => {
             if (payload.eventType === 'INSERT') {
                 pedidos.unshift(payload.new);
-                renderPedidosFiltrados();
+                atualizarMétricasDashboard();
             } else if (payload.eventType === 'UPDATE') {
                 const idx = pedidos.findIndex(p => p.id === payload.new.id);
                 if (idx !== -1) {
                     pedidos[idx] = { ...pedidos[idx], ...payload.new };
-                    renderPedidosFiltrados();
+                    atualizarMétricasDashboard();
                 }
             } else if (payload.eventType === 'DELETE') {
                 pedidos = pedidos.filter(p => p.id !== payload.old.id);
-                renderPedidosFiltrados();
+                atualizarMétricasDashboard();
             }
         })
         .subscribe();
@@ -916,8 +923,10 @@ function renderProdutos() {
                     <td style="color: var(--text-muted); text-align: center; font-size: 1.2rem;">${handleContent}</td>
                     <td><img src="${p.image_url || 'Logo.png'}" alt="Img" style="width:40px;height:40px;object-fit:cover;border-radius:6px;"></td>
                     <td onclick="editarProduto('${p.id}')" style="cursor:pointer;" title="Clique para editar">
-                        <strong class="clickable-row-name">${p.name}</strong>
-                        ${p.promo_price > 0 ? '<span class="badge" style="background:var(--warning); color:#000; margin-left:5px; font-size:0.6rem;">PROMO</span>' : ''}
+                        <div class="product-name-container">
+                            <strong class="clickable-row-name">${p.name}</strong>
+                            ${p.promo_price > 0 ? '<div class="badge-promo-container"><span class="badge badge-promo">PROMO</span></div>' : ''}
+                        </div>
                     </td>
                     <td>${p.categories?.name || '-'}</td>
                     <td onclick="editarProduto('${p.id}')" style="cursor:pointer;" title="Clique para editar">${formatCurrency(p.price)}</td>
@@ -1549,7 +1558,7 @@ function aplicarFiltrosPedidos() {
         valorMax: document.getElementById('filtroValorMax').value,
         status: document.getElementById('filtroStatus').value
     };
-    renderPedidosFiltrados();
+    atualizarMétricasDashboard();
 }
 
 document.getElementById('btnLimparFiltros').onclick = () => {
@@ -1561,7 +1570,7 @@ document.getElementById('btnLimparFiltros').onclick = () => {
     document.getElementById('filtroValorMin').value = '';
     document.getElementById('filtroValorMax').value = '';
     document.getElementById('filtroStatus').value = '';
-    renderPedidosFiltrados();
+    atualizarMétricasDashboard();
 };
 
 // --- Finalizar Pedido ---
@@ -1575,7 +1584,7 @@ window.finalizarPedido = async (id) => {
     // Atualiza o pedido na memória
     const idx = pedidos.findIndex(p => p.id === id);
     if (idx !== -1) pedidos[idx].status = 'concluido';
-    renderPedidosFiltrados();
+    atualizarMétricasDashboard();
     showToast('Pedido finalizado com sucesso!', 'success');
 };
 
@@ -1618,7 +1627,7 @@ document.getElementById('btnConfirmarCancelamento').onclick = async () => {
         pedidos[idx].status = 'cancelado';
         pedidos[idx].cancellation_reason = reason;
     }
-    renderPedidosFiltrados();
+    atualizarMétricasDashboard();
     showToast('Pedido cancelado com sucesso!', 'success');
     fecharModal('modalCancelarPedido');
     

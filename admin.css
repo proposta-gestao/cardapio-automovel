@@ -250,7 +250,7 @@ body {
 .tab-content {
     display: none;
     padding: 1.5rem;
-    max-width: 1200px;
+    max-width: 1440px;
     margin: 0 auto;
 }
 
@@ -574,13 +574,125 @@ body {
 }
 
 .admin-table td {
-    padding: 16px 20px;
+    padding: 14px 16px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     vertical-align: middle;
     color: white;
     text-align: center;
 }
+
+/* Otimização de Colunas - Tabela de Pedidos */
+#tab-dashboard .admin-table {
+    table-layout: auto;
+    width: 100%;
+    min-width: 1000px; /* Garante que não esmague em telas pequenas */
+}
+
+#pedidosBody td,
+#tab-dashboard .admin-table thead th {
+    padding: 12px 15px;
+    white-space: normal; /* Permite quebra de linha conforme pedido */
+    word-wrap: break-word;
+    vertical-align: middle;
+}
+
+/* Otimização de Colunas - Tabela de Pedidos */
+#tab-dashboard .admin-table {
+    table-layout: auto;
+    width: 100%;
+    min-width: 1000px;
+}
+
+#pedidosBody td,
+#tab-dashboard .admin-table thead th {
+    padding: 12px 15px;
+    white-space: normal;
+    word-wrap: break-word;
+    vertical-align: middle;
+    text-align: center; /* Centralização geral */
+}
+
+#pedidosBody td:nth-child(1), /* Data */
+#tab-dashboard .admin-table thead th:nth-child(1) {
+    width: 100px;
+    min-width: 100px;
+}
+
+#pedidosBody td:nth-child(2), /* Cliente */
+#tab-dashboard .admin-table thead th:nth-child(2) {
+    min-width: 200px;
+}
+
+#pedidosBody td:nth-child(3), /* Atendente */
+#tab-dashboard .admin-table thead th:nth-child(3) {
+    min-width: 140px;
+}
+
+#pedidosBody td:nth-child(4), /* Status */
+#tab-dashboard .admin-table thead th:nth-child(4) {
+    width: 110px;
+}
+
+#pedidosBody td:nth-child(5), /* Itens */
+#tab-dashboard .admin-table thead th:nth-child(5) {
+    width: 80px;
+}
+
+#pedidosBody td:nth-child(6), /* Total */
+#tab-dashboard .admin-table thead th:nth-child(6) {
+    width: 110px;
+}
+
+#pedidosBody td:nth-child(7), /* Ações */
+#tab-dashboard .admin-table thead th:nth-child(7) {
+    width: 190px;
+}
+
+#pedidosBody td:nth-child(7) {
+    display: table-cell;
+}
+
+/* Otimização de Colunas - Tabela de Produtos */
+#tab-produtos .admin-table {
+    table-layout: auto !important;
+    width: 100% !important;
+}
+
+#tab-produtos .admin-table th,
+#tab-produtos .admin-table td {
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+#produtosBody td:nth-child(3) { /* Nome */
+    min-width: 350px !important; /* Aumentado conforme pedido */
+}
+
+#produtosBody td:nth-child(4) { /* Categoria */
+    min-width: 120px;
+}
+
+#produtosBody td:nth-child(5), /* Preço */
+#produtosBody td:nth-child(6) { /* Estoque */
+    width: 100px;
+}
+
+#produtosBody td:nth-child(7) { /* Status Toggle */
+    width: 80px;
+}
+
+#produtosBody td:nth-child(8) { /* Ações */
+    width: 110px !important; /* Ainda mais reduzido */
+}
+
+#produtosBody td:nth-child(8) .actions-cell {
+    justify-content: center !important;
+    gap: 5px;
+}
+
+
+
 
 .admin-table th:first-child,
 .admin-table td:first-child {
@@ -645,6 +757,31 @@ body {
     color: var(--primary);
     text-shadow: 0 0 8px rgba(229, 178, 93, 0.3);
     transition: var(--transition);
+}
+
+.product-name-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+    text-align: center;
+}
+
+.badge-promo-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.badge-promo {
+    background: var(--warning) !important;
+    color: #000 !important;
+    font-size: 0.6rem !important;
+    padding: 2px 8px !important;
+    border: none !important;
+    font-weight: 900 !important;
 }
 
 .badge {
@@ -1311,7 +1448,8 @@ body {
         max-width: unset;
         text-align: center;
         padding: 1.2rem 0.8rem;
-        display: block !important; /* Garantir que todos os cards apareçam */
+        display: block !important;
+        /* Garantir que todos os cards apareçam */
     }
 
     .stats-row .stat-card .stat-label {
@@ -1347,19 +1485,22 @@ body {
     }
 
     /* Force all filters to span 1 column (resetting desktop spans) */
-    .filter-row > div {
+    .filter-row>div {
         grid-column: span 1 !important;
     }
 
     /* Exibir apenas Cliente e Atendente no Mobile conforme pedido anteriormente */
-    .filter-row > div:nth-child(1), /* Período */
-    .filter-row > div:nth-child(4), /* Valor */
-    .filter-row > div:nth-child(5) { /* Status */
+    .filter-row>div:nth-child(1),
+    /* Período */
+    .filter-row>div:nth-child(4),
+    /* Valor */
+    .filter-row>div:nth-child(5) {
+        /* Status */
         display: none !important;
     }
 
-    .filter-row > div:nth-child(2),
-    .filter-row > div:nth-child(3) {
+    .filter-row>div:nth-child(2),
+    .filter-row>div:nth-child(3) {
         order: unset;
         grid-column: span 1 !important;
     }
@@ -1379,108 +1520,146 @@ body {
     }
 
     /* ===== Table Mobile Refinement: Dashboard (Sales) ===== */
-    #tab-dashboard .admin-table th:nth-child(1), #tab-dashboard .admin-table td:nth-child(1), /* Data */
-    #tab-dashboard .admin-table th:nth-child(3), #tab-dashboard .admin-table td:nth-child(3), /* Atendente */
-    #tab-dashboard .admin-table th:nth-child(4), #tab-dashboard .admin-table td:nth-child(4), /* Status */
-    #tab-dashboard .admin-table th:nth-child(5), #tab-dashboard .admin-table td:nth-child(5), /* Itens */
-    #tab-dashboard .admin-table th:nth-child(7), #tab-dashboard .admin-table td:nth-child(7) { /* Ações */
+    #tab-dashboard .admin-table th:nth-child(1),
+    #tab-dashboard .admin-table td:nth-child(1),
+    /* Data */
+    #tab-dashboard .admin-table th:nth-child(3),
+    #tab-dashboard .admin-table td:nth-child(3),
+    /* Atendente */
+    #tab-dashboard .admin-table th:nth-child(4),
+    #tab-dashboard .admin-table td:nth-child(4),
+    /* Status */
+    #tab-dashboard .admin-table th:nth-child(5),
+    #tab-dashboard .admin-table td:nth-child(5),
+    /* Itens */
+    #tab-dashboard .admin-table th:nth-child(7),
+    #tab-dashboard .admin-table td:nth-child(7) {
+        /* Ações */
         display: none !important;
     }
 
-    #tab-dashboard .admin-table th:nth-child(2), #tab-dashboard .admin-table td:nth-child(2) { /* Cliente */
+    #tab-dashboard .admin-table th:nth-child(2),
+    #tab-dashboard .admin-table td:nth-child(2) {
+        /* Cliente */
         width: 70% !important;
         display: table-cell !important;
     }
 
-    #tab-dashboard .admin-table th:nth-child(6), #tab-dashboard .admin-table td:nth-child(6) { /* Total */
+    #tab-dashboard .admin-table th:nth-child(6),
+    #tab-dashboard .admin-table td:nth-child(6) {
+        /* Total */
         width: 30% !important;
         text-align: right !important;
         display: table-cell !important;
     }
 
     /* ===== Table Mobile Refinement: Products List ===== */
-    #subtab-lista-produtos .admin-table th:nth-child(1), #subtab-lista-produtos .admin-table td:nth-child(1),
-    #subtab-lista-produtos .admin-table th:nth-child(2), #subtab-lista-produtos .admin-table td:nth-child(2),
-    #subtab-lista-produtos .admin-table th:nth-child(4), #subtab-lista-produtos .admin-table td:nth-child(4),
-    #subtab-lista-produtos .admin-table th:nth-child(6), #subtab-lista-produtos .admin-table td:nth-child(6),
-    #subtab-lista-produtos .admin-table th:nth-child(7), #subtab-lista-produtos .admin-table td:nth-child(7) {
+    #subtab-lista-produtos .admin-table th:nth-child(1),
+    #subtab-lista-produtos .admin-table td:nth-child(1),
+    #subtab-lista-produtos .admin-table th:nth-child(2),
+    #subtab-lista-produtos .admin-table td:nth-child(2),
+    #subtab-lista-produtos .admin-table th:nth-child(4),
+    #subtab-lista-produtos .admin-table td:nth-child(4),
+    #subtab-lista-produtos .admin-table th:nth-child(6),
+    #subtab-lista-produtos .admin-table td:nth-child(6),
+    #subtab-lista-produtos .admin-table th:nth-child(7),
+    #subtab-lista-produtos .admin-table td:nth-child(7) {
         display: none !important;
     }
 
-    #subtab-lista-produtos .admin-table th:nth-child(3), #subtab-lista-produtos .admin-table td:nth-child(3) { /* Nome */
+    #subtab-lista-produtos .admin-table th:nth-child(3),
+    #subtab-lista-produtos .admin-table td:nth-child(3) {
+        /* Nome */
         width: 50% !important;
         display: table-cell !important;
     }
 
-    #subtab-lista-produtos .admin-table th:nth-child(5), #subtab-lista-produtos .admin-table td:nth-child(5) { /* Preço */
+    #subtab-lista-produtos .admin-table th:nth-child(5),
+    #subtab-lista-produtos .admin-table td:nth-child(5) {
+        /* Preço */
         width: 25% !important;
         text-align: center !important;
         display: table-cell !important;
     }
 }
 
-    #subtab-lista-produtos .admin-table th:nth-child(8), #subtab-lista-produtos .admin-table td:nth-child(8) { /* Ações */
-        width: 25% !important;
-        text-align: right !important;
-        display: table-cell !important;
-    }
-
-    /* ===== Table Mobile Refinement: Categories List ===== */
-    /* 1: Nome, 2: Slug, 3: Ordem, 4: Ações */
-    #subtab-lista-categorias .admin-table th:nth-child(2), #subtab-lista-categorias .admin-table td:nth-child(2),
-    #subtab-lista-categorias .admin-table th:nth-child(3), #subtab-lista-categorias .admin-table td:nth-child(3) {
-        display: none !important;
-    }
-
-    #subtab-lista-categorias .admin-table th:nth-child(1), #subtab-lista-categorias .admin-table td:nth-child(1) { /* Nome */
-        width: 70% !important;
-        display: table-cell !important;
-    }
-
-    #subtab-lista-categorias .admin-table th:nth-child(4), #subtab-lista-categorias .admin-table td:nth-child(4) { /* Ações */
-        width: 30% !important;
-        text-align: right !important;
-        display: table-cell !important;
-    }
-
-    /* ===== Table Mobile Refinement: Stock Adjustments ===== */
-    /* 1: Nome, 2: Status, 3: Ações */
-    #subtab-lista-estoque .admin-table th:nth-child(1), #subtab-lista-estoque .admin-table td:nth-child(1) { /* Nome */
-        display: table-cell !important;
-        width: auto !important;
-    }
-    #subtab-lista-estoque .admin-table th:nth-child(2), #subtab-lista-estoque .admin-table td:nth-child(2) { /* Status */
-        display: table-cell !important;
-        width: 80px !important;
-        text-align: center !important;
-    }
-    #subtab-lista-estoque .admin-table th:nth-child(3), #subtab-lista-estoque .admin-table td:nth-child(3) { /* Ações */
-        display: table-cell !important;
-        text-align: right !important;
-    }
-
-    .admin-table {
-        min-width: auto !important;
-        table-layout: fixed;
-    }
-
-    .admin-table th,
-    .admin-table td {
-        padding: 12px 8px;
-        font-size: 0.85rem;
-    }
-
-    .admin-toolbar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-    }
-
-    .admin-toolbar>button {
-        width: 100%;
-        justify-content: center;
-    }
+#subtab-lista-produtos .admin-table th:nth-child(8),
+#subtab-lista-produtos .admin-table td:nth-child(8) {
+    /* Ações */
+    width: 120px !important;
+    text-align: center !important;
+    display: table-cell !important;
 }
+/* ===== Table Mobile Refinement: Categories List ===== */
+/* 1: Nome, 2: Slug, 3: Ordem, 4: Ações */
+#subtab-lista-categorias .admin-table th:nth-child(2),
+#subtab-lista-categorias .admin-table td:nth-child(2),
+#subtab-lista-categorias .admin-table th:nth-child(3),
+#subtab-lista-categorias .admin-table td:nth-child(3) {
+    display: none !important;
+}
+
+#subtab-lista-categorias .admin-table th:nth-child(1),
+#subtab-lista-categorias .admin-table td:nth-child(1) {
+    /* Nome */
+    width: 70% !important;
+    display: table-cell !important;
+}
+
+#subtab-lista-categorias .admin-table th:nth-child(4),
+#subtab-lista-categorias .admin-table td:nth-child(4) {
+    /* Ações */
+    width: 30% !important;
+    text-align: right !important;
+    display: table-cell !important;
+}
+
+/* ===== Table Mobile Refinement: Stock Adjustments ===== */
+/* 1: Nome, 2: Status, 3: Ações */
+#subtab-lista-estoque .admin-table th:nth-child(1),
+#subtab-lista-estoque .admin-table td:nth-child(1) {
+    /* Nome */
+    display: table-cell !important;
+    width: auto !important;
+}
+
+#subtab-lista-estoque .admin-table th:nth-child(2),
+#subtab-lista-estoque .admin-table td:nth-child(2) {
+    /* Status */
+    display: table-cell !important;
+    width: 80px !important;
+    text-align: center !important;
+}
+
+#subtab-lista-estoque .admin-table th:nth-child(3),
+#subtab-lista-estoque .admin-table td:nth-child(3) {
+    /* Ações */
+    display: table-cell !important;
+    text-align: right !important;
+}
+
+.admin-table {
+    min-width: auto !important;
+    table-layout: fixed;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 12px 8px;
+    font-size: 0.85rem;
+}
+
+.admin-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.admin-toolbar>button {
+    width: 100%;
+    justify-content: center;
+}
+
 
 
 /* ===== Config Card (Configurações Tab) ===== */
@@ -1830,8 +2009,15 @@ input:checked+.slider:before {
 }
 
 @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ===== Edição de Taxa Inline ===== */
@@ -1864,11 +2050,10 @@ input:checked+.slider:before {
 }
 
 /* ===== Config Card ===== */
-.config-card + .config-card {
+.config-card+.config-card {
     margin-top: 1.5rem;
 }
 
-}
 
 /* ===== Seção de Estoque Premium ===== */
 .inventory-card {
@@ -1935,8 +2120,15 @@ input:checked+.slider:before {
 }
 
 @keyframes fadeInSlide {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @media (max-width: 600px) {
@@ -1944,30 +2136,38 @@ input:checked+.slider:before {
         flex-direction: column;
         gap: 0;
     }
+
     .inventory-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
     }
+
     .inventory-card {
         padding: 15px;
     }
+
     .visual-upload-row {
         flex-direction: column;
     }
+
     .visual-preview {
         width: 100%;
         min-width: unset;
     }
+
     /* Exibir apenas Cliente e Atendente no Mobile */
-    .filter-row > div:nth-child(1), /* Período */
-    .filter-row > div:nth-child(4), /* Valor */
-    .filter-row > div:nth-child(5) { /* Status */
+    .filter-row>div:nth-child(1),
+    /* Período */
+    .filter-row>div:nth-child(4),
+    /* Valor */
+    .filter-row>div:nth-child(5) {
+        /* Status */
         display: none !important;
     }
 
-    .filter-row > div:nth-child(2),
-    .filter-row > div:nth-child(3) {
+    .filter-row>div:nth-child(2),
+    .filter-row>div:nth-child(3) {
         order: unset;
         grid-column: span 1 !important;
     }
@@ -2069,15 +2269,16 @@ input[type=number] {
         height: 300px !important;
         padding: 0.5rem !important;
     }
-    
+
     .metrics-selectors {
         width: 100%;
     }
-    
+
     .metrics-selectors select {
         width: 100%;
     }
 }
+
 .metrics-section-title {
     font-size: 1.1rem;
     font-weight: 800;
@@ -2089,7 +2290,8 @@ input[type=number] {
     display: flex;
     align-items: center;
     gap: 10px;
-}
+
+
     font-size: 0.7rem;
     color: var(--warning);
     margin-top: 4px;
