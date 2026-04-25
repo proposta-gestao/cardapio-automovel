@@ -431,10 +431,12 @@ function calcularInsights(filtrados) {
     for (let i = 0; i < 24; i++) faturamentoPorHora[i] = 0;
 
     filtrados.forEach(p => {
-        const data = new Date(p.created_at);
-        const diaSem = diasSemana[data.getDay()];
-        const hora = data.getHours();
-        const dataStr = data.toLocaleDateString('pt-BR');
+        const dObj = new Date(p.created_at);
+        if (isNaN(dObj.getTime())) return;
+
+        const diaSem = diasSemana[dObj.getDay()];
+        const hora = dObj.getHours();
+        const dataStr = dObj.toLocaleDateString('pt-BR');
         const valor = parseFloat(p.total || 0);
 
         if (p.status === 'cancelado') totalCancelados++;
@@ -446,12 +448,20 @@ function calcularInsights(filtrados) {
 
         if (p.order_items) {
             p.order_items.forEach(item => {
-                const prodNome = item.name || 'Produto sem nome';
-                qtdPorProduto[prodNome] = (qtdPorProduto[prodNome] || 0) + parseInt(item.quantity);
+                const prodNome = item.product_name || 'Produto sem nome';
+                const qtd = parseInt(item.quantity) || 0;
+                const preco = parseFloat(item.unit_price || item.price || 0);
+
+                qtdPorProduto[prodNome] = (qtdPorProduto[prodNome] || 0) + qtd;
                 
-                // Categoria
-                const catNome = item.category_name || 'Geral';
-                faturamentoPorCategoria[catNome] = (faturamentoPorCategoria[catNome] || 0) + (parseFloat(item.price) * parseInt(item.quantity));
+                let catNome = 'Geral';
+                const prod = produtos.find(pr => pr.id === item.product_id);
+                if (prod) {
+                    const cat = categorias.find(c => c.id === prod.category_id);
+                    if (cat) catNome = cat.name;
+                }
+                
+                faturamentoPorCategoria[catNome] = (faturamentoPorCategoria[catNome] || 0) + (preco * qtd);
             });
         }
     });
@@ -463,7 +473,7 @@ function calcularInsights(filtrados) {
 
     Object.entries(faturamentoPorDiaSemana).forEach(([dia, valor]) => {
         if (valor > melhorDiaSem.valor) melhorDiaSem = { nome: dia, valor: valor };
-        if (valor < piorDiaSem.valor && valor >= 0) piorDiaSem = { nome: dia, valor: valor };
+        if (valor < piorDiaSem.valor && valor > 0) piorDiaSem = { nome: dia, valor: valor };
     });
 
     Object.entries(faturamentoPorHora).forEach(([hora, valor]) => {
@@ -478,7 +488,7 @@ function calcularInsights(filtrados) {
     // Performance de Vendas
     const totalPedidos = filtrados.length;
     const ticketMedio = totalPedidos > 0 ? (totalFaturado / totalPedidos) : 0;
-    const uniqueDaysCount = new Set(filtrados.map(p => new Date(p.created_at).toLocaleDateString())).size || 1;
+    const uniqueDaysCount = Object.keys(faturamentoPorData).length || 1;
     const mediaPedidosDia = (totalPedidos / uniqueDaysCount);
     const taxaCancelamento = totalPedidos > 0 ? ((totalCancelados / totalPedidos) * 100) : 0;
 
@@ -488,12 +498,20 @@ function calcularInsights(filtrados) {
 
     // Atualização do DOM
     // Tempo
-    document.getElementById('insightMelhorHora').innerText = melhorHora.hora + 'h';
-    document.getElementById('txtInsightHora').innerText = `Pico de faturamento às ${melhorHora.hora}h (R$ ${formatNumber(melhorHora.valor)})`;
+    document.getElementById('insightMelhorHora').innerText = melhorHora.hora !== '--' ? melhorHora.hora + 'h' : '--';
+    document.getElementById('txtInsightHora').innerText = melhorHora.hora !== '--' 
+        ? `Pico de faturamento às ${melhorHora.hora}h (R$ ${formatNumber(melhorHora.valor)})`
+        : 'Aguardando dados...';
+
     document.getElementById('insightMelhorDia').innerText = melhorDiaSem.nome;
-    document.getElementById('txtInsightMelhor').innerText = `Melhor dia: ${melhorDiaSem.nome.toLowerCase()} (R$ ${formatNumber(melhorDiaSem.valor)})`;
-    document.getElementById('insightPiorDia').innerText = piorDiaSem.nome;
-    document.getElementById('txtInsightPior').innerText = `Menor performance: ${piorDiaSem.nome.toLowerCase()} (R$ ${formatNumber(piorDiaSem.valor)})`;
+    document.getElementById('txtInsightMelhor').innerText = melhorDiaSem.valor > 0 
+        ? `Melhor dia: ${melhorDiaSem.nome.toLowerCase()} (R$ ${formatNumber(melhorDiaSem.valor)})`
+        : 'Aguardando dados...';
+
+    document.getElementById('insightPiorDia').innerText = piorDiaSem.nome !== '--' ? piorDiaSem.nome : '--';
+    document.getElementById('txtInsightPior').innerText = (piorDiaSem.valor > 0 && piorDiaSem.valor !== Infinity)
+        ? `Menor performance: ${piorDiaSem.nome.toLowerCase()} (R$ ${formatNumber(piorDiaSem.valor)})`
+        : 'Aguardando dados...';
 
     // Vendas
     document.getElementById('insightTicketMedio').innerText = formatCurrency(ticketMedio);
@@ -502,11 +520,13 @@ function calcularInsights(filtrados) {
 
     // Destaques
     document.getElementById('insightProdutoTop').innerText = topProduto[0];
-    document.getElementById('txtProdutoTop').innerText = `Vendido ${topProduto[1]} vezes`;
+    document.getElementById('txtProdutoTop').innerText = topProduto[1] > 0 ? `Vendido ${topProduto[1]} vezes` : 'Nenhum vendido';
     document.getElementById('insightCategoriaTop').innerText = topCategoria[0];
-    document.getElementById('txtCategoriaTop').innerText = `Faturou R$ ${formatNumber(topCategoria[1])}`;
+    document.getElementById('txtCategoriaTop').innerText = topCategoria[1] > 0 ? `Faturou R$ ${formatNumber(topCategoria[1])}` : 'Sem faturamento';
 
-    const topDiasList = top3Dias.map((d, i) => `${i + 1}. ${d[0]} - R$ ${formatNumber(d[1])}`).join('<br>') || 'Nenhum dado disponível';
+    const topDiasList = top3Dias.length > 0 
+        ? top3Dias.map((d, i) => `${i + 1}. ${d[0]} - R$ ${formatNumber(d[1])}`).join('<br>') 
+        : 'Nenhum dado disponível';
     document.getElementById('insightTopDias').innerHTML = topDiasList;
 
     // Geração de Insight Inteligente
