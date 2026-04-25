@@ -691,22 +691,38 @@ body {
     gap: 5px;
 }
 
-/* Otimização de Colunas - Frete e Entrega / Cancelamento */
-#subtab-config-frete .admin-table th,
-#subtab-config-frete .admin-table td,
-#subtab-config-cancelamento .admin-table th,
-#subtab-config-cancelamento .admin-table td {
+/* ===== Centralização e Estilo Geral de Tabelas (Desktop/Notebook) ===== */
+.admin-table th,
+.admin-table td {
     text-align: center !important;
     vertical-align: middle !important;
+    padding: 14px 10px !important;
 }
 
-#zonasBody td:nth-child(2) { /* Bairros */
-    max-width: 300px;
-}
+/* Ajustes Específicos para Categorias */
+#categoriasBody td:nth-child(1) { min-width: 200px; text-align: left !important; padding-left: 20px !important; } /* Nome */
+#categoriasBody td:nth-child(2) { color: var(--text-muted); font-size: 0.85rem; } /* Slug */
+#categoriasBody td:nth-child(4) { width: 120px; } /* Ações */
 
-#justificativasBody td:nth-child(2) { /* Motivo */
-    text-align: left !important;
-    padding-left: 20px !important;
+/* Ajustes Específicos para Cupons */
+#cuponsBody td:nth-child(1) { font-family: 'Courier New', Courier, monospace; font-weight: 700; color: var(--primary); } /* Código */
+#cuponsBody td:nth-child(4) { width: 120px; } /* Ações */
+
+/* Ajustes Específicos para Estoque */
+#motivosEstoqueBody td:nth-child(1) { text-align: left !important; padding-left: 20px !important; }
+#motivosEstoqueBody td:nth-child(3) { width: 120px; }
+
+/* Melhoria de Responsividade Desktop */
+@media (min-width: 1024px) {
+    .admin-table {
+        table-layout: auto !important;
+        width: 100% !important;
+    }
+    
+    .admin-table-wrapper {
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        border: 1px solid rgba(229, 178, 93, 0.1);
+    }
 }
 
 .admin-table th:first-child,
